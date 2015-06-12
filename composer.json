@@ -1,0 +1,16 @@
+{
+  "name": "CanIHaveSomeCoffee/ccextractor_submissionplatform",
+  "description": "Sample submission platforum built during GSoC 2015",
+  "minimum-stability": "stable",
+  "license": "GNU General Public License v2",
+  "authors": [
+    {
+      "name": "Willem Van Iseghem",
+      "email": "ccextractor@canihavesome.coffee"
+    }
+  ],
+  "require": {
+    "slim/slim": "3.0.x-dev",
+    "slim/twig-view": "1.1.0"
+  }
+}
