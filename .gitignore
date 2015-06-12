@@ -33,3 +33,6 @@ composer.lock
 
 # Everything in the vendor dir
 vendor/**
+
+# Twig cache
+twig_cache/**
