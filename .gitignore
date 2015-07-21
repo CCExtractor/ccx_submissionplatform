@@ -36,3 +36,6 @@ vendor/**
 
 # Twig cache
 twig_cache/**
+
+# Passwords and other sensitive things
+src/configuration.php
