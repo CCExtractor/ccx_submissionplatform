@@ -10,8 +10,11 @@
     }
   ],
   "require": {
-    "slim/slim": "3.0.x-dev",
-    "slim/twig-view": "1.1.0",
-    "twig/extensions": "1.2.x-dev"
+    "twig/extensions": "1.2.x-dev",
+    "slim/slim": "3.x-dev",
+    "slim/twig-view": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {"org\\ccextractor\\submissionplatform\\": "src/"}
   }
 }
