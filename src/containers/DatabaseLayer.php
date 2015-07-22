@@ -50,4 +50,13 @@ class DatabaseLayer implements ServiceProviderInterface
     {
         $pimple['database'] = $this;
     }
+
+    public function getSamples(){
+        $p = $this->pdo->prepare("SELECT * FROM sample ORDER BY id ASC");
+        $result = [];
+        if($p->execute()){
+            $result = $p->fetchAll();
+        }
+        return $result;
+    }
 }
