@@ -30,12 +30,12 @@ class DatabaseLayer implements ServiceProviderInterface
     {
         // Note: array_merge will not work, as the PDO constants are numeric (which results then in a renumbering of
         // the indices of the array).
-        foreach($this->defaultOptions as $key => $value){
-            if(!array_key_exists($key,$options)){
+        foreach ($this->defaultOptions as $key => $value) {
+            if (!array_key_exists($key, $options)) {
                 $options[$key] = $value;
             }
         }
-        $this->pdo = new PDO($dsn,$username,$password,$options);
+        $this->pdo = new PDO($dsn, $username, $password, $options);
     }
 
     /**
@@ -49,9 +49,5 @@ class DatabaseLayer implements ServiceProviderInterface
     public function register(Container $pimple)
     {
         $pimple['database'] = $this;
-    }
-
-    public function getPDO(){
-        return $this->pdo;
     }
 }
