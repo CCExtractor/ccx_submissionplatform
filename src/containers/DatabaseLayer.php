@@ -5,6 +5,7 @@
  */
 namespace org\ccextractor\submissionplatform\containers;
 
+use DateTime;
 use PDO;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
@@ -49,6 +50,17 @@ class DatabaseLayer implements ServiceProviderInterface
     public function register(Container $pimple)
     {
         $pimple['database'] = $this;
+    }
+
+    public function getLatestCCExtractorVersion(){
+        $stmt = $this->pdo->query("SELECT version, released FROM ccextractor_versions ORDER BY ID DESC LIMIT 1;");
+        $result = ["version" => "error", "date" => new DateTime()];
+        if($stmt !== false){
+            $data = $stmt->fetch();
+            $result["version"] = $data['version'];
+            $result["date"] = new DateTime($data['released']);
+        }
+        return $result;
     }
 
     public function getSamples(){
