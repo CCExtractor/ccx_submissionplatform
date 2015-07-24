@@ -1,5 +1,6 @@
 <?php
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
+use org\ccextractor\submissionplatform\containers\GitWrapper;
 use org\ccextractor\submissionplatform\controllers\HomeController;
 use org\ccextractor\submissionplatform\controllers\IController;
 use org\ccextractor\submissionplatform\controllers\SampleInfoController;
@@ -42,6 +43,9 @@ $dba = new DatabaseLayer(DATABASE_SOURCE_NAME, DATABASE_USERNAME, DATABASE_PASSW
     PDO::ATTR_PERSISTENT => true
 ]);
 $container->register($dba);
+// GitHub API
+$github = new GitWrapper();
+$container->register($github);
 
 $pages = [
     new HomeController(),

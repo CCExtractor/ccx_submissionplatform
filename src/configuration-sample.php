@@ -9,6 +9,12 @@
 // MySQL database source name
 define("DATABASE_SOURCE_NAME","mysql:dbname=MYDATABASENAME;host=localhost");
 // MySQL username
-define("DATABASE_USERNAME","MYUSERNAME");
+define("DATABASE_USERNAME","my_username");
 // MySQL password
-define("DATABASE_PASSWORD","MYPASSWORD");
+define("DATABASE_PASSWORD","my_password");
+// The token used by the bot to connect to the GitHub API
+define("BOT_TOKEN","my_token_here");
+// The owner of the repository
+define("REPOSITORY_OWNER","owner_or_organisation_here");
+// The name of the repository
+define("REPOSITORY_NAME","my_repo_name_here");
