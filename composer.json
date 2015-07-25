@@ -9,11 +9,18 @@
       "email": "ccextractor@canihavesome.coffee"
     }
   ],
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/wforums/Slim-Csrf"
+    }
+  ],
   "require": {
     "twig/extensions": "1.2.x-dev",
     "slim/slim": "3.x-dev",
     "slim/twig-view": "dev-master",
-    "milo/github-api": "^1.4"
+    "milo/github-api": "^1.4",
+    "slim/csrf": "dev-composer-fix"
   },
   "autoload": {
     "psr-4": {"org\\ccextractor\\submissionplatform\\": "src/"}
