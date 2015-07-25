@@ -63,8 +63,8 @@ class DatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
-    public function getSamples(){
-        $p = $this->pdo->prepare("SELECT * FROM sample ORDER BY id ASC");
+    public function getAllSamples(){
+        $p = $this->pdo->prepare("SELECT * FROM sample ORDER BY extension ASC");
         $result = [];
         if($p->execute()){
             $result = $p->fetchAll();

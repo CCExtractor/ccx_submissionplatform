@@ -1,0 +1,41 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Sample information</h3>
+    <p>Please select one of the samples below to see more detailed information about it.</p>
+    {% if samples|length > 1 %}
+        <p>Samples that have been submitted in the past:</p>
+        <table class="sortable tight striped">
+            <thead>
+                <tr>
+                    <th>SHA1</th>
+                    <th>Type videostream</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for sample in samples %}
+                <tr>
+                    <td>{{ sample.hash }}</td>
+                    <td>{{ sample.extension }}</td>
+                    <td>
+                        <a href="{{ path_for('Sample Info_sha1', { 'sha1': sample.hash }) }}" title="View details"><i class="fa fa-info-circle"></i></a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Sorry, there are no samples available yet. Please return later.</p>
+    {% endif %}
+{% endblock %}
+
+{% block sidebar %}
+    <h5>Actions</h5>
+    <ul class="icons">
+        <li>Submit a new sample</li>
+        <li>View my samples</li>
+        <li>Generate test file</li>
+        <li>Post overview on GitHub</li>
+    </ul>
+{% endblock %}
