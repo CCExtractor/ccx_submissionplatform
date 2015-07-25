@@ -7,6 +7,8 @@
  */
 namespace org\ccextractor\submissionplatform\controllers;
 
+use Slim\App;
+
 abstract class BaseController implements IController
 {
     protected $pageName;
@@ -23,13 +25,19 @@ abstract class BaseController implements IController
         $this->pageDescription = $description;
     }
 
+    protected function setDefaultBaseValues(array $base_values, App $app){
+        $base_values["pageName"] = $this->getPageName();
+        $base_values["pageDescription"] = $this->getPageDescription();
 
-    function getPageName()
+        return $base_values;
+    }
+
+    public function getPageName()
     {
         return $this->pageName;
     }
 
-    function getPageDescription()
+    public function getPageDescription()
     {
         return $this->pageDescription;
     }
