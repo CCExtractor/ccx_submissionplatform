@@ -1,21 +1,29 @@
 <?php
+use org\ccextractor\submissionplatform\containers\AccountManager;
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\containers\GitWrapper;
+use org\ccextractor\submissionplatform\controllers\AccountController;
 use org\ccextractor\submissionplatform\controllers\HomeController;
 use org\ccextractor\submissionplatform\controllers\IController;
 use org\ccextractor\submissionplatform\controllers\SampleInfoController;
 use Slim\App;
+use Slim\Csrf\Guard;
 use Slim\Views\Twig;
 use Slim\Views\TwigExtension;
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+session_start(); // TODO: replace with session middleware
+
 include_once '../src/configuration.php';
 require '../vendor/autoload.php';
 
 // Slim app
 $app = new App();
+
+// Add CSRF protection middleware
+$app->add(new Guard());
 
 // DI container
 $container = $app->getContainer();
@@ -46,13 +54,16 @@ $container->register($dba);
 // GitHub API
 $github = new GitWrapper();
 $container->register($github);
+// Account Manager
+$account = new AccountManager($dba);
+$container->register($account);
 
 $pages = [
     new HomeController(),
     new SampleInfoController(),
     // new UploadController(),
     // new TestSuiteController(),
-    // new AccountController()
+    new AccountController()
 ];
 
 // TODO: add global middleware: session, authentication, ...
