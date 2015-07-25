@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content="{{ pageDescription }}"/>
-    <link rel="stylesheet" type="text/css" href="css/kickstart.css" media="all"/>
-    <link rel="stylesheet" type="text/css" href="css/style.css" media="all"/>
-    <script type="text/javascript" src="js/jquery.min.js"></script>
-    <script type="text/javascript" src="js/kickstart.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/kickstart.css" media="all"/>
+    <link rel="stylesheet" type="text/css" href="/css/style.css" media="all"/>
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/kickstart.js"></script>
 </head>
 <body>
 
@@ -25,13 +25,26 @@
 </ul>
 
 <div class="grid">
-    {% block content %}
-    {% endblock %}
+    <div class="col_12">
+        <div class="col_9">
+            {% block content %}
+            {% endblock %}
+        </div>
+        <div class="col_3">
+            {% block sidebar %}
+            {% endblock %}
+            <h5>Problems?</h5>
+            <ul class="icons">
+                <li><i class="fa fa-li fa-exclamation-triangle"></i> <a target="_blank" href="https://github.com/wforums/ccx_submissionplatform/issues/new">Report bug/Ask question</a></li>
+            </ul>
+        </div>
+        <hr/>
+    </div>
+
 </div>
 <div class="clear"></div>
 <div id="footer">
     &copy; Copyright 2015 All Rights Reserved. Developed during GSoC 2015 for <a href="http://www.ccextractor.org">CCExtractor</a>, built with <a href="http://www.99lime.com/elements/">HTML KickStart</a>
 </div>
-
 </body>
 </html>
