@@ -27,16 +27,42 @@ class AccountController extends BaseController
                 $url = $this->router->pathFor($self->getPageName().($this->account->isLoggedIn()?"_manage":"_login"));
                 return $response->withStatus(302)->withHeader('Location',$url);
             })->setName($self->getPageName());
-            $this->get('/login', function ($request, $response, $args) use ($base_values) {
-                // TODO: handle login
-                echo "login";
-            })->setName($self->getPageName()."_login");
+            $this->group('/login', function () use ($self,$base_values) {
+                $this->get('', function ($request, $response, $args) use ($base_values) {
+                    // CSRF values
+                    $base_values["csrf_name"] = $request->getAttribute('csrf_name');
+                    $base_values["csrf_value"] = $request->getAttribute('csrf_value');
+                    // Message box data
+                    $base_values["message_type"] = "warning";
+                    $base_values["message_icon"] = "fa-warning";
+                    $base_values["message"] = "You are not logged in currently, so you need to login to proceed.";
+
+                    return $this->view->render($response,'login.html.twig',$base_values);
+                })->setName($self->getPageName()."_login");
+                $this->post('',function ($request, $response, $args) use ($base_values) {
+                    // Validate login
+                    var_dump($request->getParsedBody());
+                    // CSRF values
+                    $base_values["csrf_name"] = $request->getAttribute('csrf_name');
+                    $base_values["csrf_value"] = $request->getAttribute('csrf_value');
+                    // Message box data
+                    $base_values["message_type"] = "error";
+                    $base_values["message_icon"] = "fa-remove";
+                    $base_values["message"] = "Login failed. Please try again";
+                    // TODO: handle login
+                    return $this->view->render($response,'login.html.twig',$base_values);
+                });
+            });
+
             $this->get('/logout', function ($request, $response, $args) use ($base_values) {
                 // TODO: handle logout
             })->setName($self->getPageName()."_logout");
             $this->get('/recover', function ($request, $response, $args) use ($base_values) {
                 // TODO: handle recover
             })->setName($self->getPageName()."_recover");
+            $this->get('/register', function ($request, $response, $args) use ($base_values) {
+                // TODO: handle recover
+            })->setName($self->getPageName()."_register");
             $this->get('/manage', function ($request, $response, $args) use ($base_values) {
                 // TODO: handle manage
                 echo "manage";

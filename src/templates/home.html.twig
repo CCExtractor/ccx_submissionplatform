@@ -10,6 +10,7 @@
         <li>Run the regression tests</li>
     </ul>
     <h4>Development information</h4>
+    <!-- TODO: replace link to tests with dynamical generated one -->
     <p>Last official release: <a target="_blank" href="http://sourceforge.net/projects/ccextractor/files/ccextractor/{{ ccx_last_release.version }}/">{{ ccx_last_release.version }}</a> (release date: {{ ccx_last_release.date|date("m/d/Y") }}). Regression tests for this version are available here: <a href="test/ccextractor/{{ ccx_last_release.version }}">regression tests</a></p>
     <p>Latest GitHub commit: <a target="_blank" href="https://github.com/CCExtractor/ccextractor/commit/{{ ccx_latest_commit }}">{{ ccx_latest_commit }}</a>. View the <a href="test/{{ ccx_latest_commit }}">regression tests</a>.</p>
 {% endblock %}

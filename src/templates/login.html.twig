@@ -1,0 +1,23 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Login</h3>
+    <div class="notice {{ message_type }}"><i class="fa {{ message_icon }} fa-large"></i> {{ message }}</div>
+    <form class="vertical" method="post" action="{{ path_for('My Account_login') }}">
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" placeholder="email@address.com" />
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" />
+        <input type="hidden" name="csrf_name" value="{{ csrf_name }}" />
+        <input type="hidden" name="csrf_value" value="{{ csrf_value }}" />
+        <input type="submit" value="Log in" />
+    </form>
+{% endblock %}
+
+{% block sidebar %}
+    <h5>Actions</h5>
+    <ul class="icons">
+        <li><a href="{{ path_for('My Account_register') }}">Register an account</a></li>
+        <li><a href="{{ path_for('My Account_recover') }}">Recover forgotten password</a></li>
+    </ul>
+{% endblock %}
