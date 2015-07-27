@@ -23,11 +23,11 @@ class HomeController extends BaseController
      * @param App $app
      * @param array $base_values
      */
-    public function register(App $app, array $base_values = [])
+    public function register(App $app)
     {
-        $base_values = $this->setDefaultBaseValues($base_values, $app);
-
-        $app->get('/[home]',function($request, $response, $args) use($base_values){
+        $self = $this;
+        $app->get('/[home]',function($request, $response, $args) use ($self) {
+            $self->setDefaultBaseValues($this);
             // Get latest GitHub commit
             // TODO: implement caching
             $token = new Token(BOT_TOKEN);
@@ -51,10 +51,11 @@ class HomeController extends BaseController
             }
 
             // Custom page values
-            $base_values["ccx_last_release"] = $this->database->getLatestCCExtractorVersion();
-            $base_values["ccx_latest_commit"] = $commit;
 
-            return $this->view->render($response,'home.html.twig',$base_values);
+            $this->templateValues->add("ccx_last_release", $this->database->getLatestCCExtractorVersion());
+            $this->templateValues->add("ccx_latest_commit", $commit);
+
+            return $this->view->render($response,'home.html.twig',$this->templateValues->getValues());
         })->setName($this->getPageName());
     }
 }

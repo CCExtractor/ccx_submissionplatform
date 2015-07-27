@@ -17,21 +17,22 @@ class SampleInfoController extends BaseController
         parent::__construct("Sample Info");
     }
 
-    function register(App $app, array $base_values = [])
+    function register(App $app)
     {
-        $base_values = $this->setDefaultBaseValues($base_values,$app);
-
         $self = $this;
-        $app->group('/sample-info', function () use ($self,$base_values) {
-            $this->get('[/]', function ($request, $response, $args) use ($base_values) {
-                $base_values["samples"] = $this->database->getAllSamples();
-                return $this->view->render($response,'sample-info.html.twig',$base_values);
+        $app->group('/sample-info', function () use ($self) {
+            $this->get('[/]', function ($request, $response, $args) use ($self) {
+                $self->setDefaultBaseValues($this);
+                $this->templateValues->add("samples", $this->database->getAllSamples());
+                return $this->view->render($response,'sample-info.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName());
-            $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($base_values) {
-                return $this->view->render($response,'sample-info-id.html.twig',$base_values);
+            $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                $self->setDefaultBaseValues($this);
+                return $this->view->render($response,'sample-info-id.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName().'_id');
-            $this->get('/{sha1:[a-z0-9]+}', function ($request, $response, $args) use ($base_values) {
-                return $this->view->render($response,'sample-info-sha1.html.twig',$base_values);
+            $this->get('/{sha1:[a-z0-9]+}', function ($request, $response, $args) use ($self) {
+                $self->setDefaultBaseValues($this);
+                return $this->view->render($response,'sample-info-sha1.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName().'_sha1');
         });
     }

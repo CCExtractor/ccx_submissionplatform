@@ -7,6 +7,7 @@
  */
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\containers\TemplateValues;
 use Slim\App;
 
 abstract class BaseController implements IController
@@ -25,11 +26,13 @@ abstract class BaseController implements IController
         $this->pageDescription = $description;
     }
 
-    protected function setDefaultBaseValues(array $base_values, App $app){
-        $base_values["pageName"] = $this->getPageName();
-        $base_values["pageDescription"] = $this->getPageDescription();
-
-        return $base_values;
+    protected function setDefaultBaseValues(App $app){
+        /** @var TemplateValues $tv */
+        $tv = $app->templateValues;
+        $tv->add("pageName", $this->getPageName());
+        $tv->add("pageDescription", $this->getPageDescription());
+        $tv->add("isLoggedIn", $app->account->isLoggedIn());
+        $tv->add("loggedInUser", $app->account->getUser());
     }
 
     public function getPageName()
