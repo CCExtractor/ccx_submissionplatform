@@ -2,11 +2,13 @@
 use org\ccextractor\submissionplatform\containers\AccountManager;
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\containers\GitWrapper;
+use org\ccextractor\submissionplatform\containers\TemplateValues;
 use org\ccextractor\submissionplatform\controllers\AccountController;
 use org\ccextractor\submissionplatform\controllers\HomeController;
 use org\ccextractor\submissionplatform\controllers\IController;
 use org\ccextractor\submissionplatform\controllers\SampleInfoController;
 use Slim\App;
+use Slim\Container;
 use Slim\Csrf\Guard;
 use Slim\Views\Twig;
 use Slim\Views\TwigExtension;
@@ -18,15 +20,16 @@ session_start(); // TODO: replace with session middleware
 
 include_once '../src/configuration.php';
 require '../vendor/autoload.php';
+// For PHP version < 5.5, need to include the php password fallback. Doesn't override existing one, so can be included without checks.
+require '../vendor/ircmaxell/password-compat/lib/password.php';
+
+$container = new Container();
 
 // Slim app
-$app = new App();
+$app = new App($container);
 
 // Add CSRF protection middleware
 $app->add(new Guard());
-
-// DI container
-$container = $app->getContainer();
 
 // Twig
 $view = new Twig('../src/templates', [
@@ -57,6 +60,22 @@ $container->register($github);
 // Account Manager
 $account = new AccountManager($dba);
 $container->register($account);
+// Template Values
+$templateValues = new TemplateValues();
+$container->register($templateValues);
+
+//Override the default Not Found Handler
+$container['notFoundHandler'] = function ($c) {
+    return function ($request, $response) use ($c) {
+        /** @var TemplateValues $tv */
+        $tv = $c->get('templateValues');
+        $tv->add('pageName','404 Not Found');
+        $tv->add('pageDescription','404 Not Found');
+        $tv->add('isLoggedIn',$c->get('account')->isLoggedIn());
+        $tv->add("loggedInUser", $c->get('account')->getUser());
+        return $c->get('view')->render($response->withStatus(404),"notfound.html.twig",$tv->getValues());
+    };
+};
 
 $pages = [
     new HomeController(),
@@ -68,14 +87,13 @@ $pages = [
 
 // TODO: add global middleware: session, authentication, ...
 
-$base_values = [];
-$base_values["pages"] = $pages;
+$templateValues->add("pages",$pages);
 
 // Define routes
 
 /** @var IController $page */
 foreach($pages as $page){
-    $page->register($app,$base_values);
+    $page->register($app);
 }
 
 $app->run();
