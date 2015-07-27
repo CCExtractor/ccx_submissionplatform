@@ -6,6 +6,7 @@
 namespace org\ccextractor\submissionplatform\containers;
 
 use DateTime;
+use org\ccextractor\submissionplatform\objects\User;
 use PDO;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
@@ -70,5 +71,16 @@ class DatabaseLayer implements ServiceProviderInterface
             $result = $p->fetchAll();
         }
         return $result;
+    }
+
+    public function getUserWithEmail($email)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM user WHERE email = :email LIMIT 1");
+        $stmt->bindParam(":email",$email,PDO::PARAM_STR);
+        if($stmt->execute() && $stmt->rowCount() === 1){
+            $data = $stmt->fetch();
+            return new User($data["id"],$data["name"],$data["email"],$data["password"],$data["github_linked"],$data["admin"]);
+        }
+        return new User(-1,"","");
     }
 }

@@ -8,6 +8,11 @@ namespace org\ccextractor\submissionplatform\objects;
 class User
 {
     /**
+     * @var User
+     */
+    private static $nullUser = null;
+
+    /**
      * @var int
      */
     private $id;
@@ -50,6 +55,14 @@ class User
         $this->hash = $hash;
         $this->github = $github;
         $this->admin = $admin;
+    }
+
+    public static function getNullUser()
+    {
+        if(self::$nullUser === null){
+            self::$nullUser = new User(-1,"","");
+        }
+        return self::$nullUser;
     }
 
     /**

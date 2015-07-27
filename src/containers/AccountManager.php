@@ -49,7 +49,7 @@ class AccountManager implements ServiceProviderInterface
         }
         if(!isset($_SESSION["userManager"])){
             // Create default values for the manager
-            $this->user = new User(-1,"","");
+            $this->user = User::getNullUser();
             $this->store();
         } else {
             $this->restore();
@@ -78,5 +78,31 @@ class AccountManager implements ServiceProviderInterface
 
     public function getUser(){
         return $this->user;
+    }
+
+    public function performLogin($email,$password){
+        $user = $this->dba->getUserWithEmail($email);
+        if($user->getId() > -1){
+            // Validate password
+            if(password_verify($password,$user->getHash())){
+                $this->user = $user;
+                $this->store();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function performLogout(){
+        $this->user = User::getNullUser();
+        $this->store();
+    }
+
+    public function findUser($id){
+        if($this->user->getId() === $id){
+            return $this->user;
+        }
+        // TODO: finish
+        return false;
     }
 }

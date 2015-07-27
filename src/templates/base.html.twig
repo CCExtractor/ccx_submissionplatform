@@ -31,6 +31,15 @@
             {% endblock %}
         </div>
         <div class="col_3">
+            {% if isLoggedIn %}
+            <h5>Welcome back, {{ loggedInUser.getName }}</h5>
+            <ul class="icons">
+                <!-- TODO: fill in link to submitted samples -->
+                <li><i class="fa fa-li fa-eye"></i> <a href="">View my submitted samples</a></li>
+                <li><i class="fa fa-li fa-pencil"></i> <a href="{{ path_for("My Account_manage") }}">Manage my account</a></li>
+                <li><i class="fa fa-li fa-power-off"></i> <a href="{{ path_for("My Account_logout") }}">Log out</a></li>
+            </ul>
+            {% endif %}
             {% block sidebar %}
             {% endblock %}
             <h5>Problems?</h5>
