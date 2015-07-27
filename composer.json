@@ -20,7 +20,8 @@
     "slim/slim": "3.x-dev",
     "slim/twig-view": "dev-master",
     "milo/github-api": "^1.4",
-    "slim/csrf": "dev-composer-fix"
+    "slim/csrf": "dev-composer-fix",
+    "ircmaxell/password-compat": "^1.0"
   },
   "autoload": {
     "psr-4": {"org\\ccextractor\\submissionplatform\\": "src/"}
