@@ -2,5 +2,30 @@
 
 {% block content %}
     <h3>All registered users on the site up to now</h3>
-    <p>TODO</p>
+    {% if users|length > 0 %}
+        <table class="sortable tight striped">
+            <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.name }}</td>
+                <td>
+                    <a href="{{ path_for('My Account_view_id', { 'id': user.id }) }}" title="View user info"><i class="fa fa-info-circle"></i></a>&nbsp;
+                    <a href="{{ path_for('My Account_recover', { 'id': user.id }) }}" title="Send password recovery for user"><i class="fa fa-support"></i></a>&nbsp;
+                    <a href="{{ path_for('My Account_deactivate', { 'id': user.id }) }}" title="Deactivate user"><i class="fa fa-chain-broken"></i></a>
+                </td>
+            </tr>
+        {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>There are no registered users on this site... Strange, because you are logged in? xD</p>
+    {% endif %}
 {% endblock %}

@@ -81,6 +81,30 @@ class DatabaseLayer implements ServiceProviderInterface
             $data = $stmt->fetch();
             return new User($data["id"],$data["name"],$data["email"],$data["password"],$data["github_linked"],$data["admin"]);
         }
-        return new User(-1,"","");
+        return User::getNullUser();
+    }
+
+    public function getUserWithId($id)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM user WHERE id = :id LIMIT 1");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        if($stmt->execute() && $stmt->rowCount() === 1){
+            $data = $stmt->fetch();
+            return new User($data["id"],$data["name"],$data["email"],$data["password"],$data["github_linked"],$data["admin"]);
+        }
+        return User::getNullUser();
+    }
+
+    public function listUsers(){
+        $stmt = $this->pdo->query("SELECT * FROM user ORDER BY id ASC");
+        $result = [];
+        if($stmt !== false && $stmt->rowCount() > 0){
+            $data = $stmt->fetch();
+            while($data !== false){
+                $result[] = new User($data["id"],$data["name"],$data["email"],$data["password"],$data["github_linked"],$data["admin"]);
+                $data = $stmt->fetch();
+            }
+        }
+        return $result;
     }
 }

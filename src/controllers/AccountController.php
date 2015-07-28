@@ -65,7 +65,7 @@ class AccountController extends BaseController
                 $url = $this->router->pathFor("Home");
                 return $response->withStatus(302)->withHeader('Location',$url);
             })->setName($self->getPageName()."_logout");
-            $this->get('/recover', function ($request, $response, $args) use ($self) {
+            $this->get('/recover[/{id:[0-9]+}]', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 // TODO: handle recover
             })->setName($self->getPageName()."_recover");
@@ -73,18 +73,33 @@ class AccountController extends BaseController
                 $self->setDefaultBaseValues($this);
                 // TODO: handle register
             })->setName($self->getPageName()."_register");
+            $this->get('/deactivate[/{id:[0-9]+}]', function ($request, $response, $args) use ($self) {
+                $self->setDefaultBaseValues($this);
+                // TODO: handle deactivate/anonimisation
+            })->setName($self->getPageName()."_deactivate");
             $this->get('/manage', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 // TODO: handle manage
                 echo "manage";
             })->setName($self->getPageName()."_manage");
-            $this->get('/view[/{id:[0-9]+}]', function ($request, $response, $args) use ($self) {
-                $self->setDefaultBaseValues($this);
-                if(isset($args["id"])){
+            $this->group("/view", function () use ($self) {
+                $this->get('[/]', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+
+                    if($this->account->getUser()->isAdmin()){
+                        $this->templateValues->add("users", $this->database->listUsers());
+                        return $this->view->render($response,"userlist.html.twig",$this->templateValues->getValues());
+                    }
+                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName()."_view");
+                $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+
                     if($this->account->getUser()->isAdmin() || $args["id"] === $this->account->getUser()->getId()){
                         $user = $this->account->findUser($args["id"]);
                         if($user !== false){
-                            $base_values["user"] = $user;
+                            $this->templateValues->add("user", $user);
+                            // TODO: get the sumbitted samples
                             return $this->view->render($response,"user.html.twig",$this->templateValues->getValues());
                         }
                         // TODO: improve this?
@@ -92,18 +107,9 @@ class AccountController extends BaseController
                         return $d($request,$response);
                     }
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
-                } else {
-                    if($this->account->getUser()->isAdmin()){
-                        //$base_values["user"] = $this->account->findUser
-                        return $this->view->render($response,"userlist.html.twig",$this->templateValues->getValues());
-                    }
-                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
-                }
-
-            })->setName($self->getPageName()."_view");
-            /*$this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($base_values) {
-                return $this->view->render($response,'sample-info-id.html.twig',$base_values);
-            })->setName($self->getPageName().'_id');*/
+                })->setName($self->getPageName()."_view_id");
+                //
+            });
         });
     }
 }
