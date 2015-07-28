@@ -9,6 +9,7 @@ use Exception;
 use org\ccextractor\submissionplatform\objects\User;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
+use Slim\Views\Twig;
 
 class AccountManager implements ServiceProviderInterface
 {
@@ -17,6 +18,10 @@ class AccountManager implements ServiceProviderInterface
      */
     private $dba;
     /**
+     * @var EmailLayer
+     */
+    private $email;
+    /**
      * @var User
      */
     private $user;
@@ -24,9 +29,10 @@ class AccountManager implements ServiceProviderInterface
     /**
      * AccountManager constructor.
      */
-    public function __construct(DatabaseLayer $dba)
+    public function __construct(DatabaseLayer $dba, EmailLayer $email)
     {
         $this->dba = $dba;
+        $this->email = $email;
         $this->setup();
     }
 
@@ -109,8 +115,35 @@ class AccountManager implements ServiceProviderInterface
         return false;
     }
 
-    public function sendRecoverEmail(User $user){
-        // Create hash with HMAC to send
-        return true;
+    public function sendRecoverEmail(User $user,Twig $twig, $base_url){
+        $time = time() + 7200;
+        $hmac = self::getPasswordResetHMAC($user, $time);
+        $message = $twig->getEnvironment()->loadTemplate("email/recoveryLink.txt.twig")->render([
+            "base_url" => $base_url,
+            "time" => $time,
+            "hmac" => $hmac,
+            "user" => $user
+        ]);
+        return $this->email->sendEmailToUser($user, "Reset your password", $message);
+    }
+
+    /**
+     * Generates an HMAC for resetting passwords. Uses the user's ID, password hash, an expiration time and the ip address.
+     *
+     * @param User $user The user who needs the HMAC
+     * @param int $expiration An expiration time in epoch. If left null, current time + 7200 seconds will be taken (2 hours from now).
+     *
+     * @return string The HMAC that can be used to verify the userId, expires, client IP and old hash.
+     */
+    private static function getPasswordResetHMAC(User $user, $expiration = null)
+    {
+        if ($expiration === null) {
+            $expiration = time() + 7200;
+        }
+        return hash_hmac(
+            "sha256",
+            "userId=" . $user->getId() . "&expires=" . $expiration . "&oldHash=" .
+            $user->getHash() . "&clientIpAddress=" . $_SERVER['REMOTE_ADDR'],
+            HMAC_KEY);
     }
 }

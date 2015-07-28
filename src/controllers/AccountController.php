@@ -95,7 +95,8 @@ class AccountController extends BaseController
                         $user = $this->database->getUserWithEmail($_POST["email"]);
                         if($user->getId() > -1){
                             // We found the user, send recovery email and display ok message
-                            if($this->account->sendRecoverEmail($user)){
+                            $base_url = (($this->environment["HTTPS"] === "on")?"https://":"http://").$this->environment["HTTP_HOST"];
+                            if($this->account->sendRecoverEmail($user,$this->view,$base_url)){
                                 return $this->view->render($response,"account/recover-ok.html.twig",$this->templateValues->getValues());
                             } else {
                                 $this->templateValues->add("message","We could not send an email to this account. Please try again later, or get in touch.");
@@ -110,6 +111,16 @@ class AccountController extends BaseController
                     $this->templateValues->add("message_icon", "fa-remove");
                     return $this->view->render($response,"account/recover.html.twig",$this->templateValues->getValues());
                 });
+                // GET: recover procedure step 2: choosing a new password
+                $this->get('/step2?userId={id:[0-9]+}&expires={expires:[0-9]+}&hmac={hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    // CSRF values
+                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    // TODO: finish
+                    echo "test";
+                    return $response->withBody("test");
+                })->setName($self->getPageName()."_recover_step2");
                 // GET: admin only, recovery for a specific user
                 $this->get('/recover/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                     if(!$this->account->getUser()->isAdmin()){
@@ -149,7 +160,6 @@ class AccountController extends BaseController
                 // GET, Show a list of users if admin, or 403 if not.
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
-
                     if($this->account->getUser()->isAdmin()){
                         $this->templateValues->add("users", $this->database->listUsers());
                         return $this->view->render($response,"account/userlist.html.twig",$this->templateValues->getValues());
@@ -160,7 +170,7 @@ class AccountController extends BaseController
                 $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
 
-                    if($this->account->getUser()->isAdmin() || $args["id"] === $this->account->getUser()->getId()){
+                    if($this->account->getUser()->isAdmin() || intval($args["id"]) === $this->account->getUser()->getId()){
                         $user = $this->account->findUser($args["id"]);
                         if($user !== false){
                             $this->templateValues->add("user", $user);

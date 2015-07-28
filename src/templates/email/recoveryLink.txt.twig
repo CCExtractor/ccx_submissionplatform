@@ -1,0 +1,13 @@
+Dear user,
+
+there has been a request to reset your password.
+
+To change your password you need to click on the link below, or copy it into the browser:
+
+{% autoescape false %}
+{{ base_url }}{{ path_for("My Account_recover_step2", { "id": user.id, "expires": time, "hmac": hmac }) }}
+{% endautoescape %}
+
+Attention! This link is only valid for two hours after the request has been made, and can be used only ONCE to reset the password!
+
+If you did not request this password reset and you suspect an intrusion attempt, please get in touch through the website.
