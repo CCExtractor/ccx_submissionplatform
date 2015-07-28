@@ -20,3 +20,6 @@ define("REPOSITORY_OWNER","owner_or_organisation_here");
 define("REPOSITORY_NAME","my_repo_name_here");
 // HMAC private key. This is used for the HMAC used during password reset procedure.
 define("HMAC_KEY","a_random_string_of_characters");
+// Amazon SES (Simple Email Service) credentials
+define("AMAZON_SES_USER","Amazon_User_Id");
+define("AMAZON_SES_PASS","Amazon_User_Password");

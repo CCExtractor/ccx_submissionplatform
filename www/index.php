@@ -1,6 +1,7 @@
 <?php
 use org\ccextractor\submissionplatform\containers\AccountManager;
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
+use org\ccextractor\submissionplatform\containers\EmailLayer;
 use org\ccextractor\submissionplatform\containers\GitWrapper;
 use org\ccextractor\submissionplatform\containers\TemplateValues;
 use org\ccextractor\submissionplatform\controllers\AccountController;
@@ -54,11 +55,16 @@ $dba = new DatabaseLayer(DATABASE_SOURCE_NAME, DATABASE_USERNAME, DATABASE_PASSW
     PDO::ATTR_PERSISTENT => true
 ]);
 $container->register($dba);
+// Email container
+// TODO: replace on full launch
+$host = "canihavesome.coffee"; //$app->environment["HTTP_HOST"];
+$email = new EmailLayer(AMAZON_SES_USER, AMAZON_SES_PASS, $host);
+$container->register($email);
 // GitHub API
 $github = new GitWrapper();
 $container->register($github);
 // Account Manager
-$account = new AccountManager($dba);
+$account = new AccountManager($dba,$email);
 $container->register($account);
 // Template Values
 $templateValues = new TemplateValues();
