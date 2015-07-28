@@ -53,8 +53,8 @@ class User
         $this->name = $name;
         $this->email = $email;
         $this->hash = $hash;
-        $this->github = ($github === "1");
-        $this->admin = ($admin === "1");
+        $this->github = ($github === "1" || $github === true);
+        $this->admin = ($admin === "1" || $admin === true);
     }
 
     public static function getNullUser()
