@@ -102,7 +102,10 @@ class AccountManager implements ServiceProviderInterface
         if($this->user->getId() === $id){
             return $this->user;
         }
-        // TODO: finish
+        $user = $this->dba->getUserWithId($id);
+        if($user->getId() > -1){
+            return $user;
+        }
         return false;
     }
 }
