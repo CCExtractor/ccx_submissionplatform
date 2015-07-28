@@ -5,6 +5,7 @@
  */
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\objects\User;
 use Slim\App;
 
 class AccountController extends BaseController
@@ -21,12 +22,15 @@ class AccountController extends BaseController
     {
         $self = $this;
         $app->group('/account', function () use ($self) {
+            // Main page. If not logged in, redirect to login, otherwise to manage.
             $this->get('[/]', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 $url = $this->router->pathFor($self->getPageName().($this->account->isLoggedIn()?"_manage":"_login"));
                 return $response->withStatus(302)->withHeader('Location',$url);
             })->setName($self->getPageName());
+            // Login page logic
             $this->group('/login', function () use ($self) {
+                // GET, to show the login page
                 $this->get('', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
                     // CSRF values
@@ -39,6 +43,7 @@ class AccountController extends BaseController
 
                     return $this->view->render($response,'account/login.html.twig',$this->templateValues->getValues());
                 })->setName($self->getPageName()."_login");
+                // POST, to process a login attempt
                 $this->post('',function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
                     // Validate login
@@ -59,15 +64,61 @@ class AccountController extends BaseController
                     return $this->view->render($response,'account/login.html.twig',$this->templateValues->getValues());
                 });
             });
+            // Logout page logic
             $this->get('/logout', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 $this->account->performLogout();
                 $url = $this->router->pathFor("Home");
                 return $response->withStatus(302)->withHeader('Location',$url);
             })->setName($self->getPageName()."_logout");
-            $this->get('/recover[/{id:[0-9]+}]', function ($request, $response, $args) use ($self) {
-                $self->setDefaultBaseValues($this);
-                if(isset($args["id"]) && $this->account->getUser()->isAdmin()){
+            // Recover page logic
+            $this->group('/recover', function () use ($self) {
+                // GET: normal procedure for regular user
+                $this->get('', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    // CSRF values
+                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    // Message box data
+                    $this->templateValues->add("message_type", "warning");
+                    $this->templateValues->add("message_icon", "fa-warning");
+                    $this->templateValues->add("message", "In order to send you a password reset link, we need the email address linked to your account.");
+                    return $this->view->render($response,"account/recover.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName()."_recover");
+                // POST: normal procedure for regular user
+                $this->post('', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    $this->templateValues->add("message", "We could not retrieve an account linked to the given email address. Please try again");
+                    // Fetch user, and send recovery email if it exists
+                    if(isset($_POST["email"])){
+                        /** @var User $user */
+                        $user = $this->database->getUserWithEmail($_POST["email"]);
+                        if($user->getId() > -1){
+                            // We found the user, send recovery email and display ok message
+                            if($this->account->sendRecoverEmail($user)){
+                                return $this->view->render($response,"account/recover-ok.html.twig",$this->templateValues->getValues());
+                            } else {
+                                $this->templateValues->add("message","We could not send an email to this account. Please try again later, or get in touch.");
+                            }
+                        }
+                    }
+                    // CSRF values
+                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    // Message box data
+                    $this->templateValues->add("message_type", "error");
+                    $this->templateValues->add("message_icon", "fa-remove");
+                    return $this->view->render($response,"account/recover.html.twig",$this->templateValues->getValues());
+                });
+                // GET: admin only, recovery for a specific user
+                $this->get('/recover/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                    if(!$this->account->getUser()->isAdmin()){
+                        return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                    }
+                    $self->setDefaultBaseValues($this);
+                    // CSRF values
+                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
                     $user = $this->account->findUser($args["id"]);
                     if($user === false){
                         $d = $this->notFoundHandler;
@@ -75,23 +126,27 @@ class AccountController extends BaseController
                     }
                     $this->templateValues->add("user",$user);
                     return $this->view->render($response,"account/recover-user.html.twig",$this->templateValues->getValues());
-                }
-                // TODO: handle recover
-            })->setName($self->getPageName()."_recover");
+                })->setName($self->getPageName()."_recover_id");
+            });
+            // Register page logic
             $this->get('/register', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 // TODO: handle register
             })->setName($self->getPageName()."_register");
+            // Deactivate page logic
             $this->get('/deactivate[/{id:[0-9]+}]', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 // TODO: handle deactivate/anonimisation
             })->setName($self->getPageName()."_deactivate");
+            // User manage page logic
             $this->get('/manage', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 // TODO: handle manage
                 echo "manage";
             })->setName($self->getPageName()."_manage");
+            // View user page logic
             $this->group("/view", function () use ($self) {
+                // GET, Show a list of users if admin, or 403 if not.
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
 
@@ -101,6 +156,7 @@ class AccountController extends BaseController
                     }
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_view");
+                // GET user, show if admin or own page, 403 otherwise.
                 $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
 
@@ -116,7 +172,6 @@ class AccountController extends BaseController
                     }
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_view_id");
-                //
             });
         });
     }

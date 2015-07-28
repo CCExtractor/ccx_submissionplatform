@@ -18,3 +18,5 @@ define("BOT_TOKEN","my_token_here");
 define("REPOSITORY_OWNER","owner_or_organisation_here");
 // The name of the repository
 define("REPOSITORY_NAME","my_repo_name_here");
+// HMAC private key. This is used for the HMAC used during password reset procedure.
+define("HMAC_KEY","a_random_string_of_characters");

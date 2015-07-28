@@ -1,0 +1,13 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Password recovery</h3>
+    <div class="notice {{ message_type }}"><i class="fa {{ message_icon }} fa-large"></i> {{ message }}</div>
+    <form class="vertical" method="post" action="{{ path_for('My Account_recover') }}">
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" placeholder="email@address.com" />
+        <input type="hidden" name="csrf_name" value="{{ csrf_name }}" />
+        <input type="hidden" name="csrf_value" value="{{ csrf_value }}" />
+        <input type="submit" value="Send me a password recovery email" />
+    </form>
+{% endblock %}

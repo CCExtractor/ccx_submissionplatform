@@ -108,4 +108,9 @@ class AccountManager implements ServiceProviderInterface
         }
         return false;
     }
+
+    public function sendRecoverEmail(User $user){
+        // Create hash with HMAC to send
+        return true;
+    }
 }
