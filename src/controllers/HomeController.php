@@ -55,7 +55,7 @@ class HomeController extends BaseController
             $this->templateValues->add("ccx_last_release", $this->database->getLatestCCExtractorVersion());
             $this->templateValues->add("ccx_latest_commit", $commit);
 
-            return $this->view->render($response,'home.html.twig',$this->templateValues->getValues());
+            return $this->view->render($response,'home/home.html.twig',$this->templateValues->getValues());
         })->setName($this->getPageName());
     }
 }
