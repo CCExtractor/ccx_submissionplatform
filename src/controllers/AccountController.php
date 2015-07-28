@@ -37,7 +37,7 @@ class AccountController extends BaseController
                     $this->templateValues->add("message_icon", "fa-warning");
                     $this->templateValues->add("message", "You are not logged in currently, so you need to login to proceed.");
 
-                    return $this->view->render($response,'login.html.twig',$this->templateValues->getValues());
+                    return $this->view->render($response,'account/login.html.twig',$this->templateValues->getValues());
                 })->setName($self->getPageName()."_login");
                 $this->post('',function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
@@ -56,7 +56,7 @@ class AccountController extends BaseController
                     $this->templateValues->add("message_icon", "fa-remove");
                     $this->templateValues->add("message", "Login failed. Please try again");
 
-                    return $this->view->render($response,'login.html.twig',$this->templateValues->getValues());
+                    return $this->view->render($response,'account/login.html.twig',$this->templateValues->getValues());
                 });
             });
             $this->get('/logout', function ($request, $response, $args) use ($self) {
@@ -67,6 +67,15 @@ class AccountController extends BaseController
             })->setName($self->getPageName()."_logout");
             $this->get('/recover[/{id:[0-9]+}]', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
+                if(isset($args["id"]) && $this->account->getUser()->isAdmin()){
+                    $user = $this->account->findUser($args["id"]);
+                    if($user === false){
+                        $d = $this->notFoundHandler;
+                        return $d($request,$response);
+                    }
+                    $this->templateValues->add("user",$user);
+                    return $this->view->render($response,"account/recover-user.html.twig",$this->templateValues->getValues());
+                }
                 // TODO: handle recover
             })->setName($self->getPageName()."_recover");
             $this->get('/register', function ($request, $response, $args) use ($self) {
@@ -88,7 +97,7 @@ class AccountController extends BaseController
 
                     if($this->account->getUser()->isAdmin()){
                         $this->templateValues->add("users", $this->database->listUsers());
-                        return $this->view->render($response,"userlist.html.twig",$this->templateValues->getValues());
+                        return $this->view->render($response,"account/userlist.html.twig",$this->templateValues->getValues());
                     }
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_view");
@@ -100,9 +109,8 @@ class AccountController extends BaseController
                         if($user !== false){
                             $this->templateValues->add("user", $user);
                             // TODO: get the sumbitted samples
-                            return $this->view->render($response,"user.html.twig",$this->templateValues->getValues());
+                            return $this->view->render($response,"account/user.html.twig",$this->templateValues->getValues());
                         }
-                        // TODO: improve this?
                         $d = $this->notFoundHandler;
                         return $d($request,$response);
                     }
