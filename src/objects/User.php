@@ -49,12 +49,12 @@ class User
      */
     public function __construct($id, $name, $email, $hash="", $github=false, $admin=false)
     {
-        $this->id = $id;
+        $this->id = intval($id);
         $this->name = $name;
         $this->email = $email;
         $this->hash = $hash;
-        $this->github = $github;
-        $this->admin = $admin;
+        $this->github = ($github === "1");
+        $this->admin = ($admin === "1");
     }
 
     public static function getNullUser()
