@@ -64,7 +64,7 @@ $container->register($email);
 $github = new GitWrapper();
 $container->register($github);
 // Account Manager
-$account = new AccountManager($dba,$email);
+$account = new AccountManager($dba,$email,HMAC_KEY);
 $container->register($account);
 // Template Values
 $templateValues = new TemplateValues();

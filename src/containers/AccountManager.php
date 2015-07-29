@@ -14,6 +14,10 @@ use Slim\Views\Twig;
 class AccountManager implements ServiceProviderInterface
 {
     /**
+     * @var string
+     */
+    private $hmac;
+    /**
      * @var DatabaseLayer
      */
     private $dba;
@@ -29,10 +33,11 @@ class AccountManager implements ServiceProviderInterface
     /**
      * AccountManager constructor.
      */
-    public function __construct(DatabaseLayer $dba, EmailLayer $email)
+    public function __construct(DatabaseLayer $dba, EmailLayer $email, $hmac_key)
     {
         $this->dba = $dba;
         $this->email = $email;
+        $this->hmac = $hmac_key;
         $this->setup();
     }
 
@@ -117,7 +122,7 @@ class AccountManager implements ServiceProviderInterface
 
     public function sendRecoverEmail(User $user,Twig $twig, $base_url){
         $time = time() + 7200;
-        $hmac = self::getPasswordResetHMAC($user, $time);
+        $hmac = $this->getPasswordResetHMAC($user, $time);
         $message = $twig->getEnvironment()->loadTemplate("email/recoveryLink.txt.twig")->render([
             "base_url" => $base_url,
             "time" => $time,
@@ -135,7 +140,7 @@ class AccountManager implements ServiceProviderInterface
      *
      * @return string The HMAC that can be used to verify the userId, expires, client IP and old hash.
      */
-    private static function getPasswordResetHMAC(User $user, $expiration = null)
+    public function getPasswordResetHMAC(User $user, $expiration = null)
     {
         if ($expiration === null) {
             $expiration = time() + 7200;
@@ -144,6 +149,19 @@ class AccountManager implements ServiceProviderInterface
             "sha256",
             "userId=" . $user->getId() . "&expires=" . $expiration . "&oldHash=" .
             $user->getHash() . "&clientIpAddress=" . $_SERVER['REMOTE_ADDR'],
-            HMAC_KEY);
+            $this->hmac);
+    }
+
+    public function updatePassword(User $user, $newPassword, Twig $twig){
+        // Hash password
+        $hash = password_hash($newPassword,PASSWORD_DEFAULT);
+        $user->setHash($hash);
+        // Store it in the DB
+        if($this->dba->updateUser($user)){
+            // Send confirmation email
+            $message = $twig->getEnvironment()->loadTemplate("email/passwordReset.txt.twig")->render([]);
+            return $this->email->sendEmailToUser($user, "Your password has been reset", $message);
+        }
+        return false;
     }
 }

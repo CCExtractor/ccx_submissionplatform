@@ -107,4 +107,26 @@ class DatabaseLayer implements ServiceProviderInterface
         }
         return $result;
     }
+
+    public function updateUser(User $user)
+    {
+        $name = $user->getName();
+        $email = $user->getEmail();
+        $hash = $user->getHash();
+        $github = $user->isGithub();
+        $admin = $user->isAdmin();
+        $id = $user->getId();
+        $stmt = $this->pdo->prepare("UPDATE user SET name = :name, email = :email, password = :password, github_linked = :github, admin = :admin WHERE id = :id");
+        $stmt->bindParam(":name",$name,PDO::PARAM_STR);
+        $stmt->bindParam(":email",$email,PDO::PARAM_STR);
+        $stmt->bindParam(":password",$hash,PDO::PARAM_STR);
+        $stmt->bindParam(":github",$github,PDO::PARAM_BOOL);
+        $stmt->bindParam(":admin",$admin,PDO::PARAM_BOOL);
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+
+        if($stmt->execute()){
+            return $stmt->rowCount() === 1;
+        }
+        return false;
+    }
 }
