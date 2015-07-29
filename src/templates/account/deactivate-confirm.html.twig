@@ -4,8 +4,7 @@
     <h3>Account deactivation for {{ user.name }}</h3>
     <p>This action cannot be undone. Your details will be anonymized, and you will not longer be able to log in. Are you sure you want to do this?</p>
     <form method="post" action="{{ path_for("My Account_deactivate",{ "id": user.id }) }}">
-        <input type="hidden" name="csrf_name" value="{{ csrf_name }}" />
-        <input type="hidden" name="csrf_value" value="{{ csrf_value }}" />
+        {% include "csrf.html.twig" %}
         <p>
             <input type="button" class="green" value="No, I want to keep my account" onclick="history.back();" />
             <input type="submit" class="red" value="Yes, I'm sure I want to deactivate my account" />

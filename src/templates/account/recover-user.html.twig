@@ -4,8 +4,7 @@
     <h3>Password recovery</h3>
     <form class="vertical" method="post" action="{{ path_for('My Account_recover_id', {'id': user.id }) }}">
         <p>Are you sure you want to send a password recovery for {{ user.name }}?</p>
-        <input type="hidden" name="csrf_name" value="{{ csrf_name }}" />
-        <input type="hidden" name="csrf_value" value="{{ csrf_value }}" />
+        {% include "csrf.html.twig" %}
         <input type="submit" value="Send password recovery" />
     </form>
 {% endblock %}

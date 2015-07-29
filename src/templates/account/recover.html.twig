@@ -6,8 +6,7 @@
     <form class="vertical" method="post" action="{{ path_for('My Account_recover') }}">
         <label for="email">Email address</label>
         <input id="email" name="email" type="email" placeholder="email@address.com" />
-        <input type="hidden" name="csrf_name" value="{{ csrf_name }}" />
-        <input type="hidden" name="csrf_value" value="{{ csrf_value }}" />
+        {% include "csrf.html.twig" %}
         <input type="submit" value="Send me a password recovery email" />
     </form>
 {% endblock %}
