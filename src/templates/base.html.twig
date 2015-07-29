@@ -38,6 +38,12 @@
                 <li><i class="fa fa-li fa-pencil"></i> <a href="{{ path_for("My Account_manage", {"id": loggedInUser.id }) }}">Manage my account</a></li>
                 <li><i class="fa fa-li fa-sign-out"></i> <a href="{{ path_for("My Account_logout") }}">Log out</a></li>
             </ul>
+                {% if loggedInUser.isAdmin %}
+                    <h6>Admin shortcuts</h6>
+                    <ul class="icons">
+                        <li><i class="fa fa-li fa-list"></i> <a href="{{ path_for("My Account_view") }}">View users</a></li>
+                    </ul>
+                {% endif %}
             {% else %}
                 <h5>My Account</h5>
                 <ul class="icons">
