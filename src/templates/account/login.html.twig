@@ -13,11 +13,3 @@
         <input type="submit" value="Log in" />
     </form>
 {% endblock %}
-
-{% block sidebar %}
-    <h5>Actions</h5>
-    <ul class="icons">
-        <li><i class="fa fa-li fa-plus"></i> <a href="{{ path_for('My Account_register') }}">Register an account</a></li>
-        <li><i class="fa fa-li fa-support"></i> <a href="{{ path_for('My Account_recover') }}">Recover forgotten password</a></li>
-    </ul>
-{% endblock %}

@@ -35,9 +35,16 @@
             <h5>Welcome back, {{ loggedInUser.name }}</h5>
             <ul class="icons">
                 <li><i class="fa fa-li fa-eye"></i> <a href="{{ path_for("My Account_view_id", {"id": loggedInUser.id }) }}">View my submitted samples</a></li>
-                <li><i class="fa fa-li fa-pencil"></i> <a href="{{ path_for("My Account_manage") }}">Manage my account</a></li>
-                <li><i class="fa fa-li fa-power-off"></i> <a href="{{ path_for("My Account_logout") }}">Log out</a></li>
+                <li><i class="fa fa-li fa-pencil"></i> <a href="{{ path_for("My Account_manage", {"id": loggedInUser.id }) }}">Manage my account</a></li>
+                <li><i class="fa fa-li fa-sign-out"></i> <a href="{{ path_for("My Account_logout") }}">Log out</a></li>
             </ul>
+            {% else %}
+                <h5>My Account</h5>
+                <ul class="icons">
+                    <li><i class="fa fa-li fa-sign-in"></i> <a href="{{ path_for('My Account_login') }}">Log in</a></li>
+                    <li><i class="fa fa-li fa-plus"></i> <a href="{{ path_for('My Account_register') }}">Register</a></li>
+                    <li><i class="fa fa-li fa-support"></i> <a href="{{ path_for('My Account_recover') }}">Recover password</a></li>
+                </ul>
             {% endif %}
             {% block sidebar %}
             {% endblock %}
