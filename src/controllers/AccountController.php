@@ -97,6 +97,7 @@ class AccountController extends BaseController
                             // We found the user, send recovery email and display ok message
                             $base_url = (($this->environment["HTTPS"] === "on")?"https://":"http://").$this->environment["HTTP_HOST"];
                             if($this->account->sendRecoverEmail($user,$this->view,$base_url)){
+                                $this->templateValues->add("message","An email with instructions to reset the password has been sent.");
                                 return $this->view->render($response,"account/recover-ok.html.twig",$this->templateValues->getValues());
                             } else {
                                 $this->templateValues->add("message","We could not send an email to this account. Please try again later, or get in touch.");
@@ -112,21 +113,75 @@ class AccountController extends BaseController
                     return $this->view->render($response,"account/recover.html.twig",$this->templateValues->getValues());
                 });
                 // GET: recover procedure step 2: choosing a new password
-                $this->get('/step2?userId={id:[0-9]+}&expires={expires:[0-9]+}&hmac={hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
+                $this->get('/step2/{id:[0-9]+}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
-                    // CSRF values
-                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
-                    // TODO: finish
-                    echo "test";
-                    return $response->withBody("test");
+                    // Check expiration time
+                    if(time() <= $args["expires"]) {
+                        $user = $this->account->findUser($args["id"]);
+                        if ($user !== false) {
+                            // Check if there's been no tampering (and the password hasn't been changed yet with this token)
+                            $expectedHash = $this->account->getPasswordResetHMAC($user, $args["expires"]);
+                            if ($expectedHash === $args["hmac"]) {
+                                // Variables
+                                $this->templateValues->add("time", $args["expires"]);
+                                $this->templateValues->add("hmac", $args["hmac"]);
+                                $this->templateValues->add("user", $user);
+                                // CSRF values
+                                $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                                $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                                // Message box data
+                                $this->templateValues->add("message_type", "warning");
+                                $this->templateValues->add("message_icon", "fa-warning");
+                                $this->templateValues->add("message", "In order to proceed with the password reset, you need to pick a new password and confirm it by entering it a second time.");
+
+                                return $this->view->render($response,"account/recover-password.html.twig",$this->templateValues->getValues());
+                            }
+                        }
+                    }
+                    return $this->view->render($response,"account/invalid-token.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_recover_step2");
+                // POST: recover procedure step 2: choosing a new password
+                $this->post('/step2/{id:[0-9]+}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    // Check expiration time
+                    if(time() <= $args["expires"]) {
+                        $user = $this->account->findUser($args["id"]);
+                        if ($user !== false) {
+                            // Check if there's been no tampering (and the password hasn't been changed yet with this token)
+                            $expectedHash = $this->account->getPasswordResetHMAC($user, $args["expires"]);
+                            if ($expectedHash === $args["hmac"]) {
+                                // CSRF values
+                                $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                                $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                                // Message box data
+                                $this->templateValues->add("message_type", "error");
+                                $this->templateValues->add("message_icon", "fa-remove");
+                                $this->templateValues->add("message", "The given passwords do not match. Please try again.");
+                                // Check if passwords are set and are matching
+                                if(isset($_POST["password"]) && isset($_POST["password2"]) && $_POST["password"] !== "" && $_POST["password"] === $_POST["password2"]){
+                                    if($this->account->updatePassword($user,$_POST["password"],$this->view)){
+                                        $this->templateValues->add("message","The new password was set! You can now log in with it.");
+                                        return $this->view->render($response,"account/recover-ok.html.twig",$this->templateValues->getValues());
+                                    }
+                                    $this->templateValues->add("message", "Failed to update the password! Please try again, or get in touch.");
+                                }
+                                // Variables
+                                $this->templateValues->add("time", $args["expires"]);
+                                $this->templateValues->add("hmac", $args["hmac"]);
+                                $this->templateValues->add("user", $user);
+
+                                return $this->view->render($response,"account/recover-password.html.twig",$this->templateValues->getValues());
+                            }
+                        }
+                    }
+                    return $this->view->render($response,"account/invalid-token.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName()."_recover_step2_post");
                 // GET: admin only, recovery for a specific user
                 $this->get('/recover/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
                     if(!$this->account->getUser()->isAdmin()){
                         return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                     }
-                    $self->setDefaultBaseValues($this);
                     // CSRF values
                     $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
                     $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
@@ -138,6 +193,30 @@ class AccountController extends BaseController
                     $this->templateValues->add("user",$user);
                     return $this->view->render($response,"account/recover-user.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_recover_id");
+                // POST: admin only, recovery for a specific user
+                $this->post('/recover/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    if(!$this->account->getUser()->isAdmin()) {
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig",
+                            $this->templateValues->getValues()
+                        );
+                    }
+                    $user = $this->account->findUser($args["id"]);
+                    if($user === false){
+                        $d = $this->notFoundHandler;
+                        return $d($request,$response);
+                    }
+                    // We found the user, send recovery email and display ok message
+                    $base_url = (($this->environment["HTTPS"] === "on")?"https://":"http://").$this->environment["HTTP_HOST"];
+                    if($this->account->sendRecoverEmail($user,$this->view,$base_url)){
+                        $this->templateValues->add("message","An email with instructions to reset the password has been sent.");
+                        return $this->view->render($response,"account/recover-ok.html.twig",$this->templateValues->getValues());
+                    } else {
+                        $this->templateValues->add("message","We could not send an email to this account. Please try again later, or get in touch.");
+                    }
+                    $this->templateValues->add("user",$user);
+                    return $this->view->render($response,"account/recover-user.html.twig",$this->templateValues->getValues());
+                });
             });
             // Register page logic
             $this->get('/register', function ($request, $response, $args) use ($self) {
@@ -145,12 +224,55 @@ class AccountController extends BaseController
                 // TODO: handle register
             })->setName($self->getPageName()."_register");
             // Deactivate page logic
-            $this->get('/deactivate[/{id:[0-9]+}]', function ($request, $response, $args) use ($self) {
-                $self->setDefaultBaseValues($this);
-                // TODO: handle deactivate/anonimisation
-            })->setName($self->getPageName()."_deactivate");
+            $this->group('/deactivate/{id:[0-9]+}', function () use ($self) {
+                $this->get('', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    if (!$this->account->getUser()->isAdmin() && $this->account->getUser()->getId() !== intval($args["id"])) {
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig",
+                            $this->templateValues->getValues()
+                        );
+                    }
+                    $user = $this->account->findUser($args["id"]);
+                    if ($user === false) {
+                        $d = $this->notFoundHandler;
+                        return $d($request, $response);
+                    }
+                    $this->templateValues->add("user",$user);
+                    // CSRF values
+                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    return $this->view->render($response,"account/deactivate-confirm.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName() . "_deactivate");
+                $this->post('', function($request, $response, $args) use ($self){
+                    $self->setDefaultBaseValues($this);
+                    if (!$this->account->getUser()->isAdmin() && $this->account->getUser()->getId() !== intval($args["id"])) {
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig",
+                            $this->templateValues->getValues()
+                        );
+                    }
+                    /** @var User $user */
+                    $user = $this->account->findUser($args["id"]);
+                    if ($user === false) {
+                        $d = $this->notFoundHandler;
+                        return $d($request, $response);
+                    }
+                    $user->setName("Anonymized");
+                    $user->setEmail("ccextractor".$user->getId()."@canihavesome.coffee");
+                    $user->setHash("");
+                    if($this->database->updateUser($user)){
+                        if($this->account->getUser()->getId() === intval($args["id"])){
+                            // Log out user
+                            $this->account->performLogout();
+                            $this->templateValues->add("isLoggedIn", $this->account->isLoggedIn());
+                            $this->templateValues->add("loggedInUser", $this->account->getUser());
+                        }
+                        return $this->view->render($response,"account/deactivate-ok.html.twig",$this->templateValues->getValues());
+                    }
+                    return $this->view->render($response,"account/deactivate-fail.html.twig",$this->templateValues->getValues());
+                });
+            });
             // User manage page logic
-            $this->get('/manage', function ($request, $response, $args) use ($self) {
+            $this->get('/manage/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 // TODO: handle manage
                 echo "manage";
