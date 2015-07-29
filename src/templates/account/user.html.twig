@@ -7,5 +7,7 @@
     <p>Email: {{ user.email }}</p>
     <p>GitHub linked? {{ user.isGithub ? "Yes":"No" }}</p>
     <h4>Submitted samples</h4>
-    <p>TO DO</p>
+    {% set noSampleMessage="This user didn't submit any samples yet." %}
+    {% set useSampleOriginal=true %}
+    {% include "sample-info/list-samples.html.twig" %}
 {% endblock %}

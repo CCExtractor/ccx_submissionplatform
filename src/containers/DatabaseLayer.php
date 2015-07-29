@@ -129,4 +129,15 @@ class DatabaseLayer implements ServiceProviderInterface
         }
         return false;
     }
+
+    public function getSamplesForUser(User $user){
+        $id = $user->getId();
+        $p = $this->pdo->prepare("SELECT s.* FROM sample s JOIN upload u ON s.id = u.sample_id WHERE u.user_id = :id ORDER BY s.id ASC;");
+        $p->bindParam(":id",$id,PDO::PARAM_INT);
+        $result = [];
+        if($p->execute()){
+            $result = $p->fetchAll();
+        }
+        return $result;
+    }
 }

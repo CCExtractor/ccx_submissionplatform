@@ -219,10 +219,31 @@ class AccountController extends BaseController
                 });
             });
             // Register page logic
-            $this->get('/register', function ($request, $response, $args) use ($self) {
-                $self->setDefaultBaseValues($this);
-                // TODO: handle register
-            })->setName($self->getPageName()."_register");
+            $this->group('/register', function () use ($self){
+                // GET: first page of registering procedure
+                $this->get('/register', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    // CSRF values
+                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    // TODO: handle register
+                })->setName($self->getPageName()."_register");
+                // POST: processing the register data
+                $this->post('/register', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    // TODO: handle register
+                })->setName($self->getPageName()."_register");
+                // GET: actual creation and activation of the account
+                $this->get('/register/', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    // TODO: handle register
+                })->setName($self->getPageName()."_register_activate");
+                // POST: processing of the actual creation
+                $this->post('/register/', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    // TODO: handle register
+                });
+            });
             // Deactivate page logic
             $this->group('/deactivate/{id:[0-9]+}', function () use ($self) {
                 $this->get('', function ($request, $response, $args) use ($self) {
@@ -296,7 +317,7 @@ class AccountController extends BaseController
                         $user = $this->account->findUser($args["id"]);
                         if($user !== false){
                             $this->templateValues->add("user", $user);
-                            // TODO: get the sumbitted samples
+                            $this->templateValues->add("samples", $this->database->getSamplesForUser($user));
                             return $this->view->render($response,"account/user.html.twig",$this->templateValues->getValues());
                         }
                         $d = $this->notFoundHandler;
