@@ -25,7 +25,10 @@ class AccountController extends BaseController
             // Main page. If not logged in, redirect to login, otherwise to manage.
             $this->get('[/]', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
-                $url = $this->router->pathFor($self->getPageName().($this->account->isLoggedIn()?"_manage":"_login"));
+                $url = $this->router->pathFor($self->getPageName()."_login");
+                if($this->account->isLoggedIn()){
+                    $url = $this->router->pathFor($self->getPageName()."_manage",["id" => $this->account->getUser()->getId()]);
+                }
                 return $response->withStatus(302)->withHeader('Location',$url);
             })->setName($self->getPageName());
             // Login page logic
@@ -221,31 +224,113 @@ class AccountController extends BaseController
             // Register page logic
             $this->group('/register', function () use ($self){
                 // GET: first page of registering procedure
-                $this->get('/register', function ($request, $response, $args) use ($self) {
+                $this->get('', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
                     // CSRF values
                     $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
                     $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
-                    // TODO: handle register
+                    // Message
+                    $this->templateValues->add("type","warning");
+                    $this->templateValues->add("type_icon","fa-warning");
+                    $this->templateValues->add("message","The registration process is split up in two steps. Please enter your email address first so we can verify it exists.");
+                    // Render
+                    return $this->view->render($response,"account/registration.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_register");
                 // POST: processing the register data
-                $this->post('/register', function ($request, $response, $args) use ($self) {
+                $this->post('', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
-                    // TODO: handle register
+                    $this->templateValues->add("message","The given email address is invalid.");
+                    if(isset($_POST["email"]) && is_email($_POST["email"])){
+                        // Verify if email is not already existing
+                        $user = $this->database->getUserWithEmail($_POST["email"]);
+                        if($user->getId() === -1){
+                            // Send verification email using a hash
+                            $base_url = (($this->environment["HTTPS"] === "on")?"https://":"http://").$this->environment["HTTP_HOST"];
+                            if($this->account->sendRegistrationEmail($_POST["email"],$this->view, $base_url)){
+                                $this->templateValues->add("message","An email was sent to the given email address. Please follow the instructions to create an account.");
+                                return $this->view->render($response,"account/registration-success.html.twig",$this->templateValues->getValues());
+                            }
+                            $this->templateValues->add("message","Could not send an email. Please try again later, or get in touch.");
+                        } else {
+                            $this->templateValues->add("message", "There is already a user with this email address.");
+                        }
+                    }
+                    // Message
+                    $this->templateValues->add("type","error");
+                    $this->templateValues->add("type_icon","fa-remove");
+                    // CSRF values
+                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    // Render
+                    return $this->view->render($response,"account/registration.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_register");
                 // GET: actual creation and activation of the account
-                $this->get('/register/', function ($request, $response, $args) use ($self) {
+                $this->get('/{email}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
-                    // TODO: handle register
+                    // Check expiration time
+                    if(time() <= $args["expires"]) {
+                        // Check if there's been no tampering (and the password hasn't been changed yet with this token)
+                        $expectedHash = $this->account->getRegistrationEmailHMAC($args["email"], $args["expires"]);
+                        if ($expectedHash === $args["hmac"]) {
+                            // Variables
+                            $this->templateValues->add("time", $args["expires"]);
+                            $this->templateValues->add("hmac", $args["hmac"]);
+                            $this->templateValues->add("email", $args["email"]);
+                            // CSRF values
+                            $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                            $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                            // Message
+                            $this->templateValues->add("type","warning");
+                            $this->templateValues->add("type_icon","fa-warning");
+                            $this->templateValues->add("message","To complete the registration we need your name and a password.");
+                            // Render
+                            return $this->view->render($response,"account/registration-account.html.twig",$this->templateValues->getValues());
+                        }
+                    }
+                    return $this->view->render($response,"account/invalid-email-token.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_register_activate");
                 // POST: processing of the actual creation
-                $this->post('/register/', function ($request, $response, $args) use ($self) {
+                $this->post('/{email}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
-                    // TODO: handle register
+                    // Check expiration time
+                    if(time() <= $args["expires"]) {
+                        // Check if there's been no tampering (and the password hasn't been changed yet with this token)
+                        $expectedHash = $this->account->getRegistrationEmailHMAC($args["email"], $args["expires"]);
+                        if ($expectedHash === $args["hmac"]) {
+                            if(isset($_POST["name"]) && isset($_POST["password"]) && isset($_POST["password2"]) &&
+                                $_POST["password"] !== "" && $_POST["name"] !== "" && $_POST["password"] === $_POST["password2"]){
+                                // Register account
+                                $hash = password_hash($_POST["password"],PASSWORD_DEFAULT);
+                                $user = new User(-1,$_POST["name"],$args["email"],$hash);
+                                if($this->account->registerUser($user,$this->view)){
+                                    $this->templateValues->add("message","The account was created successfully. You are now logged in.");
+                                    $this->templateValues->add("isLoggedIn", $this->account->isLoggedIn());
+                                    $this->templateValues->add("loggedInUser", $this->account->getUser());
+                                    return $this->view->render($response,"account/registration-success.html.twig",$this->templateValues->getValues());
+                                }
+                            }
+                            // Return error message
+                            // Variables
+                            $this->templateValues->add("time", $args["expires"]);
+                            $this->templateValues->add("hmac", $args["hmac"]);
+                            $this->templateValues->add("email", $args["email"]);
+                            // CSRF values
+                            $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                            $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                            // Message
+                            $this->templateValues->add("type","error");
+                            $this->templateValues->add("type_icon","fa-remove");
+                            $this->templateValues->add("message","One of the values wasn't filled in correctly!");
+                            // Render
+                            return $this->view->render($response,"account/registration-account.html.twig",$this->templateValues->getValues());
+                        }
+                    }
+                    return $this->view->render($response,"account/invalid-email-token.html.twig",$this->templateValues->getValues());
                 });
             });
             // Deactivate page logic
             $this->group('/deactivate/{id:[0-9]+}', function () use ($self) {
+                // GET: verify access and request confirmation
                 $this->get('', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->isAdmin() && $this->account->getUser()->getId() !== intval($args["id"])) {
@@ -264,6 +349,7 @@ class AccountController extends BaseController
                     $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
                     return $this->view->render($response,"account/deactivate-confirm.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName() . "_deactivate");
+                // POST: process confirmation
                 $this->post('', function($request, $response, $args) use ($self){
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->isAdmin() && $this->account->getUser()->getId() !== intval($args["id"])) {

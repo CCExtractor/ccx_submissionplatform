@@ -164,4 +164,44 @@ class AccountManager implements ServiceProviderInterface
         }
         return false;
     }
+
+    public function sendRegistrationEmail($email, Twig $twig, $base_url){
+        // Create a 24-hour valid timestamp
+        $expiration = time() + 86400;
+        // Create HMAC with email & timestamp
+        $hmac = $this->getRegistrationEmailHMAC($email,$expiration);
+        // Send email
+        $message = $twig->getEnvironment()->loadTemplate("email/registration-email.txt.twig")->render([
+            "email" => $email,
+            "time" => $expiration,
+            "hmac" => $hmac,
+            "base_url" => $base_url
+        ]);
+        return $this->email->sendEmail($email, $email, "Email verification for registration request", $message);
+    }
+
+    public function getRegistrationEmailHMAC($email, $expiration)
+    {
+        if ($expiration === null) {
+            $expiration = time() + 7200;
+        }
+        return hash_hmac(
+            "sha256",
+            "email=" . $email . "&expires=" . $expiration . "&clientIpAddress=" . $_SERVER['REMOTE_ADDR'],
+            $this->hmac);
+    }
+
+    public function registerUser(User $user, Twig $twig){
+        $id = $this->dba->registerUser($user);
+        if($id > -1){
+            // User stored in DB, send email and log him in
+            $user->setId($id);
+            $this->user = $user;
+            $this->store();
+            // Send email
+            $message = $twig->getEnvironment()->loadTemplate("email/registration_ok.txt.twig")->render([]);
+            return $this->email->sendEmailToUser($user, "Account successfully created", $message);
+        }
+        return false;
+    }
 }

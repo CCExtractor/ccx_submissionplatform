@@ -1,0 +1,12 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Register a new account</h3>
+    <div class="notice {{ type }}"><i class="fa {{ type_icon }} fa-large"></i> {{ message }}</div>
+    <form class="vertical" method="post" action="{{ path_for('My Account_register') }}">
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" placeholder="email@address.com" />
+        {% include "csrf.html.twig" %}
+        <input type="submit" value="Send verification email" />
+    </form>
+{% endblock %}
