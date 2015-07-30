@@ -1,0 +1,15 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Upload a new sample through FTP</h3>
+    <p>Below you can find the login details so you can upload your sample.</p>
+    <p><strong>These credentials are <em>for you alone</em>! This will guarantee your privacy. If you share them, your samples are no longer guaranteed to be viewable by you alone.</strong></p>
+    <blockquote class="small col_12">
+        <div class="col_2">Server:</div><div class="col_10">{{ host }}</div>
+        <div class="col_2">Port:</div><div class="col_10">{{ port }}</div>
+        <div class="col_2">Username:</div><div class="col_10">{{ username }}</div>
+        <div class="col_2">Password:</div><div class="col_10">{{ password }}</div>
+    </blockquote>
+    <!-- FUTURE: add auto-generated files for FileZilla, etc. -->
+    <p>After uploading, the sample will be processed after a short amount of time, which means that it will show up in the unprocessed samples queue, and no longer be accessible in the FTP folder.</p>
+{% endblock %}
