@@ -86,7 +86,7 @@ $container['notFoundHandler'] = function ($c) {
 $pages = [
     new HomeController(),
     new SampleInfoController(),
-    // new UploadController(),
+    new UploadController(),
     // new TestSuiteController(),
     new AccountController()
 ];
