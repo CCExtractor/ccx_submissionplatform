@@ -1,0 +1,6 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Login required</h3>
+    <p>Sorry, but you need to log in in order to access this page. You can log in <a href="{{ path_for("My Account_login") }}">here</a> or <a href="{{ path_for("My Account_register") }}">register</a> an account.</p>
+{% endblock %}
