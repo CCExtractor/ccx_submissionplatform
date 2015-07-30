@@ -396,8 +396,62 @@ class AccountController extends BaseController
                 // POST: process form
                 $this->post('', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
-                    if(intval($args["id"]) === $this->account->getUser()->getId()){
-                        // TODO: handle manage
+                    /** @var User $user */
+                    $user = $this->account->getUser();
+                    if(intval($args["id"]) === $user->getId()){
+                        // Message box data
+                        $this->templateValues->add("message_type", "error");
+                        $this->templateValues->add("message_icon", "fa-remove");
+                        $this->templateValues->add("message", "Some values were not filled in correctly, please try again");
+
+                        // Check if the minimum values have been set
+                        if(isset($_POST["name"]) && isset($_POST["email"]) && isset($_POST["password"])){
+                            // Verify that we can change (password must be correct)
+                            if(password_verify($_POST["password"], $user->getHash())){
+                                // Verify values
+                                if($_POST["name"] !== $user->getName()){
+                                    $user->setName($_POST["name"]);
+                                }
+                                $oldEmail = null;
+                                if(is_email($_POST["email"]) && $_POST["email"] !== $user->getEmail()){
+                                    $oldEmail = $user->setEmail($_POST["email"]);
+                                }
+                                $password = false;
+                                if(isset($_POST["new-password"]) && isset($_POST["new-password2"]) &&
+                                    $_POST["new-password"] !== "" && $_POST["new-password"] === $_POST["new-password2"]){
+                                    // Update password
+                                    $user->setHash(password_hash($_POST["new-password"], PASSWORD_DEFAULT));
+                                    $password = true;
+                                }
+                                // Save changes in the database
+                                if($this->database->updateUser($user)){
+                                    $this->account->setUser($user);
+                                    if($oldEmail !== null){
+                                        // Send email to old addresses to indicate a change
+                                        $message = $this->view->getEnvironment()->loadTemplate("email/email_changed.txt.twig")->render(["new_email" => $user->getEmail()]);
+                                        $this->email->sendEmail($oldEmail, $user->getName(), "Email address changed", $message);
+                                    }
+                                    if($password){
+                                        // Send email to indicate password change
+                                        $message = $this->view->getEnvironment()->loadTemplate("email/password_changed.txt.twig")->render([]);
+                                        if($oldEmail !== null) {
+                                            $this->email->sendEmail($oldEmail, $user->getName(), "Password changed", $message);
+                                        }
+                                        $this->email->sendEmailToUser($user, "Password changed", $message);
+                                    }
+                                    // Message box data
+                                    $this->templateValues->add("message_type", "success");
+                                    $this->templateValues->add("message_icon", "fa-check");
+                                    $this->templateValues->add("message", "The changes were stored successfully.");
+                                }
+                            }
+                        }
+                        $this->templateValues->add("user",$this->account->getUser());
+                        // CSRF values
+                        $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                        $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                        // Render
+                        return $this->view->render($response,"account/manage.html.twig",$this->templateValues->getValues());
                     }
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                 });
