@@ -91,3 +91,13 @@ yes
 And do the same for `/etc/pure-ftpd/conf/CreateHomeDir`.
 
 After this you can restart Pure-FTPD with `sudo /etc/init.d/pure-ftpd-mysql restart`
+
+## Contributing
+
+If you want to help this project forward, or have a solution for some of the issues or bugs, don't hesitate to help! You can fork the project, create a branch for the issue/problem/... and afterwards create a pull request for it.
+
+It will be reviewed as soon as possible.
+
+## Security
+
+If you discover any security related issues, please email ccextractor@canihavesome.coffee instead of using the issue tracker.
