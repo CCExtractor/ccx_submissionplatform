@@ -75,10 +75,14 @@ class User
 
     /**
      * @param int $id
+     *
+     * @return int
      */
     public function setId($id)
     {
+        $old = $this->id;
         $this->id = $id;
+        return $old;
     }
 
     /**
@@ -91,10 +95,14 @@ class User
 
     /**
      * @param string $name
+     *
+     * @return string
      */
     public function setName($name)
     {
+        $old = $this->name;
         $this->name = $name;
+        return $old;
     }
 
     /**
@@ -107,10 +115,14 @@ class User
 
     /**
      * @param string $email
+     *
+     * @return string
      */
     public function setEmail($email)
     {
+        $old = $this->email;
         $this->email = $email;
+        return $old;
     }
 
     /**
@@ -123,10 +135,14 @@ class User
 
     /**
      * @param string $hash
+     *
+     * @return string
      */
     public function setHash($hash)
     {
+        $old = $this->hash;
         $this->hash = $hash;
+        return $old;
     }
 
     /**
@@ -139,10 +155,14 @@ class User
 
     /**
      * @param boolean $github
+     *
+     * @return bool
      */
     public function setGithub($github)
     {
+        $old = $this->github;
         $this->github = $github;
+        return $old;
     }
 
     /**
@@ -155,9 +175,13 @@ class User
 
     /**
      * @param boolean $admin
+     *
+     * @return bool
      */
     public function setAdmin($admin)
     {
+        $old = $this->admin;
         $this->admin = $admin;
+        return $old;
     }
 }
