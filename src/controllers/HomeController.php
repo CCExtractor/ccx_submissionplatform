@@ -29,7 +29,7 @@ class HomeController extends BaseController
         $app->get('/[home]',function($request, $response, $args) use ($self) {
             $self->setDefaultBaseValues($this);
             // Get latest GitHub commit
-            // TODO: implement caching
+            // FIXME: implement caching
             $token = new Token(BOT_TOKEN);
             $this->github->setToken($token);
             $ref = "heads/master";
