@@ -80,6 +80,9 @@ MySQLGetBandwidthUL SELECT ULBandwidth FROM ftpd WHERE User="\L"AND status="1" A
 MySQLGetBandwidthDL SELECT DLBandwidth FROM ftpd WHERE User="\L"AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
 MySQLGetQTASZ   SELECT QuotaSize FROM ftpd WHERE User="\L"AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
 MySQLGetQTAFS   SELECT QuotaFiles FROM ftpd WHERE User="\L"AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
+# Override queries for UID & GID
+MYSQLDefaultUID 2015 # Set the UID of the ftpuser here
+MYSQLDefaultGID 2015 # Set the GID of the ftpgroup here
 ```
 
 Create a file `/etc/pure-ftpd/conf/ChrootEveryone` with the following contents:
