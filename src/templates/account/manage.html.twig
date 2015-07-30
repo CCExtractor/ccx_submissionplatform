@@ -1,0 +1,40 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Manage your account</h3>
+    <p>Below you can change the settings of your account.</p>
+    {% if message is defined %}
+    <div class="notice {{ message_type }}"><i class="fa {{ message_icon }} fa-large"></i> {{ message }}</div>
+    {% endif %}
+    <form class="vertical" method="post" action="{{ path_for('My Account_manage', { 'id': user.id }) }}">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" value="{{ user.name }}" />
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" value="{{ user.email }}" />
+        <label for="new-password">New password**</label>
+        <input id="new-password" name="new-password" type="password" />
+        <label for="new-password2">Repeat new password**</label>
+        <input id="new-password2" name="new-password2" type="password" />
+        <label for="password">Current password*</label>
+        <input id="password" name="password" type="password" />
+        {% include "csrf.html.twig" %}
+        <input type="submit" value="Save changes" />
+        <p>* Necessary to save any changes<br />** Leave blank if you don't want to change your password</p>
+    </form>
+{% endblock %}
+
+{% block sidebar %}
+    <h5>My account</h5>
+    <ul class="icons">
+        {% if user.isGithub %}
+            {% set link_icon="fa-chain-broken" %}
+            {% set link_text="unlink" %}
+        {% else %}
+            {% set link_icon="fa-chain" %}
+            {% set link_text="link" %}
+        {% endif %}
+        <!-- TODO: provide links for these action(s) -->
+        <li><i class="fa fa-li {{ link_icon }}"></i> <a href="">{{ link_text }} GitHub</a></li>
+        <li><i class="fa fa-li fa-trash-o"></i> <a href="{{ path_for('My Account_deactivate', { 'id': user.id }) }}">Deactivate my account</a></li>
+    </ul>
+{% endblock %}

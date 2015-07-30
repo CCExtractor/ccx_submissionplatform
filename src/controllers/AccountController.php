@@ -379,11 +379,30 @@ class AccountController extends BaseController
                 });
             });
             // User manage page logic
-            $this->get('/manage/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
-                $self->setDefaultBaseValues($this);
-                // TODO: handle manage
-                echo "manage";
-            })->setName($self->getPageName()."_manage");
+            $this->group('/manage/{id:[0-9]+}', function () use ($self) {
+                // GET: view the edit form for a user.
+                $this->get('', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    if(intval($args["id"]) === $this->account->getUser()->getId()){
+                        $this->templateValues->add("user",$this->account->getUser());
+                        // CSRF values
+                        $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                        $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                        // Render
+                        return $this->view->render($response,"account/manage.html.twig",$this->templateValues->getValues());
+                    }
+                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName()."_manage");
+                // POST: process form
+                $this->post('', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    if(intval($args["id"]) === $this->account->getUser()->getId()){
+                        // TODO: handle manage
+                    }
+                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                });
+            });
+
             // View user page logic
             $this->group("/view", function () use ($self) {
                 // GET, Show a list of users if admin, or 403 if not.
