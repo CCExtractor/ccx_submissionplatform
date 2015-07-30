@@ -10,6 +10,26 @@ use Pimple\ServiceProviderInterface;
 
 class FTPConnector implements ServiceProviderInterface
 {
+    /**
+     * @var string
+     */
+    private $host;
+    /**
+     * @var int
+     */
+    private $port;
+
+    /**
+     * FTPConnector constructor.
+     *
+     * @param $host
+     * @param $port
+     */
+    public function __construct($host, $port)
+    {
+        $this->host = $host;
+        $this->port = $port;
+    }
 
     /**
      * Registers services on the given container.
@@ -22,5 +42,21 @@ class FTPConnector implements ServiceProviderInterface
     public function register(Container $pimple)
     {
         $pimple["FTPConnector"] = $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHost()
+    {
+        return $this->host;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPort()
+    {
+        return $this->port;
     }
 }

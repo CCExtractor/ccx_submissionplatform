@@ -2,12 +2,14 @@
 use org\ccextractor\submissionplatform\containers\AccountManager;
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\containers\EmailLayer;
+use org\ccextractor\submissionplatform\containers\FTPConnector;
 use org\ccextractor\submissionplatform\containers\GitWrapper;
 use org\ccextractor\submissionplatform\containers\TemplateValues;
 use org\ccextractor\submissionplatform\controllers\AccountController;
 use org\ccextractor\submissionplatform\controllers\HomeController;
 use org\ccextractor\submissionplatform\controllers\IController;
 use org\ccextractor\submissionplatform\controllers\SampleInfoController;
+use org\ccextractor\submissionplatform\controllers\UploadController;
 use Slim\App;
 use Slim\Container;
 use Slim\Csrf\Guard;
@@ -17,7 +19,7 @@ use Slim\Views\TwigExtension;
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-session_start(); // TODO: replace with session middleware
+session_start(); // FIXME: replace with session middleware
 
 include_once '../src/configuration.php';
 require '../vendor/autoload.php';
@@ -56,7 +58,7 @@ $dba = new DatabaseLayer(DATABASE_SOURCE_NAME, DATABASE_USERNAME, DATABASE_PASSW
 ]);
 $container->register($dba);
 // Email container
-// TODO: replace on full launch
+// FIXME: replace on full launch
 $host = "canihavesome.coffee"; //$app->environment["HTTP_HOST"];
 $email = new EmailLayer(AMAZON_SES_USER, AMAZON_SES_PASS, $host);
 $container->register($email);
@@ -69,6 +71,9 @@ $container->register($account);
 // Template Values
 $templateValues = new TemplateValues();
 $container->register($templateValues);
+// FTP Connector
+$ftp = new FTPConnector($app->environment["HTTP_HOST"],22);
+$container->register($ftp);
 
 //Override the default Not Found Handler
 $container['notFoundHandler'] = function ($c) {
@@ -91,7 +96,7 @@ $pages = [
     new AccountController()
 ];
 
-// TODO: add global middleware: session, authentication, ...
+// FUTURE: add global middleware: session, authentication, ...
 
 $templateValues->add("pages",$pages);
 
