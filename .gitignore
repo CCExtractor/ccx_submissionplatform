@@ -36,6 +36,8 @@ vendor/**
 
 # Twig cache
 twig_cache/**
+# But allow the index file
+!twig_cache/index.html
 
 # Passwords and other sensitive things
 src/configuration.php
