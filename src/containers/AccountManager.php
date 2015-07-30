@@ -87,6 +87,11 @@ class AccountManager implements ServiceProviderInterface
         return $this->user->getId() > -1;
     }
 
+    public function setUser(User $user){
+        $this->user = $user;
+        $this->store();
+    }
+
     public function getUser(){
         return $this->user;
     }
@@ -123,7 +128,7 @@ class AccountManager implements ServiceProviderInterface
     public function sendRecoverEmail(User $user,Twig $twig, $base_url){
         $time = time() + 7200;
         $hmac = $this->getPasswordResetHMAC($user, $time);
-        $message = $twig->getEnvironment()->loadTemplate("email/recoveryLink.txt.twig")->render([
+        $message = $twig->getEnvironment()->loadTemplate("email/recovery_link.txt.twig")->render([
             "base_url" => $base_url,
             "time" => $time,
             "hmac" => $hmac,
@@ -159,7 +164,7 @@ class AccountManager implements ServiceProviderInterface
         // Store it in the DB
         if($this->dba->updateUser($user)){
             // Send confirmation email
-            $message = $twig->getEnvironment()->loadTemplate("email/passwordReset.txt.twig")->render([]);
+            $message = $twig->getEnvironment()->loadTemplate("email/password_reset.txt.twig")->render([]);
             return $this->email->sendEmailToUser($user, "Your password has been reset", $message);
         }
         return false;
@@ -171,7 +176,7 @@ class AccountManager implements ServiceProviderInterface
         // Create HMAC with email & timestamp
         $hmac = $this->getRegistrationEmailHMAC($email,$expiration);
         // Send email
-        $message = $twig->getEnvironment()->loadTemplate("email/registration-email.txt.twig")->render([
+        $message = $twig->getEnvironment()->loadTemplate("email/registration_email.txt.twig")->render([
             "email" => $email,
             "time" => $expiration,
             "hmac" => $hmac,
