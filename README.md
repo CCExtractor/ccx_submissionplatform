@@ -69,8 +69,8 @@ MYSQLUser       user
 MYSQLPassword   ftpdpass
 # The database name configured in the DATABASE_SOURCE_NAME dsn string in the configuration
 MYSQLDatabase   pureftpd
-# For now we use md5. This is not really an issue, given the fact that the passwords for the FTP accounts will be randomly generated and not linked to the user itself.
-MYSQLCrypt      md5
+# For now we use plaintext. While this is terribly insecure in case of a database leakage, it's not really an issue, given the fact that the passwords for the FTP accounts will be randomly generated and hence do not contain sensitive user info (we need to show the password on the site after all).
+MYSQLCrypt      plaintext
 # Queries
 MYSQLGetPW      SELECT Password FROM ftpd WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
 MYSQLGetUID     SELECT Uid FROM ftpd WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
