@@ -19,7 +19,7 @@
                 <td>
                     <a href="{{ path_for('My Account_view_id', { 'id': user.id }) }}" title="View user info"><i class="fa fa-info-circle"></i></a>&nbsp;
                     <a href="{{ path_for('My Account_recover_id', { 'id': user.id }) }}" title="Send password recovery for user"><i class="fa fa-support"></i></a>&nbsp;
-                    <a href="{{ path_for('My Account_deactivate', { 'id': user.id }) }}" title="Deactivate user"><i class="fa fa-chain-broken"></i></a>
+                    <a href="{{ path_for('My Account_deactivate', { 'id': user.id }) }}" title="Deactivate user"><i class="fa fa-trash-o"></i></a>
                 </td>
             </tr>
         {% endfor %}
