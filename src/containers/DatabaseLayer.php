@@ -194,4 +194,18 @@ class DatabaseLayer implements ServiceProviderInterface
         }
         return false;
     }
+
+    public function getForbiddenExtensions()
+    {
+        $result = [];
+        $stmt = $this->pdo->query("SELECT * FROM blacklist_extension ORDER BY extension ASC;");
+        if($stmt !== false && $stmt->rowCount() > 0){
+            $data = $stmt->fetch();
+            while($data !== false){
+                $result[] = $data["extension"];
+                $data = $stmt->fetch();
+            }
+        }
+        return $result;
+    }
 }
