@@ -184,7 +184,7 @@ class DatabaseLayer implements ServiceProviderInterface
         $stmt = $this->pdo->prepare("INSERT INTO ftpd VALUES (:id,:user,:status,:password,:dir,:ipaccess,:quota);");
         $stmt->bindParam(":id",$id,PDO::PARAM_INT);
         $stmt->bindParam(":user",$name,PDO::PARAM_STR);
-        $stmt->bindParam(":status",$status,PDO::PARAM_INT);
+        $stmt->bindParam(":status",$status,PDO::PARAM_STR);
         $stmt->bindParam(":password",$password,PDO::PARAM_STR);
         $stmt->bindParam(":dir",$dir,PDO::PARAM_STR);
         $stmt->bindParam(":ipaccess",$ip_access,PDO::PARAM_STR);
