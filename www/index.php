@@ -52,10 +52,7 @@ $view->getEnvironment()->addExtension(new Twig_Extensions_Extension_I18n());
 $container->register($view);
 
 // Database
-$dba = new DatabaseLayer(DATABASE_SOURCE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD,[
-    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8",
-    PDO::ATTR_PERSISTENT => true
-]);
+$dba = new DatabaseLayer(DATABASE_SOURCE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD);
 $container->register($dba);
 // Email container
 // FIXME: replace on full launch
