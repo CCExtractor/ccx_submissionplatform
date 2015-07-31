@@ -5,6 +5,7 @@
  */
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\objects\FTPCredentials;
 use Slim\App;
 
 class UploadController extends BaseController
@@ -36,9 +37,16 @@ class UploadController extends BaseController
                 if($this->account->isLoggedIn()){
                     $this->templateValues->add("host", $this->FTPConnector->getHost());
                     $this->templateValues->add("port", $this->FTPConnector->getPort());
-
-                    $this->templateValues->add("username", "TODO");
-                    $this->templateValues->add("password", "TODO");
+                    // Fetch FTP username & password for user
+                    /** @var FTPCredentials $credentials */
+                    $credentials = $this->FTPConnector->getFTPCredentialsForUser($this->account->getUser());
+                    if($credentials !== false) {
+                        $this->templateValues->add("username", $credentials->getName());
+                        $this->templateValues->add("password", $credentials->getPassword());
+                    } else {
+                        $this->templateValues->add("username", "Error...");
+                        $this->templateValues->add("password", "Please get in touch...");
+                    }
                     // TODO: finish
                     return $this->view->render($response,"upload/explain-ftp.html.twig",$this->templateValues->getValues());
                 }

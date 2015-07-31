@@ -5,6 +5,8 @@
  */
 namespace org\ccextractor\submissionplatform\containers;
 
+use org\ccextractor\submissionplatform\objects\FTPCredentials;
+use org\ccextractor\submissionplatform\objects\User;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 
@@ -18,6 +20,10 @@ class FTPConnector implements ServiceProviderInterface
      * @var int
      */
     private $port;
+    /**
+     * @var DatabaseLayer
+     */
+    private $dba;
 
     /**
      * FTPConnector constructor.
@@ -25,10 +31,11 @@ class FTPConnector implements ServiceProviderInterface
      * @param $host
      * @param $port
      */
-    public function __construct($host, $port)
+    public function __construct($host, $port, DatabaseLayer $dba)
     {
         $this->host = $host;
         $this->port = $port;
+        $this->dba = $dba;
     }
 
     /**
@@ -58,5 +65,16 @@ class FTPConnector implements ServiceProviderInterface
     public function getPort()
     {
         return $this->port;
+    }
+
+    public function getFTPCredentialsForUser(User $user){
+        // Fetch the username & password for the given user. If non-existing, create them.
+        $creds = $this->dba->getFTPCredentialsForUser($user);
+        if($creds === false){
+            // Create credentials
+            $newCredentials = new FTPCredentials($user);
+            return $this->dba->storeFTPCredentials($newCredentials);
+        }
+        return $creds;
     }
 }

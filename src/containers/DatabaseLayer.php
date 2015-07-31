@@ -6,6 +6,7 @@
 namespace org\ccextractor\submissionplatform\containers;
 
 use DateTime;
+use org\ccextractor\submissionplatform\objects\FTPCredentials;
 use org\ccextractor\submissionplatform\objects\User;
 use PDO;
 use Pimple\Container;
@@ -158,5 +159,39 @@ class DatabaseLayer implements ServiceProviderInterface
             return $this->pdo->lastInsertId();
         }
         return -1;
+    }
+
+    public function getFTPCredentialsForUser(User $user){
+        $id = $user->getId();
+        $stmt = $this->pdo->prepare("SELECT * FROM ftpd WHERE user_id = :uid LIMIT 1;");
+        $stmt->bindParam(":uid",$id,PDO::PARAM_INT);
+        if($stmt->execute() && $stmt->rowCount() === 1){
+            $data = $stmt->fetch();
+            return new FTPCredentials($user,$data["user"],$data["status"],$data["password"],$data["dir"],$data["ipaccess"],$data["QuotaFiles"]);
+        }
+        return false;
+    }
+
+    public function storeFTPCredentials(FTPCredentials $newCredentials)
+    {
+        $id = $newCredentials->getUser()->getId();
+        $name = $newCredentials->getName();
+        $status = $newCredentials->getStatus();
+        $password = $newCredentials->getPassword();
+        $dir = $newCredentials->getDir();
+        $ip_access = $newCredentials->getIpAccess();
+        $quota = $newCredentials->getQuotaFiles();
+        $stmt = $this->pdo->prepare("INSERT INTO ftpd VALUES (:id,:user,:status,:password,:dir,:ipaccess,:quota);");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        $stmt->bindParam(":user",$name,PDO::PARAM_STR);
+        $stmt->bindParam(":status",$status,PDO::PARAM_INT);
+        $stmt->bindParam(":password",$password,PDO::PARAM_STR);
+        $stmt->bindParam(":dir",$dir,PDO::PARAM_STR);
+        $stmt->bindParam(":ipaccess",$ip_access,PDO::PARAM_STR);
+        $stmt->bindParam(":quota",$quota,PDO::PARAM_INT);
+        if($stmt->execute() && $stmt->rowCount() === 1){
+            return $newCredentials;
+        }
+        return false;
     }
 }
