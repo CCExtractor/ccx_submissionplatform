@@ -24,7 +24,6 @@ class AccountController extends BaseController
         $app->group('/account', function () use ($self) {
             // Main page. If not logged in, redirect to login, otherwise to manage.
             $this->get('[/]', function ($request, $response, $args) use ($self) {
-                $self->setDefaultBaseValues($this);
                 $url = $this->router->pathFor($self->getPageName()."_login");
                 if($this->account->isLoggedIn()){
                     $url = $this->router->pathFor($self->getPageName()."_manage",["id" => $this->account->getUser()->getId()]);
