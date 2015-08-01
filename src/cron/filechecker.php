@@ -40,7 +40,7 @@ function fetchAllRelevantFiles($folder) {
 $dba = new DatabaseLayer(DATABASE_SOURCE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD);
 // File checker
 /** @var FileHandler $checker */
-$checker = new FileHandler($dba);
+$checker = new FileHandler($dba, TEMP_STORAGE);
 
 $filePath = $argv[1];
 $fi = new SplFileInfo($filePath);

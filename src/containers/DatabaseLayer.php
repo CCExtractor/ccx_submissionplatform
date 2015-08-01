@@ -208,4 +208,22 @@ class DatabaseLayer implements ServiceProviderInterface
         }
         return $result;
     }
+
+    public function storeProcessMessage(User $user, $message)
+    {
+        $uid = $user->getId();
+        $stmt = $this->pdo->prepare("INSERT INTO processing_messages VALUES (NULL, :id, :message);");
+        $stmt->bindParam(":id",$uid,PDO::PARAM_INT);
+        $stmt->bindParam(":message",$message,PDO::PARAM_STR);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
+
+    public function storeQueue(User $user, $file)
+    {
+        $uid = $user->getId();
+        $stmt = $this->pdo->prepare("INSERT INTO processing_queued VALUES (NULL, :id, :file);");
+        $stmt->bindParam(":id",$uid,PDO::PARAM_INT);
+        $stmt->bindParam(":file",$file,PDO::PARAM_STR);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
 }

@@ -23,3 +23,7 @@ define("HMAC_KEY","a_random_string_of_characters");
 // Amazon SES (Simple Email Service) credentials
 define("AMAZON_SES_USER","Amazon_User_Id");
 define("AMAZON_SES_PASS","Amazon_User_Password");
+// Location to store media samples for temporary storage (for processing)
+define("TEMP_STORAGE","/path/to/temporary/storage");
+// Location to store media samples after submitting
+define("PERM_STORAGE","/path/to/permanent/storage");
