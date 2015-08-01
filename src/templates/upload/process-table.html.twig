@@ -1,0 +1,35 @@
+<h4>Queued samples</h4>
+{% if queue|length > 0 %}
+    <table class="sortable tight striped">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Extension</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for entry in queue %}
+            <tr>
+                <td>{{ entry.original }}</td>
+                <td>{{ entry.extension }}</td>
+                <td>
+                    <a href="{{ path_for('Upload_process_id', { 'id': entry.id }) }}" title="Finish submission"><i class="fa fa-edit"></i></a>&nbsp;
+                    <a href="{{ path_for('Upload_process_delete', { 'id': entry.id }) }}" title="Delete"><i class="fa fa-trash"></i></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>There are no queued samples.</p>
+{% endif %}
+{% if messages|length > 0 %}
+    <h5>Error messages</h5>
+    <p>This are the last 10 error messages that occurred during processing uploaded files</p>
+    <ul class="icons">
+        {% for message in messages %}
+            <li><i class="fa fa-li fa-exclamation-circle"></i> {{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}

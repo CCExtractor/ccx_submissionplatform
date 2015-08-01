@@ -2,6 +2,7 @@
 use org\ccextractor\submissionplatform\containers\AccountManager;
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\containers\EmailLayer;
+use org\ccextractor\submissionplatform\containers\FileHandler;
 use org\ccextractor\submissionplatform\containers\FTPConnector;
 use org\ccextractor\submissionplatform\containers\GitWrapper;
 use org\ccextractor\submissionplatform\containers\TemplateValues;
@@ -71,6 +72,9 @@ $container->register($templateValues);
 // FTP Connector
 $ftp = new FTPConnector($app->environment["HTTP_HOST"], 21, $dba);
 $container->register($ftp);
+// File Handler
+$file_handler = new FileHandler($dba,TEMP_STORAGE);
+$container->register($file_handler);
 
 //Override the default Not Found Handler
 $container['notFoundHandler'] = function ($c) {

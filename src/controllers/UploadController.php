@@ -26,7 +26,10 @@ class UploadController extends BaseController
             $this->get('[/]', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 if($this->account->isLoggedIn()){
-                    // TODO: add list of unprocessed ones
+                    // Table rendering
+                    $this->templateValues->add("queue",$this->database->getQueuedSamples($this->account->getUser()));
+                    $this->templateValues->add("messages",$this->database->getQueuedMessages($this->account->getUser()));
+                    // Render
                     return $this->view->render($response,"upload/explain.html.twig",$this->templateValues->getValues());
                 }
                 return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
@@ -88,7 +91,11 @@ class UploadController extends BaseController
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
-                        // TODO: finish
+                        // Table rendering
+                        $this->templateValues->add("queue",$this->database->getQueuedSamples($this->account->getUser()));
+                        $this->templateValues->add("messages",$this->database->getQueuedMessages($this->account->getUser()));
+                        // Render
+                        return $this->view->render($response,"upload/process.html.twig",$this->templateValues->getValues());
                     }
                     return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName().'_process');
@@ -99,6 +106,18 @@ class UploadController extends BaseController
                     }
                     return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName().'_process_id');
+                $this->get('/delete/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    if($this->account->isLoggedIn()){
+                        if($this->file_handler->remove($this->account->getUser(),$args["id"])){
+                            $url = $this->router->pathFor($self->getPageName()."_process");
+                            return $response->withStatus(302)->withHeader('Location',$url);
+                        }
+                        $this->templateValues->add("error","could not remove sample.");
+                        return $this->view->render($response,"upload/process-error.html.twig",$this->templateValues->getValues());
+                    }
+                    return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName().'_process_delete');
             });
         });
     }

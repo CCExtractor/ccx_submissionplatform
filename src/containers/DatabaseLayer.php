@@ -218,12 +218,60 @@ class DatabaseLayer implements ServiceProviderInterface
         return $stmt->execute() && $stmt->rowCount() === 1;
     }
 
-    public function storeQueue(User $user, $file)
+    public function storeQueue(User $user, $original, $hash, $extension)
     {
         $uid = $user->getId();
-        $stmt = $this->pdo->prepare("INSERT INTO processing_queued VALUES (NULL, :id, :file);");
+        $stmt = $this->pdo->prepare("INSERT INTO processing_queued VALUES (NULL, :id, :hash, :extension, :original);");
         $stmt->bindParam(":id",$uid,PDO::PARAM_INT);
-        $stmt->bindParam(":file",$file,PDO::PARAM_STR);
+        $stmt->bindParam(":original",$original,PDO::PARAM_STR);
+        $stmt->bindParam(":hash",$hash,PDO::PARAM_STR);
+        $stmt->bindParam(":extension",$extension,PDO::PARAM_STR);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
+
+    public function getQueuedSamples(User $user){
+        $uid = $user->getId();
+        $stmt = $this->pdo->prepare("SELECT * FROM processing_queued WHERE user_id = :id ORDER BY id ASC");
+        $stmt->bindParam(":id",$uid,PDO::PARAM_INT);
+        $result = [];
+        if($stmt->execute()){
+            $result = $stmt->fetchAll();
+        }
+        return $result;
+    }
+
+    public function getQueuedMessages(User $user){
+        $uid = $user->getId();
+        $stmt = $this->pdo->prepare("SELECT message FROM processing_messages WHERE user_id = :id ORDER BY id DESC LIMIT 10");
+        $stmt->bindParam(":id",$uid,PDO::PARAM_INT);
+        $result = [];
+        if($stmt->execute()){
+            $data = $stmt->fetch();
+            while($data !== false) {
+                $result[] = $data["message"];
+                $data = $stmt->fetch();
+            }
+        }
+        return $result;
+    }
+
+    public function getQueueFilename(User $user, $id)
+    {
+        $uid = $user->getId();
+        $stmt = $this->pdo->prepare("SELECT hash, extension FROM processing_queued WHERE user_id = :uid AND id = :id LIMIT 1");
+        $stmt->bindParam(":uid",$uid,PDO::PARAM_INT);
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        if($stmt->execute() && $stmt->rowCount() === 1){
+            $data = $stmt->fetch();
+            return $data["hash"].".".$data["extension"];
+        }
+        return false;
+    }
+
+    public function removeQueue($id)
+    {
+        $stmt = $this->pdo->prepare("DELETE FROM processing_queued WHERE id = :id LIMIT 1");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
         return $stmt->execute() && $stmt->rowCount() === 1;
     }
 }

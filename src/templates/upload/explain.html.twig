@@ -8,6 +8,5 @@
         <lI><i class="fa fa-li fa-folder"></i> <a href="{{ path_for("Upload_ftp") }}">FTP Upload</a></lI>
     </ul>
     <p>After you upload them, they are added into the queue below, from where you can add the necessary details in order to submit the sample.</p>
-    <h4>Queued samples</h4>
-    <p>TODO</p>
+    {% include "upload/process-table.html.twig" %}
 {% endblock %}
