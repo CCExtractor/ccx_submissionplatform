@@ -69,7 +69,7 @@ $container->register($account);
 $templateValues = new TemplateValues();
 $container->register($templateValues);
 // FTP Connector
-$ftp = new FTPConnector($app->environment["HTTP_HOST"],22,$dba);
+$ftp = new FTPConnector($app->environment["HTTP_HOST"], 21, $dba);
 $container->register($ftp);
 
 //Override the default Not Found Handler
