@@ -88,9 +88,27 @@ Create a file `/etc/pure-ftpd/conf/ChrootEveryone` with the following contents:
 yes
 ```
 
-And do the same for `/etc/pure-ftpd/conf/CreateHomeDir`.
+And do the same for `/etc/pure-ftpd/conf/CreateHomeDir` and `/etc/pure-ftpd/conf/CallUploadScript`
+
+Then modify the `/etc/default/pure-ftpd-common`, and configure the next values:
+
+```
+UPLOADSCRIPT=/path/to/cron/upload.sh
+UPLOADUID=1234 # User that owns the upload.sh script
+UPLOADGID=1234 # Group that owns the upload.sh script
+```
 
 After this you can restart Pure-FTPD with `sudo /etc/init.d/pure-ftpd-mysql restart`
+
+Note: if you don't see a line saying:
+
+`Restarting ftp upload handler: pure-uploadscript.`
+
+You need to start the pure-uploadscript. This can be done as follows (where 1000 is replaced with the gid & uid specified above):
+
+`sudo pure-uploadscript -u 1000 -g 1000 -B -r /home/path/to/src/cron/upload.sh`
+
+You can also verify this by running `ps aux | grep pure-uploadscript`. If it still doesn't work, rebooting the server might help.
 
 ## Contributing
 
