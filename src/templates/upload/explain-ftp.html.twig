@@ -10,6 +10,20 @@
         <div class="col_2">Username:</div><div class="col_10">{{ username }}</div>
         <div class="col_2">Password:</div><div class="col_10">{{ password }}</div>
     </blockquote>
-    <!-- FUTURE: add auto-generated files for FileZilla, etc. -->
-    <p>After uploading, the sample will be processed after a short amount of time, which means that it will show up in the unprocessed samples queue, and no longer be accessible in the FTP folder.</p>
+    <div class="notice warning">
+        <i class="fa fa-warning fa-large"></i> As soon as the server detects that the file was completely uploaded, the sample will be processed, which moves it to another location. You can see a list of the successfully uploaded files at the <a href="{{ path_for("Upload") }}">upload</a> page.
+    </div>
+    <h4>Premade configurations</h4>
+    <h5>FileZilla</h5>
+    <img src="/images/filezilla.png" width="100px;" class="align-right" />
+    <ol>
+        <li>Download the <a target="_blank" href="{{ path_for("Upload_ftp_filezilla") }}">FileZilla configuration file</a></li>
+        <li>Open FileZilla</li>
+        <li>Open the configuration file using File -> Import</li>
+        <li>Confirm you want to import site entries</li>
+        <li>You should now have an entry called "Sample Submission Platform", to which you can connect to</li>
+    </ol>
+    <h5>Other clients</h5>
+    <p>At this moment, there are no automated configuration files yet available for other clients. You can connect to the server using the credentials above.</p>
+    <!-- FUTURE: add auto-generated files for other clients -->
 {% endblock %}
