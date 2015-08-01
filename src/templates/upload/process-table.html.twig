@@ -15,6 +15,7 @@
                 <td>{{ entry.extension }}</td>
                 <td>
                     <a href="{{ path_for('Upload_process_id', { 'id': entry.id }) }}" title="Finish submission"><i class="fa fa-edit"></i></a>&nbsp;
+                    <a href="{{ path_for('Upload_process_link', { 'id': entry.id }) }}" title="Link to sample"><i class="fa fa-link"></i></a>&nbsp;
                     <a href="{{ path_for('Upload_process_delete', { 'id': entry.id }) }}" title="Delete"><i class="fa fa-trash"></i></a>
                 </td>
             </tr>
