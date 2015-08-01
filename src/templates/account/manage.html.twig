@@ -33,7 +33,7 @@
             {% set link_icon="fa-chain" %}
             {% set link_text="link" %}
         {% endif %}
-        <!-- FIXME: provide links for these action(s) -->
+        <!-- FIXME: provide links for this action -->
         <li><i class="fa fa-li {{ link_icon }}"></i> <a href="">{{ link_text }} GitHub</a></li>
         <li><i class="fa fa-li fa-trash-o"></i> <a href="{{ path_for('My Account_deactivate', { 'id': user.id }) }}">Deactivate my account</a></li>
     </ul>

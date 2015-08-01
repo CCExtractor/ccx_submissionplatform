@@ -1,0 +1,28 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Finalize sample</h3>
+    <form method="post" action="{{ path_for("Upload_process_id", {"id": id}) }}" class="vertical">
+        <label for="ccx_version">Used CCExtractor version</label>
+        <select name="ccx_version" id="ccx_version">
+            <option value="-1">-- Choose --</option>
+            {% if ccx_versions|length > 0 %}
+                {% for version in ccx_versions %}
+                    <option value="{{ version.id }}">{{ version.version }} ({{ version.released }})</option>
+                {% endfor %}
+            {% endif %}
+        </select>
+        <fieldset>
+            <legend>Used OS</legend>
+            <input type="radio" id="radio1" name="ccx_os" class="radio"> <label class="inline" for="radio1">Windows</label><br>
+            <input type="radio" id="radio2" name="ccx_os" class="radio"> <label class="inline" for="radio2">Linux</label><br>
+            <input type="radio" id="radio3" name="ccx_os" class="radio"> <label class="inline" for="radio3">Mac</label>
+        </fieldset>
+        <label for="ccx_params">Used parameters</label>
+        <textarea name="ccx_params" id="ccx_params" placeholder="-autoprogram -latin1 ..."></textarea>
+        <label for="notes">Notes</label>
+        <textarea name="notes" id="notes"></textarea>
+        {% include "csrf.html.twig" %}
+        <input type="submit" name="submit" value="Finalize sample" />
+    </form>
+{% endblock %}

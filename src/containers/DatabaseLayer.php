@@ -65,6 +65,15 @@ class DatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
+    public function getAllCCExtractorVersions(){
+        $stmt = $this->pdo->query("SELECT * FROM ccextractor_versions ORDER BY id DESC;");
+        $result = [];
+        if($stmt !== false && $stmt->rowCount() > 1){
+            $result = $stmt->fetchAll();
+        }
+        return $result;
+    }
+
     public function getAllSamples(){
         $p = $this->pdo->prepare("SELECT * FROM sample ORDER BY extension ASC");
         $result = [];
@@ -236,6 +245,18 @@ class DatabaseLayer implements ServiceProviderInterface
         $result = [];
         if($stmt->execute()){
             $result = $stmt->fetchAll();
+        }
+        return $result;
+    }
+
+    public function getQueuedSample(User $user, $id){
+        $uid = $user->getId();
+        $stmt = $this->pdo->prepare("SELECT * FROM processing_queued WHERE user_id = :uid AND id = :id LIMIT 1");
+        $stmt->bindParam(":uid",$uid,PDO::PARAM_INT);
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        $result = false;
+        if($stmt->execute() && $stmt->rowCount() == 1){
+            $result = $stmt->fetch();
         }
         return $result;
     }

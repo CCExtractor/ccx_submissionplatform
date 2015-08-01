@@ -99,13 +99,44 @@ class UploadController extends BaseController
                     }
                     return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName().'_process');
-                $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                $this->group('/{id:[0-9]+}', function() use ($self){
+                    $this->get('', function ($request, $response, $args) use ($self) {
+                        $self->setDefaultBaseValues($this);
+                        if($this->account->isLoggedIn()){
+                            $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
+                            if($data !== false){
+                                // CSRF values
+                                $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                                $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                                // Other variables
+                                $this->templateValues->add("id", $args["id"]);
+                                $this->templateValues->add("ccx_versions", $this->database->getAllCCExtractorVersions());
+                                // Render
+                                return $this->view->render($response,"upload/finalize.html.twig",$this->templateValues->getValues());
+                            }
+                            return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                        }
+                        return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
+                    })->setName($self->getPageName().'_process_id');
+                    $this->post('', function ($request, $response, $args) use ($self) {
+                        $self->setDefaultBaseValues($this);
+                        if($this->account->isLoggedIn()){
+                            $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
+                            if($data !== false){
+                                // TODO: finish
+                            }
+                            return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                        }
+                        return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
+                    });
+                });
+                $this->get('/link/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         // TODO: finish
                     }
                     return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
-                })->setName($self->getPageName().'_process_id');
+                })->setName($self->getPageName().'_process_link');
                 $this->get('/delete/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
