@@ -3,3 +3,11 @@
 {% block content %}
     {% include "upload/process-table.html.twig" %}
 {% endblock %}
+
+{% block sidebar %}
+    <h5>Upload new sample</h5>
+    <ul class="icons">
+        <li><i class="fa fa-li fa-upload"></i> <a href="{{ path_for("Upload_new") }}">HTTP Upload (small samples)</a></li>
+        <lI><i class="fa fa-li fa-folder"></i> <a href="{{ path_for("Upload_ftp") }}">FTP Upload</a></lI>
+    </ul>
+{% endblock %}
