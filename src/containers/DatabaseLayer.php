@@ -157,6 +157,18 @@ class DatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
+    public function getSampleForUser(User $user, $id){
+        $uid = $user->getId();
+        $p = $this->pdo->prepare("SELECT s.*,u.additional_files FROM sample s JOIN upload u ON s.id = u.sample_id WHERE u.user_id = :uid AND s.id = :id LIMIT 1;");
+        $p->bindParam(":uid",$uid,PDO::PARAM_INT);
+        $p->bindParam(":id",$id,PDO::PARAM_INT);
+        $result = false;
+        if($p->execute()){
+            $result = $p->fetch();
+        }
+        return $result;
+    }
+
     public function registerUser(User $user)
     {
         $name = $user->getName();
@@ -337,6 +349,22 @@ class DatabaseLayer implements ServiceProviderInterface
             }
             $this->pdo->rollBack();
         }
+        return false;
+    }
+
+    public function moveQueueToAppend($queue_id, $sample_id)
+    {
+        $this->pdo->beginTransaction();
+        $upload = $this->pdo->prepare("UPDATE upload SET additional_files = additional_files + 1 WHERE sample_id = :id");
+        $upload->bindParam(":id",$sample_id,PDO::PARAM_INT);
+        if($upload->execute() && $upload->rowCount() === 1){
+            // Remove from queue
+            if($this->removeQueue($queue_id)){
+                $this->pdo->commit();
+                return true;
+            }
+        }
+        $this->pdo->rollBack();
         return false;
     }
 }

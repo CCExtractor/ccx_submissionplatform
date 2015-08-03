@@ -1,0 +1,34 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    {% if samples|length >= 1 %}
+        <p>Select a previously submitted sample to link the file ({{ queued.original }}) to:</p>
+        <table class="sortable tight striped">
+            <thead>
+            <tr>
+                <th>Original name</th>
+                <th>Type videostream</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for sample in samples %}
+                <tr>
+                    <td><a href="{{ path_for('Sample Info_sha1', { 'sha1': sample.hash }) }}" target="_blank" title="View details">{{ sample.original_name }}</a></td>
+                    <td>{{ sample.extension }}</td>
+                    <td>
+                        <form method="post" action="{{ path_for("Upload_process_link", {"id": queued.id}) }}">
+                            <input type="hidden" name="link_id" value="{{ sample.id }}" />
+                            {% include "csrf.html.twig" %}
+                            <input class="small green" type="submit" name="submit" value="Link to this sample" />
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Sorry, but you need to submit a sample first before you can link anything to it...</p>
+    {% endif %}
+
+{% endblock %}

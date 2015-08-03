@@ -4,3 +4,8 @@
     border: 1px solid blue;
     color: blue;
 }
+
+input[type="submit"].small {
+    font-size: 0.8em;
+    padding: 5px 10px;
+}

@@ -209,13 +209,47 @@ class UploadController extends BaseController
                         return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
                     });
                 });
-                $this->get('/link/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
-                    $self->setDefaultBaseValues($this);
-                    if($this->account->isLoggedIn()){
-                        // TODO: finish
-                    }
-                    return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
-                })->setName($self->getPageName().'_process_link');
+                // Linking logic
+                $this->group('/link/{id:[0-9]+}', function() use ($self){
+                    $this->get('[/]', function ($request, $response, $args) use ($self) {
+                        $self->setDefaultBaseValues($this);
+                        if($this->account->isLoggedIn()){
+                            $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
+                            if($data !== false){
+                                // CSRF values
+                                $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                                $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                                // Other variables
+                                $this->templateValues->add("queued", $data);
+                                $this->templateValues->add("samples", $this->database->getSamplesForUser($this->account->getUser()));
+                                // Render
+                                return $this->view->render($response,"upload/link.html.twig",$this->templateValues->getValues());
+                            }
+                            return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                        }
+                        return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
+                    })->setName($self->getPageName().'_process_link');
+                    $this->post('[/]', function ($request, $response, $args) use ($self) {
+                        $self->setDefaultBaseValues($this);
+                        if($this->account->isLoggedIn()){
+                            $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
+                            if($data !== false){
+                                if(isset($_POST["link_id"])){
+                                    $sample = $this->database->getSampleForUser($this->account->getUser(), $_POST["link_id"]);
+                                    if(isset($sample["id"])){
+                                        // Process
+                                        if($this->file_handler->appendSample($this->account->getUser(), $args["id"], $_POST["link_id"])){
+                                            $url = $this->router->pathFor($self->getPageName()."_process");
+                                            return $response->withStatus(302)->withHeader('Location',$url);
+                                        }
+                                    }
+                                }
+                            }
+                            return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                        }
+                        return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
+                    });
+                });
                 $this->get('/delete/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){

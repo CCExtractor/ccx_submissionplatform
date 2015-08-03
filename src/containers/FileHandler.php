@@ -94,6 +94,20 @@ class FileHandler implements ServiceProviderInterface
         return false;
     }
 
+    public function appendSample(User $user, $queue_id, $sample_id){
+        $queued = $this->dba->getQueuedSample($user,$queue_id);
+        if($queued !== false){
+            $sample = $this->dba->getSampleForUser($user, $sample_id);
+            if($sample !== false) {
+                $ext = ($queued["extension"] !== "") ? "." . $queued["extension"] : "";
+                if (rename($this->temp_dir . $queued["hash"] . $ext, $this->store_dir ."extra/". $sample["hash"]."_".$sample["additional_files"] . $ext)) {
+                    return $this->dba->moveQueueToAppend($queue_id, $sample_id);
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Registers services on the given container.
      *
