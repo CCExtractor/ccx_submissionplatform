@@ -1,0 +1,6 @@
+/* Custom modifications for the theme */
+.notice.information {
+    background: lightblue none repeat scroll 0 0;
+    border: 1px solid blue;
+    color: blue;
+}
