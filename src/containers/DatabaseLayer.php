@@ -74,6 +74,12 @@ class DatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
+    public function isCCExtractorVersion($id){
+        $stmt = $this->pdo->prepare("SELECT id FROM ccextractor_versions WHERE id = :id LIMIT 1;");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        return ($stmt->execute() !== false && $stmt->rowCount() == 1);
+    }
+
     public function getAllSamples(){
         $p = $this->pdo->prepare("SELECT * FROM sample ORDER BY extension ASC");
         $result = [];
@@ -294,5 +300,39 @@ class DatabaseLayer implements ServiceProviderInterface
         $stmt = $this->pdo->prepare("DELETE FROM processing_queued WHERE id = :id LIMIT 1");
         $stmt->bindParam(":id",$id,PDO::PARAM_INT);
         return $stmt->execute() && $stmt->rowCount() === 1;
+    }
+
+    public function moveQueueToSample(User $user, $id, $ccx_version_id, $platform, $params, $notes)
+    {
+        $queue = $this->getQueuedSample($user,$id);
+        if($queue !== false){
+            $this->pdo->beginTransaction();
+            // Insert sample
+            $sample = $this->pdo->prepare("INSERT INTO sample VALUES (NULL,:hash,:extension,:original);");
+            $sample->bindParam(":hash",$queue["hash"],PDO::PARAM_STR);
+            $sample->bindParam(":extension",$queue["extension"],PDO::PARAM_STR);
+            $sample->bindParam(":original",$queue["original"],PDO::PARAM_STR);
+            if($sample->execute() && $sample->rowCount() === 1){
+                $sampleId = $this->pdo->lastInsertId();
+                $uid = $user->getId();
+                // Insert upload
+                $upload = $this->pdo->prepare("INSERT INTO upload VALUES (NULL, :uid, :sample, :version, :platform, :params, :notes, 0);");
+                $upload->bindParam(":uid",$uid,PDO::PARAM_INT);
+                $upload->bindParam(":sample",$sampleId,PDO::PARAM_INT);
+                $upload->bindParam(":version",$ccx_version_id,PDO::PARAM_INT);
+                $upload->bindParam(":platform",$platform,PDO::PARAM_STR);
+                $upload->bindParam(":params",$params,PDO::PARAM_STR);
+                $upload->bindParam(":notes",$notes,PDO::PARAM_STR);
+                if($upload->execute() && $upload->rowCount() === 1){
+                    // Remove from queue
+                    if($this->removeQueue($id)){
+                        $this->pdo->commit();
+                        return true;
+                    }
+                }
+            }
+            $this->pdo->rollBack();
+        }
+        return false;
     }
 }

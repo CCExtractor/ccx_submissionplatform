@@ -123,7 +123,42 @@ class UploadController extends BaseController
                         if($this->account->isLoggedIn()){
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
                             if($data !== false){
-                                // TODO: finish
+                                // Verify posted values
+                                if(isset($_POST["ccx_version"]) && isset($_POST["ccx_os"]) && isset($_POST["ccx_params"]) &&
+                                    isset($_POST["notes"]) && strlen($_POST["ccx_params"]) > 0 && strlen($_POST["notes"]) > 0){
+                                    $version = $this->database->isCCExtractorVersion($_POST["ccx_version"]);
+                                    if($version){
+                                        // Store, and redirect
+                                        if($this->file_handler->submitSample($this->account->getUser(),$args["id"],$_POST["ccx_version"],$_POST["ccx_os"],$_POST["ccx_params"],$_POST["notes"])){
+                                            $url = $this->router->pathFor($self->getPageName()."_process");
+                                            return $response->withStatus(302)->withHeader('Location',$url);
+                                        }
+                                        $this->templateValues->add("error","could not submit data.");
+                                        return $this->view->render($response,"upload/process-error.html.twig",$this->templateValues->getValues());
+                                    }
+                                }
+                                $this->templateValues->add("message",true);
+                                // Variables that have been filled in (if defined)
+                                if(isset($_POST["notes"])){
+                                    $this->templateValues->add("notes",$_POST["notes"]);
+                                }
+                                if(isset($_POST["ccx_params"])){
+                                    $this->templateValues->add("params",$_POST["ccx_params"]);
+                                }
+                                if(isset($_POST["ccx_version"])){
+                                    $this->templateValues->add("version",$_POST["ccx_version"]);
+                                }
+                                if(isset($_POST["ccx_os"])){
+                                    $this->templateValues->add("os",$_POST["ccx_os"]);
+                                }
+                                // CSRF values
+                                $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                                $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                                // Other variables
+                                $this->templateValues->add("id", $args["id"]);
+                                $this->templateValues->add("ccx_versions", $this->database->getAllCCExtractorVersions());
+                                // Render
+                                return $this->view->render($response,"upload/finalize.html.twig",$this->templateValues->getValues());
                             }
                             return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                         }
