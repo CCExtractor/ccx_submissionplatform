@@ -44,20 +44,30 @@ class FileHandler implements ServiceProviderInterface
         $this->forbiddenExtensions = $this->dba->getForbiddenExtensions();
     }
 
-    public function process(User $user, SplFileInfo $file)
+    public function process(User $user, SplFileInfo $file,$original="")
     {
-        $extension = $file->getExtension();
+        if($original !== ""){
+            $fName = $original;
+            $lastDot = strrpos($fName,".");
+            $extension = ($lastDot !== false)?substr($fName,$lastDot+1):"";
+        } else {
+            $fName = $file->getFilename();
+            $extension = $file->getExtension();
+        }
+        // FUTURE: more extensive mime-type checking?
         if(in_array($extension,$this->forbiddenExtensions)){
             // Store deletion message
-            $this->dba->storeProcessMessage($user, "File ".$file->getFilename()." was removed due to an illegal extension.");
+            $this->dba->storeProcessMessage($user, "File ".$fName." was removed due to an illegal extension.");
         } else {
             // Get SHA1 of file
             $sha1 = sha1_file($file->getPathname());
-            $original_name = str_replace(".".$file->getExtension(),"",$file->getFilename());
+            // FIXME: check if there's no samples (queued) yet with the same sha1
+            $ext = ($extension !== "")?".".$extension:"";
+            $original_name = str_replace($ext,"",$fName);
             // Copy file to processing folder
-            copy($file->getPathname(),$this->temp_dir.$sha1.".".$file->getExtension());
+            copy($file->getPathname(),$this->temp_dir.$sha1.$ext);
             // Store in processing queue.
-            $this->dba->storeQueue($user,$original_name,$sha1,$file->getExtension());
+            $this->dba->storeQueue($user,$original_name,$sha1,$extension);
         }
         // Delete file
         unlink($file->getPathname());
@@ -76,7 +86,8 @@ class FileHandler implements ServiceProviderInterface
     public function submitSample(User $user, $id, $ccx_version_id, $platform, $params, $notes){
         $sample = $this->dba->getQueuedSample($user,$id);
         if($sample !== false){
-            if(rename($this->temp_dir.$sample["hash"].".".$sample["extension"],$this->store_dir.$sample["hash"].".".$sample["extension"])){
+            $ext = ($sample["extension"] !== "")?".".$sample["extension"]:"";
+            if(rename($this->temp_dir.$sample["hash"].$ext,$this->store_dir.$sample["hash"].$ext)){
                 return $this->dba->moveQueueToSample($user, $id, $ccx_version_id, $platform, $params, $notes);
             }
         }

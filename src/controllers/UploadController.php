@@ -7,6 +7,7 @@ namespace org\ccextractor\submissionplatform\controllers;
 
 use org\ccextractor\submissionplatform\objects\FTPCredentials;
 use Slim\App;
+use SplFileInfo;
 
 class UploadController extends BaseController
 {
@@ -78,14 +79,56 @@ class UploadController extends BaseController
                     return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName().'_ftp_filezilla');
             });
-            // GET: HTTP upload
-            $this->get('/new', function ($request, $response, $args) use ($self) {
-                $self->setDefaultBaseValues($this);
-                if($this->account->isLoggedIn()){
-                    // TODO: finish
-                }
-                return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
-            })->setName($self->getPageName().'_new');
+            // HTTP upload upload logic
+            $this->group('/new', function() use ($self){
+                $this->get('[/]', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    if($this->account->isLoggedIn()){
+                        // CSRF values
+                        $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                        $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                        // Render
+                        return $this->view->render($response,"upload/new.html.twig",$this->templateValues->getValues());
+                    }
+                    return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName().'_new');
+                $this->post('[/]', function ($request, $response, $args) use ($self) {
+                    $self->setDefaultBaseValues($this);
+                    if($this->account->isLoggedIn()){
+                        $message = "No file given";
+                        if(isset($_FILES["new_sample"])){
+                            // Undefined | Multiple Files | $_FILES Corruption Attack
+                            if (isset($_FILES['new_sample']['error']) && !is_array($_FILES['new_sample']['error'])) {
+                                switch ($_FILES['new_sample']['error']) {
+                                    case UPLOAD_ERR_OK:
+                                        $spl = new SplFileInfo($_FILES['new_sample']['tmp_name']);
+                                        // Call file handler
+                                        $this->file_handler->process($this->account->getUser(),$spl,$_FILES["new_sample"]["name"]);
+                                        // Redirect to process page
+                                        $url = $this->router->pathFor($self->getPageName()."_process");
+                                        return $response->withStatus(302)->withHeader('Location',$url);
+                                    case UPLOAD_ERR_NO_FILE:
+                                        $message = 'No file sent.';
+                                        break;
+                                    case UPLOAD_ERR_INI_SIZE:
+                                    case UPLOAD_ERR_FORM_SIZE:
+                                        $message = 'Exceeded filesize limit.';
+                                        break;
+                                    default:
+                                        $message = 'Unknown errors.';
+                                }
+                            }
+                        }
+                        $this->templateValues->add("message", "Invalid file uploaded! Please try correct this error and try again: ".$message);
+                        // CSRF values
+                        $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                        $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                        // Render
+                        return $this->view->render($response,"upload/new.html.twig",$this->templateValues->getValues());
+                    }
+                    return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
+                });
+            });
             // Logic for finalizing samples
             $this->group('/process', function () use ($self){
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
@@ -99,6 +142,7 @@ class UploadController extends BaseController
                     }
                     return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName().'_process');
+                // Logic for finalizing a submission
                 $this->group('/{id:[0-9]+}', function() use ($self){
                     $this->get('', function ($request, $response, $args) use ($self) {
                         $self->setDefaultBaseValues($this);
