@@ -2,26 +2,34 @@
 
 {% block content %}
     <h3>Finalize sample</h3>
+    {% if message is defined %}
+        <div class="notice error">
+            <i class="fa fa-remove fa-large"></i> Some values were not filled in. Please try again.
+        </div>
+    {% endif %}
     <form method="post" action="{{ path_for("Upload_process_id", {"id": id}) }}" class="vertical">
         <label for="ccx_version">Used CCExtractor version</label>
+        {% set toSelect=version|default('') %}
         <select name="ccx_version" id="ccx_version">
             <option value="-1">-- Choose --</option>
             {% if ccx_versions|length > 0 %}
                 {% for version in ccx_versions %}
-                    <option value="{{ version.id }}">{{ version.version }} ({{ version.released }})</option>
+                    <option value="{{ version.id }}"  {% if toSelect == version.id %}selected="selected"{% endif %}>{{ version.version }} ({{ version.released }})</option>
                 {% endfor %}
             {% endif %}
         </select>
+        {% set toSelect=os|default('Windows') %}
         <fieldset>
             <legend>Used OS</legend>
-            <input type="radio" id="radio1" name="ccx_os" class="radio"> <label class="inline" for="radio1">Windows</label><br>
-            <input type="radio" id="radio2" name="ccx_os" class="radio"> <label class="inline" for="radio2">Linux</label><br>
-            <input type="radio" id="radio3" name="ccx_os" class="radio"> <label class="inline" for="radio3">Mac</label>
+            <input type="radio" id="radio1" name="ccx_os" class="radio" value="Windows" {% if toSelect == "Windows" %}checked="checked"{% endif %}> <label class="inline" for="radio1">Windows</label><br>
+            <input type="radio" id="radio2" name="ccx_os" class="radio" value="Linux" {% if toSelect == "Linux" %}checked="checked"{% endif %}> <label class="inline" for="radio2">Linux</label><br>
+            <input type="radio" id="radio3" name="ccx_os" class="radio" value="Mac" {% if toSelect == "Mac" %}checked="checked"{% endif %}> <label class="inline" for="radio3">Mac</label><br>
+            <input type="radio" id="radio4" name="ccx_os" class="radio" value="Other" {% if toSelect == "Other" %}checked="checked"{% endif %}> <label class="inline" for="radio4">Other</label>
         </fieldset>
         <label for="ccx_params">Used parameters</label>
-        <textarea name="ccx_params" id="ccx_params" placeholder="-autoprogram -latin1 ..."></textarea>
+        <textarea name="ccx_params" id="ccx_params" placeholder="-autoprogram -latin1 ...">{{ params|default('') }}</textarea>
         <label for="notes">Notes</label>
-        <textarea name="notes" id="notes"></textarea>
+        <textarea name="notes" id="notes">{{ notes|default('') }}</textarea>
         {% include "csrf.html.twig" %}
         <input type="submit" name="submit" value="Finalize sample" />
     </form>
