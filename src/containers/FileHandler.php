@@ -23,16 +23,23 @@ class FileHandler implements ServiceProviderInterface
     /**
      * @var string
      */
+    private $temp_dir;
+    /**
+     * @var string
+     */
     private $store_dir;
 
     /**
-     * FileHandler constructor.
+     * FileHandler constructor
      *
      * @param DatabaseLayer $dba
+     * @param $temp_dir
+     * @param $store_dir
      */
-    public function __construct(DatabaseLayer $dba, $store_dir)
+    public function __construct(DatabaseLayer $dba, $temp_dir, $store_dir)
     {
         $this->dba = $dba;
+        $this->temp_dir = $temp_dir;
         $this->store_dir = $store_dir;
         $this->forbiddenExtensions = $this->dba->getForbiddenExtensions();
     }
@@ -48,7 +55,7 @@ class FileHandler implements ServiceProviderInterface
             $sha1 = sha1_file($file->getPathname());
             $original_name = str_replace(".".$file->getExtension(),"",$file->getFilename());
             // Copy file to processing folder
-            copy($file->getPathname(),$this->store_dir.$sha1.".".$file->getExtension());
+            copy($file->getPathname(),$this->temp_dir.$sha1.".".$file->getExtension());
             // Store in processing queue.
             $this->dba->storeQueue($user,$original_name,$sha1,$file->getExtension());
         }
@@ -59,8 +66,18 @@ class FileHandler implements ServiceProviderInterface
     public function remove(User $user, $id){
         $filename = $this->dba->getQueueFilename($user,$id);
         if($filename !== false){
-            if(unlink($this->store_dir.$filename)){
+            if(unlink($this->temp_dir.$filename)){
                 return $this->dba->removeQueue($id);
+            }
+        }
+        return false;
+    }
+
+    public function submitSample(User $user, $id, $ccx_version_id, $platform, $params, $notes){
+        $sample = $this->dba->getQueuedSample($user,$id);
+        if($sample !== false){
+            if(rename($this->temp_dir.$sample["hash"].".".$sample["extension"],$this->store_dir.$sample["hash"].".".$sample["extension"])){
+                return $this->dba->moveQueueToSample($user, $id, $ccx_version_id, $platform, $params, $notes);
             }
         }
         return false;

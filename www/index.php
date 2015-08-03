@@ -73,7 +73,7 @@ $container->register($templateValues);
 $ftp = new FTPConnector($app->environment["HTTP_HOST"], 21, $dba);
 $container->register($ftp);
 // File Handler
-$file_handler = new FileHandler($dba,TEMP_STORAGE);
+$file_handler = new FileHandler($dba, TEMP_STORAGE, PERM_STORAGE);
 $container->register($file_handler);
 
 //Override the default Not Found Handler
