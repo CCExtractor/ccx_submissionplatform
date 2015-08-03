@@ -290,7 +290,11 @@ class DatabaseLayer implements ServiceProviderInterface
         $stmt->bindParam(":id",$id,PDO::PARAM_INT);
         if($stmt->execute() && $stmt->rowCount() === 1){
             $data = $stmt->fetch();
-            return $data["hash"].".".$data["extension"];
+            $name = $data["hash"].".".$data["extension"];
+            if($data["extension"] === ""){
+                $name = $data["hash"];
+            }
+            return $name;
         }
         return false;
     }
