@@ -59,8 +59,8 @@ class FileHandler implements ServiceProviderInterface
             // Store deletion message
             $this->dba->storeProcessMessage($user, "File ".$fName." was removed due to an illegal extension.");
         } else {
-            // Get SHA1 of file
-            $sha1 = sha1_file($file->getPathname());
+            // Get SHA256 of file
+            $sha1 = hash_file('sha256',$file->getPathname());
             // FIXME: check if there's no samples (queued) yet with the same sha1
             $ext = ($extension !== "")?".".$extension:"";
             $original_name = str_replace($ext,"",$fName);
