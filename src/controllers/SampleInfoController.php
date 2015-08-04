@@ -28,11 +28,14 @@ class SampleInfoController extends BaseController
             })->setName($self->getPageName());
             $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
-                return $this->view->render($response,'sample-info/sample-info-id.html.twig',$this->templateValues->getValues());
+                // Fetch sample
+
+                return $this->view->render($response,'sample-info/sample-info-common.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName().'_id');
             $this->get('/{sha1:[a-z0-9]+}', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
-                return $this->view->render($response,'sample-info/sample-info-sha1.html.twig',$this->templateValues->getValues());
+                // Fetch sample
+                return $this->view->render($response,'sample-info/sample-info-common.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName().'_sha1');
         });
     }
