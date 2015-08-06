@@ -18,19 +18,19 @@ use Slim\Views\Twig;
 class AccountManager implements ServiceProviderInterface
 {
     /**
-     * @var string
+     * @var string The HMAC secret.
      */
     private $hmac;
     /**
-     * @var DatabaseLayer
+     * @var DatabaseLayer The object that provides access to the database.
      */
     private $dba;
     /**
-     * @var EmailLayer
+     * @var EmailLayer The object that allows emails to be sent.
      */
     private $email;
     /**
-     * @var User
+     * @var User The current active user.
      */
     private $user;
 

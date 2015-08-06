@@ -12,10 +12,20 @@ use PDO;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 
+/**
+ * Class DatabaseLayer takes care of the connection to the database.
+ *
+ * @package org\ccextractor\submissionplatform\containers
+ */
 class DatabaseLayer implements ServiceProviderInterface
 {
+    /**
+     * @var PDO The real connection to the database.
+     */
     private $pdo;
-
+    /**
+     * @var array The default options for the PDO object.
+     */
     private $defaultOptions = [
         PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8",
         PDO::ATTR_PERSISTENT => true
@@ -54,6 +64,11 @@ class DatabaseLayer implements ServiceProviderInterface
         $pimple['database'] = $this;
     }
 
+    /**
+     * Gets the latest version of CCExtractor.
+     *
+     * @return array An array with a version and date key.
+     */
     public function getLatestCCExtractorVersion(){
         $stmt = $this->pdo->query("SELECT version, released FROM ccextractor_versions ORDER BY ID DESC LIMIT 1;");
         $result = ["version" => "error", "date" => new DateTime()];
@@ -65,6 +80,11 @@ class DatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
+    /**
+     * Gets a list of all CCExtractor versions.
+     *
+     * @return array An array of CCX versions (id,version,date as keys).
+     */
     public function getAllCCExtractorVersions(){
         $stmt = $this->pdo->query("SELECT * FROM ccextractor_versions ORDER BY id DESC;");
         $result = [];
@@ -74,12 +94,23 @@ class DatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
+    /**
+     * Checks if a CCExtractor version exists with given id.
+     *
+     * @param int $id The id of the CCExtractor version to check.
+     * @return bool True if there exists a version with given id.
+     */
     public function isCCExtractorVersion($id){
         $stmt = $this->pdo->prepare("SELECT id FROM ccextractor_versions WHERE id = :id LIMIT 1;");
         $stmt->bindParam(":id",$id,PDO::PARAM_INT);
         return ($stmt->execute() !== false && $stmt->rowCount() == 1);
     }
 
+    /**
+     * Gets all samples, sorted by extension.
+     *
+     * @return array All the samples.
+     */
     public function getAllSamples(){
         $p = $this->pdo->prepare("SELECT * FROM sample ORDER BY extension ASC");
         $result = [];
@@ -89,6 +120,12 @@ class DatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
+    /**
+     * Gets a user that has the given email address.
+     *
+     * @param string $email The email address we want a user for.
+     * @return User A user object if found, or the null user.
+     */
     public function getUserWithEmail($email)
     {
         $stmt = $this->pdo->prepare("SELECT * FROM user WHERE email = :email LIMIT 1");
