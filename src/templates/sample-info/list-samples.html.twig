@@ -24,7 +24,7 @@
                 <td>{{ display }}</td>
                 <td>{{ sample.extension }}</td>
                 <td>
-                    <a href="{{ path_for('Sample Info_sha1', { 'sha1': sample.hash }) }}" title="View details"><i class="fa fa-info-circle"></i></a>
+                    <a href="{{ path_for('Sample Info_hash', { 'hash': sample.hash }) }}" title="View details"><i class="fa fa-info-circle"></i></a>
                 </td>
             </tr>
         {% endfor %}

@@ -14,7 +14,7 @@
             <tbody>
             {% for sample in samples %}
                 <tr>
-                    <td><a href="{{ path_for('Sample Info_sha1', { 'sha1': sample.hash }) }}" target="_blank" title="View details">{{ sample.original_name }}</a></td>
+                    <td><a href="{{ path_for('Sample Info_hash', { 'hash': sample.hash }) }}" target="_blank" title="View details">{{ sample.original_name }}</a></td>
                     <td>{{ sample.extension }}</td>
                     <td>
                         <form method="post" action="{{ path_for("Upload_process_link", {"id": queued.id}) }}">
