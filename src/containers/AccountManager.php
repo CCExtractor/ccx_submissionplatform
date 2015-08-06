@@ -11,6 +11,10 @@ use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 use Slim\Views\Twig;
 
+/**
+ * Class AccountManager manages user accounts (registration, log in, log out, recovery, ...).
+ * @package org\ccextractor\submissionplatform\containers
+ */
 class AccountManager implements ServiceProviderInterface
 {
     /**
@@ -32,6 +36,11 @@ class AccountManager implements ServiceProviderInterface
 
     /**
      * AccountManager constructor.
+     *
+     * @param DatabaseLayer $dba The database to connect to
+     * @param EmailLayer $email The functionality to send emails
+     * @param string $hmac_key The HMAC key that will be used to create the HMAC's.
+     * @throws Exception When a session is not available.
      */
     public function __construct(DatabaseLayer $dba, EmailLayer $email, $hmac_key)
     {
@@ -54,6 +63,11 @@ class AccountManager implements ServiceProviderInterface
         $pimple['account'] = $this;
     }
 
+    /**
+     * Performs a setup/initialization for the object.
+     *
+     * @throws Exception When the $_SESSION object is unavailable.
+     */
     private function setup(){
         if(!isset($_SESSION)){
             throw new Exception("Session not available!");
@@ -67,12 +81,18 @@ class AccountManager implements ServiceProviderInterface
         }
     }
 
+    /**
+     * Restores a user from the session.
+     */
     private function restore()
     {
         $d = $_SESSION["userManager"];
         $this->user = new User($d["id"],$d["name"],$d["email"],$d["hash"],$d["github"],$d["admin"]);
     }
 
+    /**
+     * Stores a user in the session variables.
+     */
     public function store(){
         $_SESSION["userManager"] = [];
         $_SESSION["userManager"]["id"] = $this->user->getId();
@@ -83,19 +103,41 @@ class AccountManager implements ServiceProviderInterface
         $_SESSION["userManager"]["admin"] = $this->user->isAdmin();
     }
 
+    /**
+     * Checks if the current user is logged in.
+     *
+     * @return bool
+     */
     public function isLoggedIn(){
         return $this->user->getId() > -1;
     }
 
+    /**
+     * Sets the given user as the current user.
+     *
+     * @param User $user The new user to set as current user.
+     */
     public function setUser(User $user){
         $this->user = $user;
         $this->store();
     }
 
+    /**
+     * Gets the current user.
+     *
+     * @return User The current user.
+     */
     public function getUser(){
         return $this->user;
     }
 
+    /**
+     * Performs a login attempt for a user with given email and password.
+     *
+     * @param string $email The email that is used as login name.
+     * @param string $password The password for the user linked to the email.
+     * @return bool True if the email/password match, false otherwise.
+     */
     public function performLogin($email,$password){
         $user = $this->dba->getUserWithEmail($email);
         if($user->getId() > -1){
@@ -109,11 +151,20 @@ class AccountManager implements ServiceProviderInterface
         return false;
     }
 
+    /**
+     * Logs out the current user.
+     */
     public function performLogout(){
         $this->user = User::getNullUser();
         $this->store();
     }
 
+    /**
+     * Searches for a user by the given id.
+     *
+     * @param int $id The id of the user.
+     * @return bool|User The user object if found, false otherwise.
+     */
     public function findUser($id){
         if($this->user->getId() === $id){
             return $this->user;
@@ -125,6 +176,14 @@ class AccountManager implements ServiceProviderInterface
         return false;
     }
 
+    /**
+     * Sends a recovery email to a given user.
+     *
+     * @param User $user The user to send the recovery email to.
+     * @param Twig $twig The twig environment to render the email template.
+     * @param string $base_url The base url of the application.
+     * @return bool True if an email was sent, false otherwise.
+     */
     public function sendRecoverEmail(User $user,Twig $twig, $base_url){
         $time = time() + 7200;
         $hmac = $this->getPasswordResetHMAC($user, $time);
@@ -142,7 +201,6 @@ class AccountManager implements ServiceProviderInterface
      *
      * @param User $user The user who needs the HMAC
      * @param int $expiration An expiration time in epoch. If left null, current time + 7200 seconds will be taken (2 hours from now).
-     *
      * @return string The HMAC that can be used to verify the userId, expires, client IP and old hash.
      */
     public function getPasswordResetHMAC(User $user, $expiration = null)
@@ -157,6 +215,14 @@ class AccountManager implements ServiceProviderInterface
             $this->hmac);
     }
 
+    /**
+     * Updates the password for a given user.
+     *
+     * @param User $user The user that will get the new password.
+     * @param string $newPassword The new password for the user.
+     * @param Twig $twig The twig environment to render the email template.
+     * @return bool True if the password was updated & email sent, false otherwise.
+     */
     public function updatePassword(User $user, $newPassword, Twig $twig){
         // Hash password
         $hash = password_hash($newPassword,PASSWORD_DEFAULT);
@@ -170,6 +236,14 @@ class AccountManager implements ServiceProviderInterface
         return false;
     }
 
+    /**
+     * Sends a registration email to the given email address, so that the address can be verified.
+     *
+     * @param string $email The email address that needs to be verified.
+     * @param Twig $twig The twig environment to render the email template.
+     * @param string $base_url The base url of the application.
+     * @return bool True if the email was sent, false otherwise.
+     */
     public function sendRegistrationEmail($email, Twig $twig, $base_url){
         // Create a 24-hour valid timestamp
         $expiration = time() + 86400;
@@ -185,10 +259,18 @@ class AccountManager implements ServiceProviderInterface
         return $this->email->sendEmail($email, $email, "Email verification for registration request", $message);
     }
 
-    public function getRegistrationEmailHMAC($email, $expiration)
+    /**
+     * Obtains an HMAC for the registration email.
+     *
+     * @param string $email The email address that needs to be included in the HMAC.
+     * @param int $expiration The expiration time that needs to be included. If left null, time + 86400 seconds will be
+     * used (24 hours in the future).
+     * @return string The HMAC for the given parameters.
+     */
+    public function getRegistrationEmailHMAC($email, $expiration = null)
     {
         if ($expiration === null) {
-            $expiration = time() + 7200;
+            $expiration = time() + 86400;
         }
         return hash_hmac(
             "sha256",
@@ -196,6 +278,13 @@ class AccountManager implements ServiceProviderInterface
             $this->hmac);
     }
 
+    /**
+     * Registers a given user by storing it in the database and sending an email.
+     *
+     * @param User $user The unregistered user.
+     * @param Twig $twig The twig environment to render the email template.
+     * @return bool True if the user was registered and an email was sent, false otherwise.
+     */
     public function registerUser(User $user, Twig $twig){
         $id = $this->dba->registerUser($user);
         if($id > -1){
