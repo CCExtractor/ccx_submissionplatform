@@ -170,13 +170,23 @@ class DatabaseLayer implements ServiceProviderInterface
     }
 
     public function getSampleById($id){
-        // TODO: finish
-        return false;
+        $p = $this->pdo->prepare("SELECT s.*,u.additional_files FROM sample s JOIN upload u ON s.id = u.sample_id WHERE s.id = :id LIMIT 1;");
+        $p->bindParam(":id",$id,PDO::PARAM_INT);
+        $result = false;
+        if($p->execute()){
+            $result = $p->fetch();
+        }
+        return $result;
     }
 
-    public function getSampleByHash($id){
-        // TODO: finish
-        return false;
+    public function getSampleByHash($hash){
+        $p = $this->pdo->prepare("SELECT s.*,u.additional_files FROM sample s JOIN upload u ON s.id = u.sample_id WHERE s.hash = :hash LIMIT 1;");
+        $p->bindParam(":hash",$hash,PDO::PARAM_INT);
+        $result = false;
+        if($p->execute()){
+            $result = $p->fetch();
+        }
+        return $result;
     }
 
     public function registerUser(User $user)
