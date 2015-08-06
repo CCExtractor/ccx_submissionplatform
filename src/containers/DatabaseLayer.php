@@ -169,6 +169,16 @@ class DatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
+    public function getSampleById($id){
+        // TODO: finish
+        return false;
+    }
+
+    public function getSampleByHash($id){
+        // TODO: finish
+        return false;
+    }
+
     public function registerUser(User $user)
     {
         $name = $user->getName();

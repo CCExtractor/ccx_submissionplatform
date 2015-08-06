@@ -108,6 +108,11 @@ class FileHandler implements ServiceProviderInterface
         return false;
     }
 
+    public function fetchMediaInfo($sample, $generate=false){
+        // TODO: fetch media info for sample, if not existing & $generate == true, create it
+        return false;
+    }
+
     /**
      * Registers services on the given container.
      *
