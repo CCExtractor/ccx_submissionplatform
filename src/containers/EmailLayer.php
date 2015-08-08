@@ -8,16 +8,21 @@ namespace org\ccextractor\submissionplatform\containers;
 use Exception;
 use org\ccextractor\submissionplatform\objects\User;
 use PHPMailer;
+use phpmailerException;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 
+/**
+ * Class EmailLayer allows to send emails to users.
+ *
+ * @package org\ccextractor\submissionplatform\containers
+ */
 class EmailLayer implements ServiceProviderInterface
 {
     /**
-     * @var PHPMailer
+     * @var PHPMailer The PHPMailer that will do the actual email sending.
      */
     private $mail;
-
 
     /**
      * EmailLayer constructor.
@@ -30,7 +35,6 @@ class EmailLayer implements ServiceProviderInterface
     {
         $this->setUpPHPMailer($user, $pass, $domain);
     }
-
 
     /**
      * Registers services on the given container.
@@ -45,6 +49,14 @@ class EmailLayer implements ServiceProviderInterface
         $pimple["email"] = $this;
     }
 
+    /**
+     * Sets up the PHP mailer instance, using the given user, pass and domain.
+     *
+     * @param string $user The user that will be used to send mail.
+     * @param string $pass The password for above user.
+     * @param string $domain The domain name.
+     * @throws phpmailerException
+     */
     private function setUpPHPMailer($user, $pass, $domain)
     {
         $mail = new PHPMailer();

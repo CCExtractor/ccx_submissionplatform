@@ -9,6 +9,11 @@ use Milo\Github\Api;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 
+/**
+ * Class GitWrapper Wrapper for the GitHub operations.
+ *
+ * @package org\ccextractor\submissionplatform\containers
+ */
 class GitWrapper extends Api implements ServiceProviderInterface
 {
     /**
@@ -18,7 +23,6 @@ class GitWrapper extends Api implements ServiceProviderInterface
     {
         parent::__construct();
     }
-
 
     /**
      * Registers services on the given container.
