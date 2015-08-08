@@ -16,7 +16,7 @@
         <tbody>
         {% for sample in samples %}
             {% if useSampleOriginal is defined %}
-                {% set display=sample.original_name %}
+                {% set display=sample.originalName %}
             {% else %}
                 {% set display=sample.hash %}
             {% endif %}

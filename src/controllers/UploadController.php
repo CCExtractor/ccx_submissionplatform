@@ -236,7 +236,7 @@ class UploadController extends BaseController
                             if($data !== false){
                                 if(isset($_POST["link_id"])){
                                     $sample = $this->database->getSampleForUser($this->account->getUser(), $_POST["link_id"]);
-                                    if(isset($sample["id"])){
+                                    if($sample !== false){
                                         // Process
                                         if($this->file_handler->appendSample($this->account->getUser(), $args["id"], $_POST["link_id"])){
                                             $url = $this->router->pathFor($self->getPageName()."_process");

@@ -14,7 +14,7 @@
             <option value="-1">-- Choose --</option>
             {% if ccx_versions|length > 0 %}
                 {% for version in ccx_versions %}
-                    <option value="{{ version.id }}"  {% if toSelect == version.id %}selected="selected"{% endif %}>{{ version.version }} ({{ version.released }})</option>
+                    <option value="{{ version.id }}"  {% if toSelect == version.id %}selected="selected"{% endif %}>{{ version.name }} ({{ version.release|date("Y-m-d") }})</option>
                 {% endfor %}
             {% endif %}
         </select>

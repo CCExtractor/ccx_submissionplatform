@@ -11,7 +11,7 @@
         <tbody>
         {% for entry in queue %}
             <tr>
-                <td>{{ entry.original }}</td>
+                <td>{{ entry.originalName }}</td>
                 <td>{{ entry.extension }}</td>
                 <td>
                     <a href="{{ path_for('Upload_process_id', { 'id': entry.id }) }}" title="Finish submission"><i class="fa fa-edit"></i></a>&nbsp;

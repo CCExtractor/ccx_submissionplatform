@@ -5,27 +5,36 @@
  */
 namespace org\ccextractor\submissionplatform\containers;
 
+use org\ccextractor\submissionplatform\objects\QueuedSample;
+use org\ccextractor\submissionplatform\objects\Sample;
+use org\ccextractor\submissionplatform\objects\SampleData;
 use org\ccextractor\submissionplatform\objects\User;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 use SplFileInfo;
+use XMLReader;
 
+/**
+ * Class FileHandler handles some file operations for samples.
+ *
+ * @package org\ccextractor\submissionplatform\containers
+ */
 class FileHandler implements ServiceProviderInterface
 {
     /**
-     * @var DatabaseLayer
+     * @var DatabaseLayer The layer that connects to the database.
      */
     private $dba;
     /**
-     * @var array
+     * @var array A list of forbidden extensions.
      */
     private $forbiddenExtensions;
     /**
-     * @var string
+     * @var string The directory that holds the queued items.
      */
     private $temp_dir;
     /**
-     * @var string
+     * @var string The directory that holds the submitted samples.
      */
     private $store_dir;
 
@@ -80,14 +89,15 @@ class FileHandler implements ServiceProviderInterface
             $this->dba->storeProcessMessage($user, "File ".$fName." was removed due to an illegal extension.");
         } else {
             // Get SHA256 of file
-            $sha1 = hash_file('sha256',$file->getPathname());
-            // FIXME: check if there's no samples (queued) yet with the same sha1
+            $hash = hash_file('sha256',$file->getPathname());
+            // FIXME: check if there's no samples (queued) yet with the same hash
             $ext = ($extension !== "")?".".$extension:"";
             $original_name = str_replace($ext,"",$fName);
             // Copy file to processing folder
-            copy($file->getPathname(),$this->temp_dir.$sha1.$ext);
+            copy($file->getPathname(),$this->temp_dir.Sample::getFileName($hash,$extension));
             // Store in processing queue.
-            $this->dba->storeQueue($user,$original_name,$sha1,$extension);
+            $sample = new QueuedSample(-1,$hash,$extension,$original_name,$user);
+            $this->dba->storeQueue($sample);
         }
         // Delete file
         unlink($file->getPathname());
@@ -101,9 +111,9 @@ class FileHandler implements ServiceProviderInterface
      * @return bool True if the file was removed and scrapped from the queue.
      */
     public function remove(User $user, $id){
-        $filename = $this->dba->getQueueFilename($user,$id);
-        if($filename !== false){
-            if(unlink($this->temp_dir.$filename)){
+        $queued = $this->dba->getQueuedSample($user,$id);
+        if($queued !== false){
+            if(unlink($this->temp_dir.$queued->getSampleFileName())){
                 return $this->dba->removeQueue($id);
             }
         }
@@ -122,10 +132,9 @@ class FileHandler implements ServiceProviderInterface
      * @return bool True if the queue item existed, the file was moved and stored in the database.
      */
     public function submitSample(User $user, $id, $ccx_version_id, $platform, $params, $notes){
-        $sample = $this->dba->getQueuedSample($user,$id);
-        if($sample !== false){
-            $ext = ($sample["extension"] !== "")?".".$sample["extension"]:"";
-            if(rename($this->temp_dir.$sample["hash"].$ext,$this->store_dir.$sample["hash"].$ext)){
+        $queued = $this->dba->getQueuedSample($user,$id);
+        if($queued !== false){
+            if(rename($this->temp_dir.$queued->getSampleFileName(),$this->store_dir.$queued->getSampleFileName())){
                 return $this->dba->moveQueueToSample($user, $id, $ccx_version_id, $platform, $params, $notes);
             }
         }
@@ -145,8 +154,7 @@ class FileHandler implements ServiceProviderInterface
         if($queued !== false){
             $sample = $this->dba->getSampleForUser($user, $sample_id);
             if($sample !== false) {
-                $ext = ($queued["extension"] !== "") ? "." . $queued["extension"] : "";
-                if (rename($this->temp_dir . $queued["hash"] . $ext, $this->store_dir ."extra/". $sample["hash"]."_".$sample["additional_files"] . $ext)) {
+                if (rename($this->temp_dir . $queued->getSampleFileName(), $this->store_dir ."extra/". $sample->getAdditionalFileName($queued->getExtension()))) {
                     return $this->dba->moveQueueToAppend($queue_id, $sample_id);
                 }
             }
@@ -157,30 +165,46 @@ class FileHandler implements ServiceProviderInterface
     /**
      * Fetches the media info for a given sample.
      *
-     * @param object $sample The sample.
-     * @param bool|false $generate If true, it will generate the media info if it's missing.
+     * @param SampleData $sample The sample.
+     * @param bool $generate If true, it will generate the media info if it's missing.
      * @return bool|string The media info if it's loaded, false otherwise.
      */
-    public function fetchMediaInfo($sample, $generate = false){
+    public function fetchMediaInfo(SampleData $sample, $generate = false){
         // Media info, if existing, is stored in $store_dir/media/hash.xml
-        $finfo = new SplFileInfo($this->store_dir."/media/".$sample["hash"].".xml");
+        $finfo = new SplFileInfo($this->store_dir."media/".$sample->getHash().".xml");
         $media = false;
         if($finfo->isFile()){
             $media = $this->loadMediaInfo($finfo);
         } else if($generate){
-            $media = $this->createMediaInfo($finfo, new SplFileInfo($this->store_dir."/".$sample["hash"]));
+            $media = $this->createMediaInfo($finfo, new SplFileInfo($this->store_dir.$sample->getHash()));
         }
         return $media;
     }
 
+    /**
+     * Loads and parses the media info from given file.
+     *
+     * @param SplFileInfo $mediaInfo The mediainfo xml containing the metadata.
+     * @return bool|string False on failure, a string with the contents otherwise.
+     */
     private function loadMediaInfo(SplFileInfo $mediaInfo){
-        // TODO: load xml, process it and return
-        return true;
+        $reader = new XMLReader();
+        if($reader->open($mediaInfo->getPathname())){
+            return $reader->readOuterXml();
+        }
+        return false;
     }
 
+    /**
+     * Generates (and then loads) the media info for a given sample. Mediainfo output is stored in a given file.
+     *
+     * @param SplFileInfo $mediaInfo The mediainfo xml that will contain the metadata.
+     * @param SplFileInfo $sample The sample that needs the media info.
+     * @return bool|string False on failure, a string with the mediainfo contents otherwise.
+     */
     private function createMediaInfo(SplFileInfo $mediaInfo, SplFileInfo $sample){
-        // TODO: run mediainfo on sample, store xml.
-
+        $command = "mediainfo --Full --Output=XML ".escapeshellarg($sample->getPathname())." > ".escapeshellarg($mediaInfo->getPathname());
+        shell_exec($command);
         return $this->loadMediaInfo($mediaInfo);
     }
 }

@@ -6,7 +6,11 @@
 namespace org\ccextractor\submissionplatform\containers;
 
 use DateTime;
+use org\ccextractor\submissionplatform\objects\CCExtractorVersion;
 use org\ccextractor\submissionplatform\objects\FTPCredentials;
+use org\ccextractor\submissionplatform\objects\QueuedSample;
+use org\ccextractor\submissionplatform\objects\Sample;
+use org\ccextractor\submissionplatform\objects\SampleData;
 use org\ccextractor\submissionplatform\objects\User;
 use PDO;
 use Pimple\Container;
@@ -67,15 +71,15 @@ class DatabaseLayer implements ServiceProviderInterface
     /**
      * Gets the latest version of CCExtractor.
      *
-     * @return array An array with a version and date key.
+     * @return CCExtractorVersion The latest CCExtractor version, or a null object in case of an error.
      */
     public function getLatestCCExtractorVersion(){
-        $stmt = $this->pdo->query("SELECT version, released FROM ccextractor_versions ORDER BY ID DESC LIMIT 1;");
-        $result = ["version" => "error", "date" => new DateTime()];
+        $stmt = $this->pdo->query("SELECT * FROM ccextractor_versions ORDER BY ID DESC LIMIT 1;");
         if($stmt !== false){
             $data = $stmt->fetch();
-            $result["version"] = $data['version'];
-            $result["date"] = new DateTime($data['released']);
+            $result = new CCExtractorVersion($data["id"],$data["version"],new DateTime($data["released"]));
+        } else {
+            $result = CCExtractorVersion::getNullObject();
         }
         return $result;
     }
@@ -83,13 +87,17 @@ class DatabaseLayer implements ServiceProviderInterface
     /**
      * Gets a list of all CCExtractor versions.
      *
-     * @return array An array of CCX versions (id,version,date as keys).
+     * @return array An array of CCX versions.
      */
     public function getAllCCExtractorVersions(){
         $stmt = $this->pdo->query("SELECT * FROM ccextractor_versions ORDER BY id DESC;");
         $result = [];
         if($stmt !== false && $stmt->rowCount() > 1){
-            $result = $stmt->fetchAll();
+            $data = $stmt->fetch();
+            while($data !== false){
+                $result[] = new CCExtractorVersion($data["id"],$data["version"],new DateTime($data["released"]));
+                $data = $stmt->fetch();
+            }
         }
         return $result;
     }
@@ -109,13 +117,17 @@ class DatabaseLayer implements ServiceProviderInterface
     /**
      * Gets all samples, sorted by extension.
      *
-     * @return array All the samples.
+     * @return array The samples.
      */
     public function getAllSamples(){
         $p = $this->pdo->prepare("SELECT * FROM sample ORDER BY extension ASC");
         $result = [];
         if($p->execute()){
-            $result = $p->fetchAll();
+            $data = $p->fetch();
+            while($data !== false){
+                $result[] = new Sample($data["id"],$data["hash"],$data["extension"],$data["original_name"]);
+                $data = $p->fetch();
+            }
         }
         return $result;
     }
@@ -137,6 +149,12 @@ class DatabaseLayer implements ServiceProviderInterface
         return User::getNullUser();
     }
 
+    /**
+     * Returns a user with a given id, or the null user if not found.
+     *
+     * @param int $id The id of the user.
+     * @return User The user object.
+     */
     public function getUserWithId($id)
     {
         $stmt = $this->pdo->prepare("SELECT * FROM user WHERE id = :id LIMIT 1");
@@ -148,6 +166,11 @@ class DatabaseLayer implements ServiceProviderInterface
         return User::getNullUser();
     }
 
+    /**
+     * Gets a list of all registered users.
+     *
+     * @return array A list of all registered users.
+     */
     public function listUsers(){
         $stmt = $this->pdo->query("SELECT * FROM user ORDER BY id ASC");
         $result = [];
@@ -161,6 +184,12 @@ class DatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
+    /**
+     * Stores a modified user object in the database.
+     *
+     * @param User $user The user object that's modified compared to the database entry.
+     * @return bool True if the update worked, false otherwise.
+     */
     public function updateUser(User $user)
     {
         $name = $user->getName();
@@ -183,49 +212,118 @@ class DatabaseLayer implements ServiceProviderInterface
         return false;
     }
 
+    /**
+     * Gets all samples for a given user.
+     *
+     * @param User $user The user we want to see the samples of.
+     * @return array A list of the submitted samples.
+     */
     public function getSamplesForUser(User $user){
         $id = $user->getId();
         $p = $this->pdo->prepare("SELECT s.* FROM sample s JOIN upload u ON s.id = u.sample_id WHERE u.user_id = :id ORDER BY s.id ASC;");
         $p->bindParam(":id",$id,PDO::PARAM_INT);
         $result = [];
         if($p->execute()){
-            $result = $p->fetchAll();
+            $data = $p->fetch();
+            while($data !== false){
+                $result[] = new Sample($data["id"],$data["hash"],$data["extension"],$data["original_name"]);
+                $data = $p->fetch();
+            }
         }
         return $result;
     }
 
+    /**
+     * Gets a specific sample for a given user.
+     *
+     * @param User $user The user we want to get a sample for.
+     * @param int $id The sample id.
+     * @return bool|SampleData False on failure or the SampleData on success.
+     */
     public function getSampleForUser(User $user, $id){
         $uid = $user->getId();
-        $p = $this->pdo->prepare("SELECT s.*,u.additional_files FROM sample s JOIN upload u ON s.id = u.sample_id WHERE u.user_id = :uid AND s.id = :id LIMIT 1;");
+        $p = $this->pdo->prepare("
+SELECT s.*, c.id AS 'ccx_id', c.released, c.version, u.additional_files, u.notes, u.parameters, u.platform
+FROM sample s
+	JOIN upload u ON s.id = u.sample_id
+	JOIN ccextractor_versions c ON c.id = u.ccx_used
+WHERE u.user_id = :uid AND s.id = :id LIMIT 1;");
         $p->bindParam(":uid",$uid,PDO::PARAM_INT);
         $p->bindParam(":id",$id,PDO::PARAM_INT);
         $result = false;
         if($p->execute()){
-            $result = $p->fetch();
+            $data = $p->fetch();
+            $result = new SampleData(
+                $data["id"], $data["hash"], $data["extension"], $data["original_name"], $user,
+                new CCExtractorVersion($data["ccx_id"],$data["version"],new DateTime($data["released"])),
+                $data["platform"], $data["parameters"], $data["notes"], $data["additional_files"]
+            );
         }
         return $result;
     }
 
+    /**
+     * Gets a sample for the given id.
+     *
+     * @param int $id The sample to get.
+     * @return bool|SampleData False on failure, sample data otherwise.
+     */
     public function getSampleById($id){
-        $p = $this->pdo->prepare("SELECT s.*,u.additional_files FROM sample s JOIN upload u ON s.id = u.sample_id WHERE s.id = :id LIMIT 1;");
+        $p = $this->pdo->prepare("
+SELECT s.*, uu.id AS 'user_id', uu.name AS 'user_name', uu.email, c.id AS 'ccx_id', c.released, c.version, u.additional_files, u.notes, u.parameters, u.platform
+FROM sample s
+  JOIN upload u ON s.id = u.sample_id
+  JOIN user uu ON uu.id = u.user_id
+  JOIN ccextractor_versions c ON c.id = u.ccx_used
+WHERE s.id = :id LIMIT 1;");
         $p->bindParam(":id",$id,PDO::PARAM_INT);
         $result = false;
         if($p->execute()){
-            $result = $p->fetch();
+            $data = $p->fetch();
+            $result = new SampleData(
+                $data["id"], $data["hash"], $data["extension"], $data["original_name"],
+                new User($data["user_id"],$data["user_name"],$data["email"]),
+                new CCExtractorVersion($data["ccx_id"],$data["version"],new DateTime($data["released"])),
+                $data["platform"], $data["parameters"], $data["notes"], $data["additional_files"]
+            );
         }
         return $result;
     }
 
+    /**
+     * Gets a sample for the given hash.
+     *
+     * @param string $hash The sample to get.
+     * @return bool|SampleData False on failure, sample data otherwise.
+     */
     public function getSampleByHash($hash){
-        $p = $this->pdo->prepare("SELECT s.*,u.additional_files FROM sample s JOIN upload u ON s.id = u.sample_id WHERE s.hash = :hash LIMIT 1;");
+        $p = $this->pdo->prepare("
+SELECT s.*, uu.id AS 'user_id', uu.name AS 'user_name', uu.email, c.id AS 'ccx_id', c.released, c.version, u.additional_files, u.notes, u.parameters, u.platform
+FROM sample s
+  JOIN upload u ON s.id = u.sample_id
+  JOIN user uu ON uu.id = u.user_id
+  JOIN ccextractor_versions c ON c.id = u.ccx_used
+WHERE s.hash = :hash LIMIT 1;");
         $p->bindParam(":hash",$hash,PDO::PARAM_INT);
         $result = false;
         if($p->execute()){
-            $result = $p->fetch();
+            $data = $p->fetch();
+            $result = new SampleData(
+                $data["id"], $data["hash"], $data["extension"], $data["original_name"],
+                new User($data["user_id"],$data["user_name"],$data["email"]),
+                new CCExtractorVersion($data["ccx_id"],$data["version"],new DateTime($data["released"])),
+                $data["platform"], $data["parameters"], $data["notes"], $data["additional_files"]
+            );
         }
         return $result;
     }
 
+    /**
+     * Stores a user in the database.
+     *
+     * @param User $user The user to register/store.
+     * @return int The user id assigned, or -1 in case of failure.
+     */
     public function registerUser(User $user)
     {
         $name = $user->getName();
@@ -240,11 +338,17 @@ class DatabaseLayer implements ServiceProviderInterface
         $stmt->bindParam(":github",$github,PDO::PARAM_BOOL);
         $stmt->bindParam(":admin",$admin,PDO::PARAM_BOOL);
         if($stmt->execute() && $stmt->rowCount() === 1){
-            return $this->pdo->lastInsertId();
+            return intval($this->pdo->lastInsertId());
         }
         return -1;
     }
 
+    /**
+     * Fetches FTP credentials for a given user.
+     *
+     * @param User $user The user we want to get the FTP credentials off.
+     * @return bool|FTPCredentials False on failure, FTPCredentials otherwise.
+     */
     public function getFTPCredentialsForUser(User $user){
         $id = $user->getId();
         $stmt = $this->pdo->prepare("SELECT * FROM ftpd WHERE user_id = :uid LIMIT 1;");
@@ -256,6 +360,12 @@ class DatabaseLayer implements ServiceProviderInterface
         return false;
     }
 
+    /**
+     * Stores a set of FTP credentials in the database.
+     *
+     * @param FTPCredentials $newCredentials The FTP credentials to store.
+     * @return bool|FTPCredentials False on failure, FTP credentials otherwise.
+     */
     public function storeFTPCredentials(FTPCredentials $newCredentials)
     {
         $id = $newCredentials->getUser()->getId();
@@ -279,6 +389,11 @@ class DatabaseLayer implements ServiceProviderInterface
         return false;
     }
 
+    /**
+     * Gets a list of forbidden extensions from the database.
+     *
+     * @return array A list of forbidden extensions.
+     */
     public function getForbiddenExtensions()
     {
         $result = [];
@@ -293,6 +408,13 @@ class DatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
+    /**
+     * Stores a processing message in the database for given user.
+     *
+     * @param User $user The user to store the message for.
+     * @param string $message The message.
+     * @return bool False on failure, true on success.
+     */
     public function storeProcessMessage(User $user, $message)
     {
         $uid = $user->getId();
@@ -302,9 +424,18 @@ class DatabaseLayer implements ServiceProviderInterface
         return $stmt->execute() && $stmt->rowCount() === 1;
     }
 
-    public function storeQueue(User $user, $original, $hash, $extension)
+    /**
+     * Stores a given QueuedSample in the database.
+     *
+     * @param QueuedSample $sample The sample to store.
+     * @return bool True on success, false on failure.
+     */
+    public function storeQueue(QueuedSample $sample)
     {
-        $uid = $user->getId();
+        $uid = $sample->getUser()->getId();
+        $original = $sample->getOriginalName();
+        $hash = $sample->getHash();
+        $extension = $sample->getExtension();
         $stmt = $this->pdo->prepare("INSERT INTO processing_queued VALUES (NULL, :id, :hash, :extension, :original);");
         $stmt->bindParam(":id",$uid,PDO::PARAM_INT);
         $stmt->bindParam(":original",$original,PDO::PARAM_STR);
@@ -313,17 +444,34 @@ class DatabaseLayer implements ServiceProviderInterface
         return $stmt->execute() && $stmt->rowCount() === 1;
     }
 
+    /**
+     * Gets all queued samples for given user.
+     *
+     * @param User $user The user we want the samples for.
+     * @return array A list of all queued samples.
+     */
     public function getQueuedSamples(User $user){
         $uid = $user->getId();
         $stmt = $this->pdo->prepare("SELECT * FROM processing_queued WHERE user_id = :id ORDER BY id ASC");
         $stmt->bindParam(":id",$uid,PDO::PARAM_INT);
         $result = [];
         if($stmt->execute()){
-            $result = $stmt->fetchAll();
+            $data = $stmt->fetch();
+            while($data !== false){
+                $result[] = new QueuedSample($data["id"],$data["hash"],$data["extension"],$data["original"],$user);
+                $data = $stmt->fetch();
+            }
         }
         return $result;
     }
 
+    /**
+     * Gets a queued sample for a given used and id.
+     *
+     * @param User $user The user that submitted the sample.
+     * @param int $id The id of the sample.
+     * @return bool|QueuedSample False on failure, the object otherwise.
+     */
     public function getQueuedSample(User $user, $id){
         $uid = $user->getId();
         $stmt = $this->pdo->prepare("SELECT * FROM processing_queued WHERE user_id = :uid AND id = :id LIMIT 1");
@@ -331,11 +479,18 @@ class DatabaseLayer implements ServiceProviderInterface
         $stmt->bindParam(":id",$id,PDO::PARAM_INT);
         $result = false;
         if($stmt->execute() && $stmt->rowCount() == 1){
-            $result = $stmt->fetch();
+            $data = $stmt->fetch();
+            $result = new QueuedSample($data["id"],$data["hash"],$data["extension"],$data["original"],$user);
         }
         return $result;
     }
 
+    /**
+     * Gets the 10 latest processing messages for a given user.
+     *
+     * @param User $user The user to get the messages for.
+     * @return array The last 10 messages for this user.
+     */
     public function getQueuedMessages(User $user){
         $uid = $user->getId();
         $stmt = $this->pdo->prepare("SELECT message FROM processing_messages WHERE user_id = :id ORDER BY id DESC LIMIT 10");
@@ -351,23 +506,12 @@ class DatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
-    public function getQueueFilename(User $user, $id)
-    {
-        $uid = $user->getId();
-        $stmt = $this->pdo->prepare("SELECT hash, extension FROM processing_queued WHERE user_id = :uid AND id = :id LIMIT 1");
-        $stmt->bindParam(":uid",$uid,PDO::PARAM_INT);
-        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
-        if($stmt->execute() && $stmt->rowCount() === 1){
-            $data = $stmt->fetch();
-            $name = $data["hash"].".".$data["extension"];
-            if($data["extension"] === ""){
-                $name = $data["hash"];
-            }
-            return $name;
-        }
-        return false;
-    }
-
+    /**
+     * Removes a sample from the queue based on given id.
+     *
+     * @param int $id The id of the queued item to remove.
+     * @return bool True on success, false on failure.
+     */
     public function removeQueue($id)
     {
         $stmt = $this->pdo->prepare("DELETE FROM processing_queued WHERE id = :id LIMIT 1");
@@ -375,16 +519,30 @@ class DatabaseLayer implements ServiceProviderInterface
         return $stmt->execute() && $stmt->rowCount() === 1;
     }
 
+    /**
+     * Moves a queued item to the sample table, finalizing the entry (apart from additional files).
+     *
+     * @param User $user The user that submits the sample.
+     * @param int $id The id of the queued sample.
+     * @param int $ccx_version_id The id of the CCX version used.
+     * @param string $platform The platform used.
+     * @param string $params The used parameters.
+     * @param string $notes Additional remarks or notes.
+     * @return bool True on success, false on failure.
+     */
     public function moveQueueToSample(User $user, $id, $ccx_version_id, $platform, $params, $notes)
     {
         $queue = $this->getQueuedSample($user,$id);
         if($queue !== false){
             $this->pdo->beginTransaction();
             // Insert sample
+            $hash = $queue->getHash();
+            $extension = $queue->getExtension();
+            $original = $queue->getOriginalName();
             $sample = $this->pdo->prepare("INSERT INTO sample VALUES (NULL,:hash,:extension,:original);");
-            $sample->bindParam(":hash",$queue["hash"],PDO::PARAM_STR);
-            $sample->bindParam(":extension",$queue["extension"],PDO::PARAM_STR);
-            $sample->bindParam(":original",$queue["original"],PDO::PARAM_STR);
+            $sample->bindParam(":hash",$hash,PDO::PARAM_STR);
+            $sample->bindParam(":extension",$extension,PDO::PARAM_STR);
+            $sample->bindParam(":original",$original,PDO::PARAM_STR);
             if($sample->execute() && $sample->rowCount() === 1){
                 $sampleId = $this->pdo->lastInsertId();
                 $uid = $user->getId();
@@ -409,6 +567,13 @@ class DatabaseLayer implements ServiceProviderInterface
         return false;
     }
 
+    /**
+     * Moves a given queued item to the appended sample files.
+     *
+     * @param int $queue_id The id of the queued item.
+     * @param int $sample_id The id of the sample where the queued item will be added to.
+     * @return bool
+     */
     public function moveQueueToAppend($queue_id, $sample_id)
     {
         $this->pdo->beginTransaction();
