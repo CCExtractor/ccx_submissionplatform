@@ -4,6 +4,7 @@
     {% set accept=".ts,.txt,.srt,.png,video/*" %}
     <h3>Upload a new sample</h3>
     <p>Please select a file using the "browse" button below, and then press the "Upload sample" button. This can take a while though! For bigger files it's recommended to use <a href="{{ path_for("Upload_ftp") }}">FTP upload</a> instead.</p>
+    <p>The maximum allowed upload size is: {{ upload_size }}</p>
     {% if message is defined %}
     <div class="notice error"><i class="fa fa-large fa-remove"></i> {{ message }}</div>
     {% endif %}

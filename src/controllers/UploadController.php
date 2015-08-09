@@ -84,6 +84,7 @@ class UploadController extends BaseController
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
+                        $this->templateValues->add("upload_size", $this->file_handler->file_upload_max_size());
                         // CSRF values
                         $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
                         $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
@@ -119,6 +120,7 @@ class UploadController extends BaseController
                                 }
                             }
                         }
+                        $this->templateValues->add("upload_size", $this->file_handler->file_upload_max_size());
                         $this->templateValues->add("message", "Invalid file uploaded! Please try correct this error and try again: ".$message);
                         // CSRF values
                         $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
