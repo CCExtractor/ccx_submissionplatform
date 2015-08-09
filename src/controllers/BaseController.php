@@ -12,6 +12,8 @@ use Slim\App;
 
 abstract class BaseController implements IController
 {
+    public static $BASE_URL;
+
     protected $pageName;
     protected $pageDescription;
 

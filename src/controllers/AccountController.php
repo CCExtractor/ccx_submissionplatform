@@ -97,8 +97,7 @@ class AccountController extends BaseController
                         $user = $this->database->getUserWithEmail($_POST["email"]);
                         if($user->getId() > -1){
                             // We found the user, send recovery email and display ok message
-                            $base_url = (($this->environment["HTTPS"] === "on")?"https://":"http://").$this->environment["HTTP_HOST"];
-                            if($this->account->sendRecoverEmail($user,$this->view,$base_url)){
+                            if($this->account->sendRecoverEmail($user,$this->view,BaseController::$BASE_URL)){
                                 $this->templateValues->add("message","An email with instructions to reset the password has been sent.");
                                 return $this->view->render($response,"account/recover-ok.html.twig",$this->templateValues->getValues());
                             } else {
@@ -209,8 +208,7 @@ class AccountController extends BaseController
                         return $d($request,$response);
                     }
                     // We found the user, send recovery email and display ok message
-                    $base_url = (($this->environment["HTTPS"] === "on")?"https://":"http://").$this->environment["HTTP_HOST"];
-                    if($this->account->sendRecoverEmail($user,$this->view,$base_url)){
+                    if($this->account->sendRecoverEmail($user,$this->view,BaseController::$BASE_URL)){
                         $this->templateValues->add("message","An email with instructions to reset the password has been sent.");
                         return $this->view->render($response,"account/recover-ok.html.twig",$this->templateValues->getValues());
                     } else {
@@ -244,8 +242,7 @@ class AccountController extends BaseController
                         $user = $this->database->getUserWithEmail($_POST["email"]);
                         if($user->getId() === -1){
                             // Send verification email using a hash
-                            $base_url = (($this->environment["HTTPS"] === "on")?"https://":"http://").$this->environment["HTTP_HOST"];
-                            if($this->account->sendRegistrationEmail($_POST["email"],$this->view, $base_url)){
+                            if($this->account->sendRegistrationEmail($_POST["email"],$this->view, BaseController::$BASE_URL)){
                                 $this->templateValues->add("message","An email was sent to the given email address. Please follow the instructions to create an account.");
                                 return $this->view->render($response,"account/registration-success.html.twig",$this->templateValues->getValues());
                             }

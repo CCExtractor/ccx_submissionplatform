@@ -7,6 +7,7 @@ use org\ccextractor\submissionplatform\containers\FTPConnector;
 use org\ccextractor\submissionplatform\containers\GitWrapper;
 use org\ccextractor\submissionplatform\containers\TemplateValues;
 use org\ccextractor\submissionplatform\controllers\AccountController;
+use org\ccextractor\submissionplatform\controllers\BaseController;
 use org\ccextractor\submissionplatform\controllers\HomeController;
 use org\ccextractor\submissionplatform\controllers\IController;
 use org\ccextractor\submissionplatform\controllers\SampleInfoController;
@@ -58,6 +59,7 @@ $container->register($dba);
 // Email container
 // FIXME: replace on full launch
 $host = "canihavesome.coffee"; //$app->environment["HTTP_HOST"];
+BaseController::$BASE_URL = (($app->environment["HTTPS"] === "on")?"https://":"http://").$app->environment["HTTP_HOST"];
 $email = new EmailLayer(AMAZON_SES_USER, AMAZON_SES_PASS, $host);
 $container->register($email);
 // GitHub API
