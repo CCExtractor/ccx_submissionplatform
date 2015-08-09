@@ -75,7 +75,7 @@ class SampleData extends Sample
     /**
      * @return CCExtractorVersion
      */
-    public function getCcextractorVersion(){
+    public function getCCExtractorVersion(){
         return $this->ccextractor_version;
     }
 
