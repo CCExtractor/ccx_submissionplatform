@@ -2,11 +2,44 @@
 
 {% block content %}
     <h3>Sample information</h3>
-
+    <h4>Basic details</h4>
+    <blockquote class="small">
+        <p>
+            SHA256-hash: {{ sample.hash }}<br/>
+            Extension: {{ sample.extension }}<br/>
+            {% if loggedInUser.isAdmin or loggedInUser.id == sample.user.id %}
+                Original name: {{ sample.originalName }}<br />
+            {% endif %}
+            {% if loggedInUser.isAdmin %}
+                Submitted by: <a href="{{ path_for("My Account_view_id", {'id': sample.user.id }) }}">{{ sample.user.name }}</a><br/>
+            {% endif %}
+            Submitted for CCExtractor version {{ sample.CCExtractorVersion.name }} (released {{ sample.CCExtractorVersion.release|date("Y-m-d") }})<br />
+            Platform: {{ sample.platform }}<br />
+            Parameters: {{ sample.parameters }}<br />
+            Notes: {{ sample.notes }}<br />
+        </p>
+    </blockquote>
+    <h4>Test status</h4>
+    <p>Repository: <!-- TODO: insert test status --></p>
+    <p>Last release: <!-- TODO: insert test status --></p>
+    <!-- TODO: add url for all available tests -->
+    <p><a href="">View all available tests for this sample</a></p>
+    <h4>Media info</h4>
+    <p class="small">Full media info can be downloaded using the link at the right -->.</p>
+    <blockquote class="small">
+        {% if media and media|length > 0 %}
+            {% include 'sample-info/media-info-render.html.twig' with {'info': media} %}
+        {% else %}
+            <p>No media info available</p>
+        {% endif %}
+    </blockquote>
+    <p class="small">Do you want to see more information displayed by default/Did I forget something? Please ask to add!</p>
 {% endblock %}
 
 {% block sidebar %}
     <h5>Actions</h5>
     <ul class="icons">
+        <!-- TODO: add more actions (GitHub post, ...) -->
+        <li><i class="fa fa-li fa-download"></i> <a href="{{ path_for("Sample Info_media_download", { 'id': sample.id }) }}">Download media info xml</a></li>
     </ul>
 {% endblock %}

@@ -1,0 +1,12 @@
+<ul style="list-style: none; margin-bottom: 0;">
+{% for description, value in info  %}
+    {% if value is iterable %}
+        <li>
+            {{ description }}: <br/>
+            {% include 'sample-info/media-info-render.html.twig' with {'info': value} %}
+        </li>
+    {% elseif value != "" %}
+        <li>{{ description }}: {{ value }}</li>
+    {% endif %}
+{% endfor %}
+</ul>

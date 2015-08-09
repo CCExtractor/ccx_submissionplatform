@@ -62,6 +62,25 @@ class SampleInfoController extends BaseController
                 }
                 return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName().'_hash');
+            $this->get('/download/media-info/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                $self->setDefaultBaseValues($this);
+                // Fetch sample
+                $sample = $this->database->getSampleById($args["id"]);
+                if($sample !== false){
+                    // Fetch media info
+                    $media = $this->file_handler->fetchMediaInfo($sample,true,false);
+                    if($media !== false){
+                        // Create headers
+                        $response = $response->withHeader("Content-type","text/xml");
+                        $response = $response->withHeader("Content-Disposition",'attachment; filename="'.$sample->getHash().'.xml"');
+                        return $response->write($media);
+                    }
+                    $this->templateValues->add("error","error obtaining media info");
+                } else {
+                    $this->templateValues->add("error","invalid sample id");
+                }
+                return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
+            })->setName($self->getPageName().'_media_download');
         });
     }
 }
