@@ -9,6 +9,11 @@ use org\ccextractor\submissionplatform\objects\FTPCredentials;
 use Slim\App;
 use SplFileInfo;
 
+/**
+ * Class UploadController handles all actions related to ftp/http uploads and sample submission.
+ *
+ * @package org\ccextractor\submissionplatform\controllers
+ */
 class UploadController extends BaseController
 {
     /**
@@ -19,6 +24,11 @@ class UploadController extends BaseController
         parent::__construct("Upload","Upload samples to the repository.");
     }
 
+    /**
+     * Registers the routes for this controller in the given app.
+     *
+     * @param App $app The instance of the Slim framework app.
+     */
     function register(App $app)
     {
         $self = $this;

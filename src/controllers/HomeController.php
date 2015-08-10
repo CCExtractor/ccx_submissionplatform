@@ -9,6 +9,11 @@ use Milo\Github\Http\Response;
 use Milo\Github\OAuth\Token;
 use Slim\App;
 
+/**
+ * Class HomeController handles the actions from the home page of the submission platform.
+ *
+ * @package org\ccextractor\submissionplatform\controllers
+ */
 class HomeController extends BaseController
 {
     /**
@@ -20,8 +25,9 @@ class HomeController extends BaseController
     }
 
     /**
-     * @param App $app
-     * @param array $base_values
+     * Registers the routes for this controller in the given app.
+     *
+     * @param App $app The instance of the Slim framework app.
      */
     public function register(App $app)
     {

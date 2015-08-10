@@ -8,6 +8,11 @@ namespace org\ccextractor\submissionplatform\controllers;
 use org\ccextractor\submissionplatform\objects\User;
 use Slim\App;
 
+/**
+ * Class AccountController takes care of handling all account related actions (registration, reset, login, logout, ...).
+ *
+ * @package org\ccextractor\submissionplatform\controllers
+ */
 class AccountController extends BaseController
 {
     /**
@@ -18,6 +23,11 @@ class AccountController extends BaseController
         parent::__construct("My Account","Manage my account");
     }
 
+    /**
+     * Registers the routes for this controller in the given app.
+     *
+     * @param App $app The instance of the Slim framework app.
+     */
     function register(App $app)
     {
         $self = $this;

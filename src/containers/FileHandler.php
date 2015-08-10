@@ -277,7 +277,7 @@ class FileHandler implements ServiceProviderInterface
     /**
      * Returns a file size limit in bytes based on the PHP upload_max_filesize and post_max_size. Borrowed from Drupal.
      *
-     * @return float
+     * @return string The max size limit, formatted.
      */
     function file_upload_max_size() {
         static $max_size = -1;
@@ -299,8 +299,8 @@ class FileHandler implements ServiceProviderInterface
     /**
      * Parses a given size. Borrowed from Drupal.
      *
-     * @param $size
-     * @return float
+     * @param string $size The size to parse into bytes.
+     * @return float The amount of bytes that represents the passed size.
      */
     private function parse_size($size) {
         $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
@@ -317,9 +317,9 @@ class FileHandler implements ServiceProviderInterface
     /**
      * Function to format a given number of bytes in KB and up.
      *
-     * @param $bytes
-     * @param int $precision
-     * @return string
+     * @param float $bytes The amount of bytes to format.
+     * @param int $precision The precision of the formatting.
+     * @return string The formatted bytes.
      */
     private function formatBytes($bytes, $precision = 2) {
         $units = array('B', 'KB', 'MB', 'GB', 'TB');

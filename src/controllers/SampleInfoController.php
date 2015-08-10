@@ -7,6 +7,11 @@ namespace org\ccextractor\submissionplatform\controllers;
 
 use Slim\App;
 
+/**
+ * Class SampleInfoController handles all actions related to viewing samples and displaying/downloading the related media info.
+ *
+ * @package org\ccextractor\submissionplatform\controllers
+ */
 class SampleInfoController extends BaseController
 {
     /**
@@ -17,15 +22,22 @@ class SampleInfoController extends BaseController
         parent::__construct("Sample Info");
     }
 
+    /**
+     * Registers the routes for this controller in the given app.
+     *
+     * @param App $app The instance of the Slim framework app.
+     */
     function register(App $app)
     {
         $self = $this;
         $app->group('/sample-info', function () use ($self) {
+            // GET: default; display all samples
             $this->get('[/]', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 $this->templateValues->add("samples", $this->database->getAllSamples());
                 return $this->view->render($response,'sample-info/sample-info.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName());
+            // GET: display a single sample based on id.
             $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 // Fetch sample
@@ -44,6 +56,7 @@ class SampleInfoController extends BaseController
                 }
                 return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName().'_id');
+            // GET: display a single sample based on hash
             $this->get('/{hash:[a-z0-9]+}', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 // Fetch sample
@@ -62,6 +75,7 @@ class SampleInfoController extends BaseController
                 }
                 return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName().'_hash');
+            // GET: offers a download of the media info xml for a given id
             $this->get('/download/media-info/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
                 // Fetch sample

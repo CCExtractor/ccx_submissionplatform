@@ -64,9 +64,15 @@ class GitBotController extends BaseController
         $this->author = $author;
     }
 
+    /**
+     * Registers the routes for this controller in the given app.
+     *
+     * @param App $app The instance of the Slim framework app.
+     */
     function register(App $app){
         $self = $this;
         $app->group('/github_bot', function() use ($self){
+            // POST: reporting status updates from the test-suite/bot
             $this->post('/report',function($request, $response, $args) use ($self) {
                 if($this->environment['HTTP_USER_AGENT'] === BOT_CCX_USER_AGENT) {
                     if (isset($_POST["type"]) && isset($_POST["token"])) {
@@ -129,6 +135,7 @@ class GitBotController extends BaseController
                 }
                 return $response->withStatus(403)->write("INVALID COMMAND");
             })->setName($this->getPageName()."_report");
+            // POST: fetching the necessary data for a worker.
             $this->post('/fetch',function($request, $response, $args) use ($self) {
                 if($this->environment['HTTP_USER_AGENT'] === CCX_USER_AGENT_S) {
                     if (isset($_POST["token"])) {
@@ -140,6 +147,9 @@ class GitBotController extends BaseController
         });
     }
 
+    /**
+     * Processes the current VM queue in the database (selects one and calls the bot).
+     */
     private function processVMQueue(){
         $this->logger->info("Deleted id from VM queue; checking for more");
         // If there's still one or multiple items left in the queue, we'll need to give the python script a
@@ -155,6 +165,9 @@ class GitBotController extends BaseController
         }
     }
 
+    /**
+     * Processes the current local queue in the database (selects one and calls the worker script).
+     */
     private function processLocalQueue(){
         $this->logger->info("Deleted id from local queue; checking for more");
         $token = $this->dba->hasLocalTokensLeft();
@@ -168,6 +181,12 @@ class GitBotController extends BaseController
         }
     }
 
+    /**
+     * Handles an upload of a file for a test request.
+     *
+     * @param int $id The id of the test entry.
+     * @return bool True if the file was saved, false otherwise.
+     */
     private function handle_upload($id){
         // Check if a file was provided
         if(array_key_exists("html",$_FILES)){
@@ -191,6 +210,12 @@ class GitBotController extends BaseController
         return false;
     }
 
+    /**
+     * Queues a GitHub comment for a given test entry with a certain status.
+     *
+     * @param int $id The id of the test entry.
+     * @param string $status The status of the test entry.
+     */
     private function queue_github_comment($id, $status)
     {
         $message = "";
