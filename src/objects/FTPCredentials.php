@@ -5,47 +5,52 @@
  */
 namespace org\ccextractor\submissionplatform\objects;
 
+/**
+ * Class FTPCredentials holds an entry from the ftpd table in the database, including password, user, ...
+ *
+ * @package org\ccextractor\submissionplatform\objects
+ */
 class FTPCredentials
 {
     /**
-     * @var User
+     * @var User The user linked to these credentials.
      */
     private $user;
     /**
-     * @var string
+     * @var string The name of the FTP account.
      */
     private $name;
     /**
-     * @var int
+     * @var int The status of the FTP connection (active/inactive).
      */
     private $status;
     /**
-     * @var string
+     * @var string The password of the account.
      */
     private $password;
     /**
-     * @var string
+     * @var string The home directory.
      */
     private $dir;
     /**
-     * @var string
+     * @var string Limit to certain ip's? * for wildcard.
      */
     private $ip_access;
     /**
-     * @var int
+     * @var int The maximum number of files in the directory.
      */
     private $QuotaFiles;
 
     /**
      * FTPCredentials constructor.
      *
-     * @param User $user
-     * @param string $name
-     * @param int $status
-     * @param string $password
-     * @param string $dir
-     * @param string $ip_access
-     * @param int $QuotaFiles
+     * @param User $user The user linked to these credentials.
+     * @param string $name The name of the FTP account.
+     * @param int $status The status of the FTP connection (active/inactive).
+     * @param string $password The password of the account.
+     * @param string $dir The home directory.
+     * @param string $ip_access Limit to certain ip's? * for wildcard.
+     * @param int $QuotaFiles The maximum number of files in the directory.
      */
     public function __construct(User $user, $name = "", $status = 1, $password = "", $dir = "", $ip_access = "*", $QuotaFiles = 20)
     {

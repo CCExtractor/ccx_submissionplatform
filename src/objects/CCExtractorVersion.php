@@ -6,7 +6,6 @@
 
 namespace org\ccextractor\submissionplatform\objects;
 
-
 use DateTime;
 
 /**
@@ -31,6 +30,7 @@ class CCExtractorVersion
 
     /**
      * CCExtractorVersion constructor.
+     *
      * @param int $id
      * @param string $name
      * @param DateTime $release
@@ -62,6 +62,11 @@ class CCExtractorVersion
         return $this->release;
     }
 
+    /**
+     * Gets a null object of the CCExtractorVersion object.
+     *
+     * @return CCExtractorVersion The null object (id: -1)
+     */
     public static function getNullObject(){
         return new CCExtractorVersion(-1,"",new DateTime());
     }

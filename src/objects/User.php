@@ -5,47 +5,52 @@
  */
 namespace org\ccextractor\submissionplatform\objects;
 
+/**
+ * Class User represents a user in the system.
+ *
+ * @package org\ccextractor\submissionplatform\objects
+ */
 class User
 {
     /**
-     * @var User
+     * @var User A null user used in the system.
      */
     private static $nullUser = null;
 
     /**
-     * @var int
+     * @var int The id of the user.
      */
     private $id;
     /**
-     * @var string
+     * @var string The name of the user.
      */
     private $name;
     /**
-     * @var string
+     * @var string The email address of the user.
      */
     private $email;
     /**
-     * @var string
+     * @var string The password hash for the user.
      */
     private $hash;
     /**
-     * @var bool
+     * @var bool Is GitHub linked?
      */
     private $github;
     /**
-     * @var bool
+     * @var bool Is the user a admin?
      */
     private $admin;
 
     /**
      * User constructor.
      *
-     * @param int $id
-     * @param string $name
-     * @param string $email
-     * @param string $hash
-     * @param bool $github
-     * @param bool $admin
+     * @param int $id The id of the user.
+     * @param string $name The name of the user.
+     * @param string $email The email address of the user.
+     * @param string $hash The password hash for the user.
+     * @param bool $github Is GitHub linked?
+     * @param bool $admin Is the user a admin?
      */
     public function __construct($id, $name, $email, $hash="", $github=false, $admin=false)
     {
@@ -57,6 +62,11 @@ class User
         $this->admin = ($admin === "1" || $admin === true);
     }
 
+    /**
+     * Returns the null user.
+     *
+     * @return User
+     */
     public static function getNullUser()
     {
         if(self::$nullUser === null){
