@@ -1,4 +1,5 @@
 <?php
+use Katzgrau\KLogger\Logger;
 use org\ccextractor\submissionplatform\containers\AccountManager;
 use org\ccextractor\submissionplatform\containers\BotDatabaseLayer;
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
@@ -9,6 +10,7 @@ use org\ccextractor\submissionplatform\containers\GitWrapper;
 use org\ccextractor\submissionplatform\containers\TemplateValues;
 use org\ccextractor\submissionplatform\controllers\AccountController;
 use org\ccextractor\submissionplatform\controllers\BaseController;
+use org\ccextractor\submissionplatform\controllers\GitBotController;
 use org\ccextractor\submissionplatform\controllers\HomeController;
 use org\ccextractor\submissionplatform\controllers\IController;
 use org\ccextractor\submissionplatform\controllers\SampleInfoController;
@@ -82,6 +84,8 @@ $container->register($ftp);
 // File Handler
 $file_handler = new FileHandler($dba, TEMP_STORAGE, PERM_STORAGE);
 $container->register($file_handler);
+// Logger (non added right now)
+$logger = new Logger(__DIR__."/../private/logs"); // FUTURE: create wrapper layer for slim
 
 //Override the default Not Found Handler
 $container['notFoundHandler'] = function ($c) {
@@ -114,5 +118,9 @@ $templateValues->add("pages",$pages);
 foreach($pages as $page){
     $page->register($app);
 }
+// These stay out of the regular pages, but need to be registered anyway
+$gitBotController = new GitBotController(
+    $bdba, BOT_CCX_VBOX_MANAGER, BOT_CCX_WORKER, BOT, __DIR__."/reports", $logger, BOT_AUTHOR);
+$gitBotController->register($app);
 
 $app->run();
