@@ -41,3 +41,4 @@ twig_cache/**
 
 # Passwords and other sensitive things
 src/configuration.php
+src/bot-configuration.php
