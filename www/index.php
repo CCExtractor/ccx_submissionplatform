@@ -1,5 +1,6 @@
 <?php
 use org\ccextractor\submissionplatform\containers\AccountManager;
+use org\ccextractor\submissionplatform\containers\BotDatabaseLayer;
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\containers\EmailLayer;
 use org\ccextractor\submissionplatform\containers\FileHandler;
@@ -24,6 +25,7 @@ ini_set('display_errors', 1);
 session_start(); // FIXME: replace with session middleware
 
 include_once '../src/configuration.php';
+include_once '../src/bot-configuration.php';
 require '../vendor/autoload.php';
 // For PHP version < 5.5, need to include the php password fallback. Doesn't override existing one, so can be included without checks.
 require '../vendor/ircmaxell/password-compat/lib/password.php';
@@ -56,6 +58,9 @@ $container->register($view);
 // Database
 $dba = new DatabaseLayer(DATABASE_SOURCE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD);
 $container->register($dba);
+// Bot Database
+$bdba = new BotDatabaseLayer(BOT_DATABASE_SOURCE_NAME, BOT_DATABASE_USERNAME, BOT_DATABASE_PASSWORD);
+$container->register($bdba);
 // Email container
 // FIXME: replace on full launch
 $host = "canihavesome.coffee"; //$app->environment["HTTP_HOST"];

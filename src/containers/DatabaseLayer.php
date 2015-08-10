@@ -589,20 +589,4 @@ WHERE s.hash = :hash LIMIT 1;");
         $this->pdo->rollBack();
         return false;
     }
-
-    /**
-     * Checks if given token is valid.
-     *
-     * @param string $token The token to validate.
-     * @return int The id of the associated test run, or -1 in case of failure.
-     */
-    public function bot_validate_token($token){
-        $prep = $this->pdo->prepare("SELECT id FROM test WHERE token = :token AND finished = 0 LIMIT 1;");
-        $prep->bindParam(":token", $token, PDO::PARAM_STR);
-        if($prep->execute() !== false){
-            $data = $prep->fetch();
-            return $data['id'];
-        }
-        return -1;
-    }
 }
