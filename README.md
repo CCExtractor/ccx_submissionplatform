@@ -16,14 +16,14 @@ It will be closely integrated with GitHub and the [GitHub bot](https://github.co
 
 ### Requirements
 
-* PHP >= 5.4 (5.5+ preferred)
+* PHP >= 5.5
 * MySQL
 * Pure-FTPD with mysql
 * Composer
 
 ### Database
 
-To be completed
+Create a new database with the name of your wish, and then use the statements from the `installation.sql` file to complete the database, or run the `installation.sql` immediately for a database with preset name.
 
 ### Web platform
 
