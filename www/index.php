@@ -120,7 +120,7 @@ foreach($pages as $page){
 }
 // These stay out of the regular pages, but need to be registered anyway
 $gitBotController = new GitBotController(
-    $bdba, BOT_CCX_VBOX_MANAGER, BOT_CCX_WORKER, BOT, __DIR__."/reports", $logger, BOT_AUTHOR);
+    $bdba, BOT_CCX_VBOX_MANAGER, BOT_CCX_WORKER, __DIR__."/reports", $logger, BOT_AUTHOR);
 $gitBotController->register($app);
 
 $app->run();
