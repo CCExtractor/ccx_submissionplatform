@@ -134,7 +134,7 @@ class GitBotController extends BaseController
                     }
                 }
                 return $response->withStatus(403)->write("INVALID COMMAND");
-            })->setName($this->getPageName()."_report");
+            })->setName($self->getPageName()."_report");
             // POST: fetching the necessary data for a worker.
             $this->post('/fetch',function($request, $response, $args) use ($self) {
                 if($this->environment['HTTP_USER_AGENT'] === CCX_USER_AGENT_S) {
@@ -143,7 +143,7 @@ class GitBotController extends BaseController
                     }
                 }
                 return $response->withStatus(403)->write("INVALID COMMAND");
-            })->setName($this->getPageName()."_fetch");
+            })->setName($self->getPageName()."_fetch");
         });
     }
 
