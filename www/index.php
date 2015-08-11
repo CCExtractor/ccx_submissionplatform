@@ -29,8 +29,6 @@ session_start(); // FIXME: replace with session middleware
 include_once '../src/configuration.php';
 include_once '../src/bot-configuration.php';
 require '../vendor/autoload.php';
-// For PHP version < 5.5, need to include the php password fallback. Doesn't override existing one, so can be included without checks.
-require '../vendor/ircmaxell/password-compat/lib/password.php';
 
 $container = new Container();
 
