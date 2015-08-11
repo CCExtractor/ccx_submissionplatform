@@ -12,7 +12,18 @@
     <script type="text/javascript" src="/js/kickstart.js"></script>
 </head>
 <body>
-
+<!-- Temporary untill it's out of beta -->
+<div class="grid">
+    <div class="col_12">
+        <!-- Warning -->
+        <div class="notice warning">
+            <i class="fa fa-warning"></i>
+            Please note that this platform is still in beta phase! Not everything is working, and bugs can occur.
+        </div>
+    </div>
+</div>
+<div class="clear"></div>
+<!-- end of beta notice -->
 <ul class="menu">
     {% for page in pages %}
         {% set active = '' %}
