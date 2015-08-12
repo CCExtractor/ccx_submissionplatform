@@ -98,6 +98,8 @@ UPLOADUID=1234 # User that owns the upload.sh script
 UPLOADGID=1234 # Group that owns the upload.sh script
 ```
 
+If necessary, you can also set an appropriate value in the Umask file (`/etc/pure-ftpd/conf/Umask`).
+
 After this you can restart Pure-FTPD with `sudo /etc/init.d/pure-ftpd-mysql restart`
 
 Note: if you don't see a line saying:
