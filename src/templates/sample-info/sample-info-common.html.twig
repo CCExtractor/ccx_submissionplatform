@@ -22,8 +22,7 @@
     <h4>Test status</h4>
     <p>Repository: <!-- TODO: insert test status --></p>
     <p>Last release: <!-- TODO: insert test status --></p>
-    <!-- TODO: add url for all available tests -->
-    <p><a href="">View all available tests for this sample</a></p>
+    <p><a href="{{ path_for("Test results_sample", {'id': sample.id}) }}">View all available tests for this sample</a></p>
     <h4>Media info</h4>
     <p class="small">Full media info can be downloaded using the link at the right -->.</p>
     <blockquote class="small">
