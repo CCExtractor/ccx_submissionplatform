@@ -144,4 +144,20 @@ class Test
     public function getCleanRepositoryName(){
         return str_replace(".git","",str_replace('git://github.com/','',$this->getRepository()));
     }
+
+    /**
+     * Formats the type a bit better.
+     *
+     * @return string The formatted type.
+     */
+    public function getTypeFormatted(){
+        switch($this->getType()){
+            case "PullRequest":
+                return "Pull Request";
+            case "Commit":
+                return "Commit";
+            default:
+                return "Invalid type";
+        }
+    }
 }

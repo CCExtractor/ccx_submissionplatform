@@ -34,7 +34,8 @@ class TestController extends BaseController
             // GET: show start of controller
             $this->get('[/]', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
-                // TODO: fetch last 10 test run informations.
+                $newest = $this->bot_database->fetchLastXTests();
+                $this->templateValues->add("tests",$newest);
                 return $this->view->render($response,"test/index.html.twig",$this->templateValues->getValues());
             })->setName($self->getPageName());
             // GET: show test details with a certain id
