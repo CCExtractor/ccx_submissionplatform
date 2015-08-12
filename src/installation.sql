@@ -40,6 +40,7 @@ CREATE TABLE `ccextractor_versions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `version` varchar(10) NOT NULL,
   `released` date NOT NULL,
+  `hash` text NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
 
