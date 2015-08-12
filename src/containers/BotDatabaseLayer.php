@@ -10,6 +10,7 @@ use org\ccextractor\submissionplatform\objects\Test;
 use org\ccextractor\submissionplatform\objects\TestEntry;
 use PDO;
 use PDOException;
+use PDOStatement;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 
@@ -161,10 +162,7 @@ class BotDatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
-    public function fetchTestInformation($id){
-        $stmt = $this->pdo->prepare("SELECT * FROM test WHERE id= :id LIMIT 1;");
-        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
-
+    private function fetchTestData(PDOStatement $stmt){
         if($stmt->execute() && $stmt->rowCount() === 1){
             $testEntry = $stmt->fetch();
             $entries = [];
@@ -184,5 +182,19 @@ class BotDatabaseLayer implements ServiceProviderInterface
             );
         }
         return Test::getNullTest();
+    }
+
+    public function fetchTestInformation($id){
+        $stmt = $this->pdo->prepare("SELECT * FROM test WHERE id= :id LIMIT 1;");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+
+        return $this->fetchTestData($stmt);
+    }
+
+    public function fetchTestInformationForCommit($hash){
+        $stmt = $this->pdo->prepare("SELECT * FROM test WHERE commit_hash = :hash ORDER BY id DESC LIMIT 1;");
+        $stmt->bindParam(":hash",$hash,PDO::PARAM_INT);
+
+        return $this->fetchTestData($stmt);
     }
 }

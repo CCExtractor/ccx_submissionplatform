@@ -33,9 +33,8 @@
         <p>This test run is still in the waiting queue! Please check again later.</p>
     {% endif %}
     {% if test.isFinished %}
-        <p><a class="button" href="/reports/{{ test.id }}">Go to the results</a></p>
+        <p><a class="button" target="_blank" href="/reports/{{ test.id }}">Go to the results</a></p>
         <p><strong>WARNING! The result files have been auto-generated and could possibly contain malware*, so please use caution.</strong></p>
         <p>(* That is, if someone is so unkind to abuse the functionality of the bot)</p>
     {% endif %}
-    <!-- TODO: render test result -->
 {% endblock %}

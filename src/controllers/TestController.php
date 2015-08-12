@@ -46,19 +46,27 @@ class TestController extends BaseController
                     $this->templateValues->add("test",$test);
                     return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
                 }
-
+                return $this->view->render($response->withStatus(404),"test/notfound.html.twig",$this->templateValues->getValues());
             })->setName($self->getPageName()."_id");
             // GET: show test details for a ccx version
             $this->get('/ccextractor/{version}', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
+
                 // TODO: fetch ccextractor version test info. If unexisting, run tests
                 return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
             })->setName($self->getPageName()."_ccx");
             // GET: show test details for a certain commit
             $this->get('/commit/{hash}', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
-                // TODO: fetch commit test info. If unexisting, run tests
-                return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
+                /** @var Test $test */
+                $test = $this->bot_database->fetchTestInformationForCommit($args["hash"]);
+                if($test->getId() > 0){
+                    $this->templateValues->add("test",$test);
+                    return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
+                } else {
+                    // TODO: run tests for this hash, if it exists in the main CCX repository!
+                }
+                return $this->view->render($response->withStatus(404),"test/notfound.html.twig",$this->templateValues->getValues());
             })->setName($self->getPageName()."_commit");
             // GET: show test details for a certain sample
             $this->get('/sample/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
