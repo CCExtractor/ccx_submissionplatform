@@ -82,6 +82,14 @@ class BotDatabaseLayer implements ServiceProviderInterface
         return -1;
     }
 
+    /**
+     * Saves a status with a message for a given id.
+     *
+     * @param int $id The id of the test entry.
+     * @param string $status The status of the test entry.
+     * @param string $message The message that needs to be stored.
+     * @return bool True on success, false on failure.
+     */
     public function save_status($id,$status,$message){
         $p = $this->pdo->prepare("INSERT INTO test_progress VALUES (NULL, :test_id, NOW(), :status, :message);");
         $p->bindParam(":test_id",$id,PDO::PARAM_INT);
@@ -90,6 +98,12 @@ class BotDatabaseLayer implements ServiceProviderInterface
         return $p->execute() !== false && $p->rowCount() === 1;
     }
 
+    /**
+     * Marks an entry with a given id as finished.
+     *
+     * @param int $id The id of the entry that needs to be marked as finished.
+     * @return int 0 on failure, 1 for a VM test entry, 2 for a local entry.
+     */
     public function mark_finished($id)
     {
         $result = 0;
@@ -121,6 +135,11 @@ class BotDatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
+    /**
+     * Checks if the VM has any queued items left.
+     *
+     * @return bool True if there are items left in the VM queue.
+     */
     public function hasQueueItemsLeft(){
         $q = $this->pdo->query("SELECT COUNT(*) AS 'left' FROM test_queue");
         if($q !== false){
@@ -130,6 +149,11 @@ class BotDatabaseLayer implements ServiceProviderInterface
         return false;
     }
 
+    /**
+     * Checks if the local has any queued items left.
+     *
+     * @return bool True if there are items left in the local queue.
+     */
     public function hasLocalTokensLeft(){
         $q = $this->pdo->query("SELECT t.`token` FROM local_queue l JOIN test t ON l.`test_id` = t.`id` ORDER BY l.`test_id` ASC LIMIT 1;");
         if($q !== false && $q->rowCount() === 1){
@@ -139,6 +163,12 @@ class BotDatabaseLayer implements ServiceProviderInterface
         return false;
     }
 
+    /**
+     * Stores a message in the GitHub queue for a given id.
+     *
+     * @param int $id The id of the test entry.
+     * @param string $message The message.
+     */
     public function store_github_message($id,$message){
         $stmt = $this->pdo->prepare("INSERT INTO github_queue VALUES(NULL,:id,:message);");
         $stmt->bindParam(":id",$id,PDO::PARAM_INT);
@@ -146,6 +176,12 @@ class BotDatabaseLayer implements ServiceProviderInterface
         $stmt->execute();
     }
 
+    /**
+     * Fetches an array of data linked to the given token.
+     *
+     * @param string $token The token we want data for.
+     * @return array An array (with fail or success status) containing the data linked to the token.
+     */
     public function fetchDataForToken($token){
         $result = ["status" => "failed"];
 
@@ -162,6 +198,12 @@ class BotDatabaseLayer implements ServiceProviderInterface
         return $result;
     }
 
+    /**
+     * Fetches test data using a prepared statement.
+     *
+     * @param PDOStatement $stmt The statement that has been prepared already.
+     * @return Test A null test in case of failure, or a filled Test with the results.
+     */
     private function fetchTestData(PDOStatement $stmt){
         if($stmt->execute() && $stmt->rowCount() === 1){
             $testEntry = $stmt->fetch();
@@ -184,6 +226,12 @@ class BotDatabaseLayer implements ServiceProviderInterface
         return Test::getNullTest();
     }
 
+    /**
+     * Fetches test result information based on the given id.
+     *
+     * @param int $id The id to fetch the test info for.
+     * @return Test A null test in case of failure, or a filled Test with the results.
+     */
     public function fetchTestInformation($id){
         $stmt = $this->pdo->prepare("SELECT * FROM test WHERE id= :id LIMIT 1;");
         $stmt->bindParam(":id",$id,PDO::PARAM_INT);
@@ -191,10 +239,38 @@ class BotDatabaseLayer implements ServiceProviderInterface
         return $this->fetchTestData($stmt);
     }
 
+    /**
+     * Fetches test result information based on the given hash.
+     *
+     * @param string $hash The hash to fetch the test info for.
+     * @return Test A null test in case of failure, or a filled Test with the results.
+     */
     public function fetchTestInformationForCommit($hash){
         $stmt = $this->pdo->prepare("SELECT * FROM test WHERE commit_hash = :hash ORDER BY id DESC LIMIT 1;");
         $stmt->bindParam(":hash",$hash,PDO::PARAM_INT);
 
         return $this->fetchTestData($stmt);
+    }
+
+    /**
+     * Fetches the last X tests from the database (without progress info).
+     *
+     * @param int $amount The number of tests to fetch.
+     * @return array An array containing the Test objects.
+     */
+    public function fetchLastXTests($amount=10){
+        $stmt = $this->pdo->query("SELECT * FROM test ORDER BY id DESC LIMIT ".$amount.";");
+        $result = [];
+        if($stmt !== false){
+            $testEntry = $stmt->fetch();
+            while($testEntry !== false){
+                $result[] = new Test(
+                    $testEntry["id"],$testEntry["token"],($testEntry["finished"] === "1"),$testEntry["repository"],
+                    $testEntry["branch"],$testEntry["commit_hash"],$testEntry["type"]
+                );
+                $testEntry = $stmt->fetch();
+            }
+        }
+        return $result;
     }
 }
