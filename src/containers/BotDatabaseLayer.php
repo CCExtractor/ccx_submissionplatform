@@ -5,6 +5,9 @@
  */
 namespace org\ccextractor\submissionplatform\containers;
 
+use DateTime;
+use org\ccextractor\submissionplatform\objects\Test;
+use org\ccextractor\submissionplatform\objects\TestEntry;
 use PDO;
 use PDOException;
 use Pimple\Container;
@@ -156,5 +159,30 @@ class BotDatabaseLayer implements ServiceProviderInterface
             $result["git"] = $data["local"];
         }
         return $result;
+    }
+
+    public function fetchTestInformation($id){
+        $stmt = $this->pdo->prepare("SELECT * FROM test WHERE id= :id LIMIT 1;");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+
+        if($stmt->execute() && $stmt->rowCount() === 1){
+            $testEntry = $stmt->fetch();
+            $entries = [];
+            // Fetch entries
+            $stmt = $this->pdo->prepare("SELECT * FROM test_progress WHERE test_id = :id ORDER BY id ASC;");
+            $stmt->bindParam(":id",$testEntry["id"],PDO::PARAM_INT);
+            if($stmt->execute() && $stmt->rowCount() > 0){
+                $data = $stmt->fetch();
+                while($data !== false){
+                    $entries[] = new TestEntry($data["status"],$data["message"],new DateTime($data["time"]));
+                    $data = $stmt->fetch();
+                }
+            }
+            return new Test(
+                $testEntry["id"],$testEntry["token"],($testEntry["finished"] === "1"),$testEntry["repository"],
+                $testEntry["branch"],$testEntry["commit_hash"],$testEntry["type"],$entries
+            );
+        }
+        return Test::getNullTest();
     }
 }

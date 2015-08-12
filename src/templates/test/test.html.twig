@@ -1,6 +1,41 @@
 {% extends "base.html.twig" %}
 
 {% block content %}
-    <h3>Test results</h3>
+    {% if test.type == "Commit" %}
+        <h3>Test run progress for commit {{ test.commit|slice(0,7) }} (branch {{ test.branch }})</h3>
+        {% set url = test.getRepositoryURL ~ "/commit/" ~ test.commit %}
+    {% elseif test.type == "PullRequest" %}
+        <h3>Test run progress for pull request {{ test.commit }}</h3>
+        {% set url = test.getRepositoryURL ~ "/pull/" ~ test.commit %}
+    {% endif %}
+    <p>Repository: <a href="{{ test.getRepositoryURL }}" target="_blank">{{ test.getCleanRepositoryName }}</a></p>
+    <p>Test source: <a href="{{ url }}" target="_blank">GitHub</a></p>
+    {% if test.progress|length > 0 %}
+        <table class="tight striped">
+            <thead>
+            <tr>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Message</th>
+            </tr>
+            </thead>
+            <tbody>
+        {% for entry in test.progress %}
+            <tr>
+                <td>{{ entry.timestamp|date("Y-m-d h:i:s") }}</td>
+                <td>{{ entry.status }}</td>
+                <td>{{ entry.message }}</td>
+            </tr>
+        {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>This test run is still in the waiting queue! Please check again later.</p>
+    {% endif %}
+    {% if test.isFinished %}
+        <p><a class="button" href="/reports/{{ test.id }}">Go to the results</a></p>
+        <p><strong>WARNING! The result files have been auto-generated and could possibly contain malware*, so please use caution.</strong></p>
+        <p>(* That is, if someone is so unkind to abuse the functionality of the bot)</p>
+    {% endif %}
     <!-- TODO: render test result -->
 {% endblock %}

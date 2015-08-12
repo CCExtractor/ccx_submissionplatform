@@ -6,6 +6,7 @@
 
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\objects\Test;
 use Slim\App;
 
 /**
@@ -39,8 +40,13 @@ class TestController extends BaseController
             // GET: show test details with a certain id
             $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
-                // TODO: fetch test information
-                return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
+                /** @var Test $test */
+                $test = $this->bot_database->fetchTestInformation($args["id"]);
+                if($test->getId() > 0){
+                    $this->templateValues->add("test",$test);
+                    return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
+                }
+
             })->setName($self->getPageName()."_id");
             // GET: show test details for a ccx version
             $this->get('/ccextractor/{version}', function ($request, $response, $args) use ($self) {
