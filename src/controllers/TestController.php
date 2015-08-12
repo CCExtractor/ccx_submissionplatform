@@ -51,9 +51,18 @@ class TestController extends BaseController
             // GET: show test details for a ccx version
             $this->get('/ccextractor/{version}', function ($request, $response, $args) use ($self) {
                 $self->setDefaultBaseValues($this);
-
-                // TODO: fetch ccextractor version test info. If unexisting, run tests
-                return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
+                $commit = $this->database->fetchHashForCCXVersion($args["version"]);
+                if($commit !== ""){
+                    /** @var Test $test */
+                    $test = $this->bot_database->fetchTestInformationForCommit($args["hash"]);
+                    if($test->getId() > 0){
+                        $this->templateValues->add("test",$test);
+                        return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
+                    } else {
+                        // TODO: run tests for this hash, if it exists in the main CCX repository!
+                    }
+                }
+                return $this->view->render($response->withStatus(404),"test/notfound.html.twig",$this->templateValues->getValues());
             })->setName($self->getPageName()."_ccx");
             // GET: show test details for a certain commit
             $this->get('/commit/{hash}', function ($request, $response, $args) use ($self) {
