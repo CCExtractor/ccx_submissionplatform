@@ -62,8 +62,7 @@ $container->register($dba);
 $bdba = new BotDatabaseLayer(BOT_DATABASE_SOURCE_NAME, BOT_DATABASE_USERNAME, BOT_DATABASE_PASSWORD);
 $container->register($bdba);
 // Email container
-// FIXME: replace on full launch
-$host = "canihavesome.coffee"; //$app->environment["HTTP_HOST"];
+$host = $app->environment["HTTP_HOST"];
 BaseController::$BASE_URL = (($app->environment["HTTPS"] === "on")?"https://":"http://").$app->environment["HTTP_HOST"];
 $email = new EmailLayer(AMAZON_SES_USER, AMAZON_SES_PASS, $host);
 $container->register($email);
