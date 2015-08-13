@@ -27,7 +27,7 @@
     "slim/csrf": "dev-composer-fix",
     "phpmailer/phpmailer": "^5.2",
     "dominicsayers/isemail": "dev-master",
-    "katzgrau/klogger": "1.0.0"
+    "katzgrau/klogger": "dev-master"
   },
   "autoload": {
     "psr-4": {"org\\ccextractor\\submissionplatform\\": "src/"}
