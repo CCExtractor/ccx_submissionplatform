@@ -77,7 +77,7 @@ class SampleInfoController extends BaseController
                     }
                     $this->templateValues->add("error","error obtaining media info");
                 } else {
-                    $this->templateValues->add("error","invalid sample id");
+                    $this->templateValues->add("error","invalid sample hash");
                 }
                 return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName().'_hash');

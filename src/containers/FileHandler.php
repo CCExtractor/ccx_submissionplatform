@@ -42,9 +42,9 @@ class FileHandler implements ServiceProviderInterface
     /**
      * FileHandler constructor
      *
-     * @param DatabaseLayer $dba
-     * @param $temp_dir
-     * @param $store_dir
+     * @param DatabaseLayer $dba The layer that connects to the database.
+     * @param string $temp_dir The directory that holds the queued items.
+     * @param string $store_dir The directory that holds the submitted samples.
      */
     public function __construct(DatabaseLayer $dba, $temp_dir, $store_dir)
     {
@@ -197,7 +197,7 @@ class FileHandler implements ServiceProviderInterface
         if($reader->open($mediaInfo->getPathname())){
             if($reader->read()){
                 if(!$filter){
-                    // TODO: strip path info. Will require some processing.
+                    // FUTURE: strip path info. Will require some processing.
                     return file_get_contents($mediaInfo->getPathname());
                 }
                 // Build up information...
