@@ -53,7 +53,7 @@ class TemplateValues implements ServiceProviderInterface
      * Adds a key-value pair to the array of values.
      *
      * @param string $key The key.
-     * @param object $value The value.
+     * @param object|string $value The value.
      */
     public function add($key, $value)
     {

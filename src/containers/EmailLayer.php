@@ -5,7 +5,6 @@
  */
 namespace org\ccextractor\submissionplatform\containers;
 
-use Exception;
 use org\ccextractor\submissionplatform\objects\User;
 use PHPMailer;
 use phpmailerException;
