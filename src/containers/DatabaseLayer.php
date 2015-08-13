@@ -243,7 +243,7 @@ class DatabaseLayer implements ServiceProviderInterface
     public function getSampleForUser(User $user, $id){
         $uid = $user->getId();
         $p = $this->pdo->prepare("
-SELECT s.*, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash' u.additional_files, u.notes, u.parameters, u.platform
+SELECT s.*, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash', u.additional_files, u.notes, u.parameters, u.platform
 FROM sample s
 	JOIN upload u ON s.id = u.sample_id
 	JOIN ccextractor_versions c ON c.id = u.ccx_used
@@ -270,7 +270,7 @@ WHERE u.user_id = :uid AND s.id = :id LIMIT 1;");
      */
     public function getSampleById($id){
         $p = $this->pdo->prepare("
-SELECT s.*, uu.id AS 'user_id', uu.name AS 'user_name', uu.email, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash' u.additional_files, u.notes, u.parameters, u.platform
+SELECT s.*, uu.id AS 'user_id', uu.name AS 'user_name', uu.email, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash', u.additional_files, u.notes, u.parameters, u.platform
 FROM sample s
   JOIN upload u ON s.id = u.sample_id
   JOIN user uu ON uu.id = u.user_id
@@ -298,7 +298,7 @@ WHERE s.id = :id LIMIT 1;");
      */
     public function getSampleByHash($hash){
         $p = $this->pdo->prepare("
-SELECT s.*, uu.id AS 'user_id', uu.name AS 'user_name', uu.email, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash' u.additional_files, u.notes, u.parameters, u.platform
+SELECT s.*, uu.id AS 'user_id', uu.name AS 'user_name', uu.email, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash', u.additional_files, u.notes, u.parameters, u.platform
 FROM sample s
   JOIN upload u ON s.id = u.sample_id
   JOIN user uu ON uu.id = u.user_id
