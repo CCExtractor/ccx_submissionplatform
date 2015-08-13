@@ -62,7 +62,7 @@ class TestController extends BaseController
                 $commit = $this->database->fetchHashForCCXVersion($args["version"]);
                 if($commit !== ""){
                     /** @var Test $test */
-                    $test = $this->bot_database->fetchTestInformationForCommit($args["hash"]);
+                    $test = $this->bot_database->fetchTestInformationForCommit($commit);
                     if($test->getId() > 0){
                         $this->templateValues->add("test",$test);
                         return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
