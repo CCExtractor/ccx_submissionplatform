@@ -11,6 +11,7 @@ use DOMNode;
 use Katzgrau\KLogger\Logger;
 use org\ccextractor\submissionplatform\containers\BotDatabaseLayer;
 use Slim\App;
+use Slim\Http\Request;
 use Slim\Http\Response;
 
 /**
@@ -151,6 +152,118 @@ class GitBotController extends BaseController
                 }
                 return $response->withStatus(403)->write("INVALID COMMAND");
             })->setName($self->getPageName()."_fetch");
+            // Admin logic
+            $this->group("/admin", function() use ($self) {
+                /** @var App $this */
+                // GET: / root, shows links to actions below.
+                $this->get("[/]",function($request, $response, $args) use ($self){
+                    /** @var App $this */
+                    $self->setDefaultBaseValues($this);
+                    if($this->account->getUser()->isAdmin()){
+                        return $this->view->render($response,"github_bot/admin_index.html.twig",$this->templateValues->getValues());
+                    }
+                    /** @var Response $response */
+                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName()."_admin");
+                $this->group("/queue", function() use ($self) {
+                    /** @var App $this */
+                    // GET: vmqueue shows the current vm queue
+                    $this->map(['GET', 'POST'],"/vm",function($request, $response, $args) use ($self){
+                        /** @var App $this */
+                        /** @var Request $request */
+                        $self->setDefaultBaseValues($this);
+                        if($this->account->getUser()->isAdmin()){
+                            // Check if POST's are set
+                            if(isset($_POST["action"]) && isset($_POST["id"])){
+                                // Execute action
+                                switch($_POST["action"]){
+                                    case "abort":
+                                        if($this->bot_database->abortQueueEntry($_POST["id"],"The admin aborted your currently running request (id {0}). Please get in touch to know why.")){
+                                            $this->templateValues->add("message","Entry ".$_POST["id"]." was aborted");
+                                            $this->templateValues->add("message_status","success");
+                                            $this->templateValues->add("message_icon","check");
+                                        } else {
+                                            $this->templateValues->add("message","Entry ".$_POST["id"]." could not be aborted");
+                                            $this->templateValues->add("message_status","error");
+                                            $this->templateValues->add("message_icon","remove");
+                                        }
+                                        break;
+                                    case "remove":
+                                        if($this->bot_database->removeFromQueue($_POST["id"],false,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
+                                            $this->templateValues->add("message","Entry ".$_POST["id"]." was removed");
+                                            $this->templateValues->add("message_status","success");
+                                            $this->templateValues->add("message_icon","check");
+                                        } else {
+                                            $this->templateValues->add("message","Entry ".$_POST["id"]." could not be removed");
+                                            $this->templateValues->add("message_status","error");
+                                            $this->templateValues->add("message_icon","remove");
+                                        }
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            // Fetch queue
+                            $this->templateValues->add("queue",$this->bot_database->fetchVMQueue());
+                            // CSRF values
+                            $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                            $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                            // Render
+                            return $this->view->render($response,"github_bot/queue_vm.html.twig",$this->templateValues->getValues());
+                        }
+                        /** @var Response $response */
+                        return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                    })->setName($self->getPageName()."_admin_queue_vm");
+                    // GET: localqueue shows the local queue
+                    $this->map(['GET', 'POST'],"/local",function($request, $response, $args) use ($self){
+                        /** @var App $this */
+                        /** @var Request $request */
+                        $self->setDefaultBaseValues($this);
+                        if($this->account->getUser()->isAdmin()){
+                            // Check if POST's are set
+                            if(isset($_POST["action"]) && isset($_POST["id"])){
+                                // Execute action
+                                switch($_POST["action"]){
+                                    case "remove":
+                                        if($this->bot_database->removeFromQueue($_POST["id"],true,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
+                                            $this->templateValues->add("message","Entry ".$_POST["id"]." was removed");
+                                            $this->templateValues->add("message_status","success");
+                                            $this->templateValues->add("message_icon","check");
+                                        } else {
+                                            $this->templateValues->add("message","Entry ".$_POST["id"]." could not be removed");
+                                            $this->templateValues->add("message_status","error");
+                                            $this->templateValues->add("message_icon","remove");
+                                        }
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            // Fetch queue
+                            $this->templateValues->add("queue",$this->bot_database->fetchLocalQueue());
+                            // CSRF values
+                            $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+                            $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                            // Render
+                            return $this->view->render($response,"github_bot/queue_local.html.twig",$this->templateValues->getValues());
+                        }
+                        /** @var Response $response */
+                        return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                    })->setName($self->getPageName()."_admin_queue_local");
+                });
+                // GET: history shows the history of commands
+                $this->get("/history",function($request, $response, $args) use ($self){
+                    /** @var App $this */
+                    $self->setDefaultBaseValues($this);
+                    if($this->account->getUser()->isAdmin()){
+                        $this->templateValues->add("queue",$this->bot_database->getCommandHistory());
+                        return $this->view->render($response,"github_bot/history.html.twig",$this->templateValues->getValues());
+                    }
+                    /** @var Response $response */
+                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName()."_admin_history");
+                //
+            });
         });
     }
 

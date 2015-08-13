@@ -1,0 +1,30 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+<h3>GitHub bot manager</h3>
+<h4>Command history</h4>
+    {% if queue|length > 0 %}
+        <table class="tight striped sortable">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Command</th>
+                    <th>Requested by</th>
+                    <th>Link to comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in queue %}
+                    <tr>
+                        <td>{{ entry.time }}</td>
+                        <td>{{ entry.type }}</td>
+                        <td>{{ entry.requester }}</td>
+                        <td><a target="_blank" href="{{ entry.link }}">GitHub comment</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No entries in the history</p>
+    {% endif %}
+{% endblock %}

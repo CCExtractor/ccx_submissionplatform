@@ -1,0 +1,47 @@
+{% if queue|length > 0 %}
+    <table class="striped sortable tight">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>GitHub</th>
+                <th>Started on</th>
+                <th>Manage</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for entry in queue %}
+            <tr>
+                <td><a href="{{ path_for('Test results_id', {'id': entry.id }) }}">{{ entry.id }}</a></td>
+                <td>{{ entry.repository }}</td>
+                {% if entry.time is null %}
+                    <td>Queued</td>
+                    <td>
+                        <form method="post" action="{{ path_for('GitBot Controller_admin_queue_' ~ path) }}">
+                            <input type="hidden" name="action" value="remove" />
+                            <input type="hidden" name="id" value="{{ entry.id }}" />
+                            {% include "csrf.html.twig" %}
+                            <input type="submit" value="Remove" class="small red" />
+                        </form>
+                    </td>
+                {% else %}
+                    <td>{{ entry.time }}</td>
+                    {% if path == "vm" %}
+                        <td>
+                            <form method="post" action="{{ path_for('GitBot Controller_admin_queue_' ~ path) }}">
+                                <input type="hidden" name="action" value="abort" />
+                                <input type="hidden" name="id" value="{{ entry.id }}" />
+                                {% include "csrf.html.twig" %}
+                                <input type="submit" value="Abort" class="small red" />
+                            </form>
+                        </td>
+                    {% else %}
+                        <td>&nbsp;</td>
+                    {% endif %}
+                {% endif %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>There are no entries in the queue at this moment.</p>
+{% endif %}

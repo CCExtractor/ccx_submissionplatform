@@ -1,0 +1,12 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>GitHub bot manager</h3>
+    <p>The GitHub bot manager allows you to view the queues of the bot, and manage them.</p>
+    <ul class="icons">
+        <li><i class="fa fa-li fa-ellipsis-v"></i> <a href="{{ path_for("GitBot Controller_admin_queue_vm") }}">view current VM queue</a></li>
+        <li><i class="fa fa-li fa-ellipsis-v"></i> <a href="{{ path_for("GitBot Controller_admin_queue_local") }}">view current local queue</a></li>
+        <li><i class="fa fa-li fa-history"></i> <a href="{{ path_for("GitBot Controller_admin_history") }}">view command history</a></li>
+        <!-- TODO: add page to manage trusted repositories and users -->
+    </ul>
+{% endblock %}

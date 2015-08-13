@@ -273,4 +273,119 @@ class BotDatabaseLayer implements ServiceProviderInterface
         }
         return $result;
     }
+
+    /**
+     * Fetches all pending entries for the VM queue from the database.
+     *
+     * @return array A list with all the pending entries.
+     */
+    public function fetchVMQueue(){
+        $stmt = $this->pdo->query("SELECT t.id, t.repository, p.`time` FROM test_queue q JOIN test t ON q.test_id = t.id LEFT JOIN test_progress p ON q.`test_id` = p.`test_id` GROUP BY t.id ORDER BY t.`id`, p.`id` ASC;");
+        $result = [];
+        if($stmt !== false && $stmt->rowCount() > 0){
+            $result = $stmt->fetchAll();
+        }
+        return $result;
+    }
+
+    /**
+     * Fetches all pending entries for the local queue from the database.
+     *
+     * @return array A list with all the pending entries.
+     */
+    public function fetchLocalQueue(){
+        $stmt = $this->pdo->query("SELECT t.id, t.repository, p.`time` FROM local_queue q JOIN test t ON q.test_id = t.id LEFT JOIN test_progress p ON q.`test_id` = p.`test_id` GROUP BY t.id ORDER BY t.`id`, p.`id` ASC;");
+        $result = [];
+        if($stmt !== false && $stmt->rowCount() > 0){
+            $result = $stmt->fetchAll();
+        }
+        return $result;
+    }
+
+    /**
+     * Aborts a queue entry (with the given id) with given message.
+     * @param int $id The id of the entry to abort.
+     * @param string $abortMessage The message to send to the person who requested this test entry.
+     * @return bool True if it succeeded, false otherwise.
+     */
+    public function abortQueueEntry($id,$abortMessage){
+        $id = intval($id);
+        $message = str_replace("{0}",$id,$abortMessage);
+        if($this->pdo->beginTransaction()) {
+            try {
+                $m = $this->pdo->prepare("INSERT INTO github_queue VALUES (NULL, :test_id, :message);");
+                $m->bindParam(":test_id",$id,PDO::PARAM_INT);
+                $m->bindParam(":message",$message,PDO::PARAM_STR);
+                $m->execute();
+                $m = $this->pdo->prepare("UPDATE test SET finished = '1' WHERE id = :test_id");
+                $m->bindParam(":test_id",$id,PDO::PARAM_INT);
+                $m->execute();
+                $m = $this->pdo->prepare("INSERT INTO test_progress VALUES (NULL, :test_id, NOW(), 'error', 'aborted by admin');");
+                $m->bindParam(":test_id",$id,PDO::PARAM_INT);
+                $m->execute();
+                $m = $this->pdo->prepare("DELETE FROM test_queue WHERE test_id = :test_id");
+                $m->bindParam(":test_id",$id,PDO::PARAM_INT);
+                $m->execute();
+                $this->pdo->commit();
+                return true;
+                // Bot will automatically turn off the VM in <= 5 minutes
+            } catch(PDOException $e){
+                $this->pdo->rollBack();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Removes an item from the (local) queue and inserts a message for the requester.
+     *
+     * @param int $id The id to remove.
+     * @param bool $local Is the test local?
+     * @param string $removeMessage The message to send to the requester.
+     * @return bool True if it succeeded, false otherwise.
+     */
+    public function removeFromQueue($id,$local,$removeMessage){
+        $id = intval($id);
+        $message = str_replace("{0}",$id,$removeMessage);
+        if($this->pdo->beginTransaction()) {
+            try {
+                $m = $this->pdo->prepare("INSERT INTO github_queue VALUES (NULL, :test_id, :message);");
+                $m->bindParam(":test_id",$id,PDO::PARAM_INT);
+                $m->bindParam(":message",$message,PDO::PARAM_STR);
+                $m->execute();
+                $m = $this->pdo->prepare("UPDATE test SET finished = '1' WHERE id = :test_id");
+                $m->bindParam(":test_id",$id,PDO::PARAM_INT);
+                $m->execute();
+                if($local){
+                    $m = $this->pdo->prepare("DELETE FROM local_queue WHERE test_id = :test_id");
+                    $m->bindParam(":test_id",$id,PDO::PARAM_INT);
+                    $m->execute();
+                } else{
+                    $m = $this->pdo->prepare("DELETE FROM test_queue WHERE test_id = :test_id");
+                    $m->bindParam(":test_id", $id, PDO::PARAM_INT);
+                    $m->execute();
+                }
+                $this->pdo->commit();
+                return true;
+            } catch(PDOException $e){
+                $this->pdo->rollBack();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Fetches max. x entries from the command history.
+     *
+     * @param int $limit The max. amount of entries to fetch.
+     * @return array A list of entries.
+     */
+    public function getCommandHistory($limit=100){
+        $stmt = $this->pdo->query("SELECT * FROM cmd_history ORDER BY id DESC LIMIT ".$limit.";");
+        $result = [];
+        if($stmt !== false && $stmt->rowCount() > 0){
+            $result = $stmt->fetchAll();
+        }
+        return $result;
+    }
 }
