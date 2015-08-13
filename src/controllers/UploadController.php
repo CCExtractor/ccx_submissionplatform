@@ -7,6 +7,8 @@ namespace org\ccextractor\submissionplatform\controllers;
 
 use org\ccextractor\submissionplatform\objects\FTPCredentials;
 use Slim\App;
+use Slim\Http\Request;
+use Slim\Http\Response;
 use SplFileInfo;
 
 /**
@@ -33,8 +35,11 @@ class UploadController extends BaseController
     {
         $self = $this;
         $app->group('/upload', function () use ($self) {
+            /** @var App $this */
             // GET: show start of controller
             $this->get('[/]', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
+                /** @var Response $response */
                 $self->setDefaultBaseValues($this);
                 if($this->account->isLoggedIn()){
                     // Table rendering
@@ -47,7 +52,10 @@ class UploadController extends BaseController
             })->setName($self->getPageName());
             // GET: FTP upload details
             $this->group('/ftp', function () use ($self){
+                /** @var App $this */
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         $this->templateValues->add("host", $this->FTPConnector->getHost());
@@ -67,6 +75,8 @@ class UploadController extends BaseController
                     return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName().'_ftp');
                 $this->get('/filezilla', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         /** @var FTPCredentials $credentials */
@@ -91,7 +101,11 @@ class UploadController extends BaseController
             });
             // HTTP upload upload logic
             $this->group('/new', function() use ($self){
+                /** @var App $this */
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         $this->templateValues->add("upload_size", $this->file_handler->file_upload_max_size());
@@ -104,6 +118,9 @@ class UploadController extends BaseController
                     return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName().'_new');
                 $this->post('[/]', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         $message = "No file given";
@@ -143,7 +160,10 @@ class UploadController extends BaseController
             });
             // Logic for finalizing samples
             $this->group('/process', function () use ($self){
+                /** @var App $this */
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         // Table rendering
@@ -156,7 +176,11 @@ class UploadController extends BaseController
                 })->setName($self->getPageName().'_process');
                 // Logic for finalizing a submission
                 $this->group('/{id:[0-9]+}', function() use ($self){
+                    /** @var App $this */
                     $this->get('', function ($request, $response, $args) use ($self) {
+                        /** @var App $this */
+                        /** @var Response $response */
+                        /** @var Request $request */
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
@@ -175,6 +199,9 @@ class UploadController extends BaseController
                         return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
                     })->setName($self->getPageName().'_process_id');
                     $this->post('', function ($request, $response, $args) use ($self) {
+                        /** @var App $this */
+                        /** @var Response $response */
+                        /** @var Request $request */
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
@@ -223,7 +250,11 @@ class UploadController extends BaseController
                 });
                 // Linking logic
                 $this->group('/link/{id:[0-9]+}', function() use ($self){
+                    /** @var App $this */
                     $this->get('[/]', function ($request, $response, $args) use ($self) {
+                        /** @var App $this */
+                        /** @var Response $response */
+                        /** @var Request $request */
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
@@ -242,6 +273,8 @@ class UploadController extends BaseController
                         return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
                     })->setName($self->getPageName().'_process_link');
                     $this->post('[/]', function ($request, $response, $args) use ($self) {
+                        /** @var App $this */
+                        /** @var Response $response */
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
@@ -263,6 +296,8 @@ class UploadController extends BaseController
                     });
                 });
                 $this->get('/delete/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         if($this->file_handler->remove($this->account->getUser(),$args["id"])){

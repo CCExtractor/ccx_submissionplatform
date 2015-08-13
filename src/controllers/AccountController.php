@@ -7,6 +7,8 @@ namespace org\ccextractor\submissionplatform\controllers;
 
 use org\ccextractor\submissionplatform\objects\User;
 use Slim\App;
+use Slim\Http\Request;
+use Slim\Http\Response;
 
 /**
  * Class AccountController takes care of handling all account related actions (registration, reset, login, logout, ...).
@@ -33,17 +35,23 @@ class AccountController extends BaseController
         $self = $this;
         $app->group('/account', function () use ($self) {
             // Main page. If not logged in, redirect to login, otherwise to manage.
+            /** @var App $this */
             $this->get('[/]', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
                 $url = $this->router->pathFor($self->getPageName()."_login");
                 if($this->account->isLoggedIn()){
                     $url = $this->router->pathFor($self->getPageName()."_manage",["id" => $this->account->getUser()->getId()]);
                 }
+                /** @var Response $response */
                 return $response->withStatus(302)->withHeader('Location',$url);
             })->setName($self->getPageName());
             // Login page logic
             $this->group('/login', function () use ($self) {
+                /** @var App $this */
                 // GET, to show the login page
                 $this->get('', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // CSRF values
                     $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
@@ -57,11 +65,14 @@ class AccountController extends BaseController
                 })->setName($self->getPageName()."_login");
                 // POST, to process a login attempt
                 $this->post('',function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Validate login
                     if(isset($_POST["email"]) && isset($_POST["password"])){
                         if($this->account->performLogin($_POST["email"],$_POST["password"])){
                             $url = $this->router->pathFor("Home");
+                            /** @var Response $response */
                             return $response->withStatus(302)->withHeader('Location',$url);
                         }
                     }
@@ -78,15 +89,20 @@ class AccountController extends BaseController
             });
             // Logout page logic
             $this->get('/logout', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
                 $self->setDefaultBaseValues($this);
                 $this->account->performLogout();
                 $url = $this->router->pathFor("Home");
+                /** @var Response $response */
                 return $response->withStatus(302)->withHeader('Location',$url);
             })->setName($self->getPageName()."_logout");
             // Recover page logic
             $this->group('/recover', function () use ($self) {
+                /** @var App $this */
                 // GET: normal procedure for regular user
                 $this->get('', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // CSRF values
                     $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
@@ -99,6 +115,8 @@ class AccountController extends BaseController
                 })->setName($self->getPageName()."_recover");
                 // POST: normal procedure for regular user
                 $this->post('', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     $this->templateValues->add("message", "We could not retrieve an account linked to the given email address. Please try again");
                     // Fetch user, and send recovery email if it exists
@@ -125,6 +143,8 @@ class AccountController extends BaseController
                 });
                 // GET: recover procedure step 2: choosing a new password
                 $this->get('/step2/{id:[0-9]+}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
@@ -153,6 +173,8 @@ class AccountController extends BaseController
                 })->setName($self->getPageName()."_recover_step2");
                 // POST: recover procedure step 2: choosing a new password
                 $this->post('/step2/{id:[0-9]+}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
@@ -189,8 +211,11 @@ class AccountController extends BaseController
                 })->setName($self->getPageName()."_recover_step2_post");
                 // GET: admin only, recovery for a specific user
                 $this->get('/recover/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if(!$this->account->getUser()->isAdmin()){
+                        /** @var Response $response */
                         return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                     }
                     // CSRF values
@@ -206,6 +231,8 @@ class AccountController extends BaseController
                 })->setName($self->getPageName()."_recover_id");
                 // POST: admin only, recovery for a specific user
                 $this->post('/recover/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
                     $self->setDefaultBaseValues($this);
                     if(!$this->account->getUser()->isAdmin()) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig",
@@ -230,8 +257,11 @@ class AccountController extends BaseController
             });
             // Register page logic
             $this->group('/register', function () use ($self){
+                /** @var App $this */
                 // GET: first page of registering procedure
                 $this->get('', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // CSRF values
                     $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
@@ -245,10 +275,13 @@ class AccountController extends BaseController
                 })->setName($self->getPageName()."_register");
                 // POST: processing the register data
                 $this->post('', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     $this->templateValues->add("message","The given email address is invalid.");
                     if(isset($_POST["email"]) && is_email($_POST["email"])){
                         // Verify if email is not already existing
+                        /** @var User $user */
                         $user = $this->database->getUserWithEmail($_POST["email"]);
                         if($user->getId() === -1){
                             // Send verification email using a hash
@@ -272,6 +305,8 @@ class AccountController extends BaseController
                 })->setName($self->getPageName()."_register");
                 // GET: actual creation and activation of the account
                 $this->get('/{email}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
@@ -297,6 +332,8 @@ class AccountController extends BaseController
                 })->setName($self->getPageName()."_register_activate");
                 // POST: processing of the actual creation
                 $this->post('/{email}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
@@ -336,8 +373,12 @@ class AccountController extends BaseController
             });
             // Deactivate page logic
             $this->group('/deactivate/{id:[0-9]+}', function () use ($self) {
+                /** @var App $this */
                 // GET: verify access and request confirmation
                 $this->get('', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->isAdmin() && $this->account->getUser()->getId() !== intval($args["id"])) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig",
@@ -357,6 +398,8 @@ class AccountController extends BaseController
                 })->setName($self->getPageName() . "_deactivate");
                 // POST: process confirmation
                 $this->post('', function($request, $response, $args) use ($self){
+                    /** @var App $this */
+                    /** @var Response $response */
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->isAdmin() && $this->account->getUser()->getId() !== intval($args["id"])) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig",
@@ -386,8 +429,12 @@ class AccountController extends BaseController
             });
             // User manage page logic
             $this->group('/manage/{id:[0-9]+}', function () use ($self) {
+                /** @var App $this */
                 // GET: view the edit form for a user.
                 $this->get('', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if(intval($args["id"]) === $this->account->getUser()->getId()){
                         $this->templateValues->add("user",$this->account->getUser());
@@ -401,6 +448,9 @@ class AccountController extends BaseController
                 })->setName($self->getPageName()."_manage");
                 // POST: process form
                 $this->post('', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     /** @var User $user */
                     $user = $this->account->getUser();
@@ -465,17 +515,21 @@ class AccountController extends BaseController
 
             // View user page logic
             $this->group("/view", function () use ($self) {
+                /** @var App $this */
                 // GET, Show a list of users if admin, or 403 if not.
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
                     $self->setDefaultBaseValues($this);
                     if($this->account->getUser()->isAdmin()){
                         $this->templateValues->add("users", $this->database->listUsers());
                         return $this->view->render($response,"account/userlist.html.twig",$this->templateValues->getValues());
                     }
+                    /** @var Response $response */
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_view");
                 // GET user, show if admin or own page, 403 otherwise.
                 $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
                     $self->setDefaultBaseValues($this);
 
                     if($this->account->getUser()->isAdmin() || intval($args["id"]) === $this->account->getUser()->getId()){
@@ -488,6 +542,7 @@ class AccountController extends BaseController
                         $d = $this->notFoundHandler;
                         return $d($request,$response);
                     }
+                    /** @var Response $response */
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_view_id");
             });

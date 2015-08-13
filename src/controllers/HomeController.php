@@ -33,6 +33,7 @@ class HomeController extends BaseController
     {
         $self = $this;
         $app->get('/[home]',function($request, $response, $args) use ($self) {
+            /** @var App $this */
             $self->setDefaultBaseValues($this);
             // Get latest GitHub commit
             // FIXME: implement caching

@@ -11,6 +11,7 @@ use DOMNode;
 use Katzgrau\KLogger\Logger;
 use org\ccextractor\submissionplatform\containers\BotDatabaseLayer;
 use Slim\App;
+use Slim\Http\Response;
 
 /**
  * Class GitBotController is an improvement/replacement for the server part of the GitHub bot found at
@@ -48,11 +49,12 @@ class GitBotController extends BaseController
     /**
      * GitBotController constructor.
      *
-     * @param BotDatabaseLayer $dba
-     * @param string $python_script
-     * @param string $worker_script
-     * @param Logger $logger
-     * @param string $author
+     * @param BotDatabaseLayer $dba The access to the database.
+     * @param string $python_script The path to the python GitHub bot script.
+     * @param string $worker_script The path to the worker shell script.
+     * @param string $reportFolder The folder that holds the reports.
+     * @param Logger $logger The instance of the KLogger.
+     * @param string $author The GitHub user handle of the bot author.
      */
     public function __construct(BotDatabaseLayer $dba, $python_script, $worker_script, $reportFolder, Logger $logger, $author){
         parent::__construct("GitBot Controller");
@@ -72,8 +74,11 @@ class GitBotController extends BaseController
     function register(App $app){
         $self = $this;
         $app->group('/github_bot', function() use ($self){
+            /** @var App $this */
             // POST: reporting status updates from the test-suite/bot
             $this->post('/report',function($request, $response, $args) use ($self) {
+                /** @var App $this */
+                /** @var Response $response */
                 if($this->environment['HTTP_USER_AGENT'] === BOT_CCX_USER_AGENT) {
                     if (isset($_POST["type"]) && isset($_POST["token"])) {
                         $id = $self->dba->bot_validate_token($_POST["token"]);
@@ -87,9 +92,9 @@ class GitBotController extends BaseController
                                             case "running":
                                             case "finalization":
                                                 if($self->dba->save_status($id,$_POST["status"], $_POST["message"])){
-                                                    return $request->write("OK");
+                                                    return $response->write("OK");
                                                 } else {
-                                                    return $request->withStatus(403)->write("ERROR");
+                                                    return $response->withStatus(403)->write("ERROR");
                                                 }
                                             case "finalized":
                                             case "error":
@@ -107,12 +112,12 @@ class GitBotController extends BaseController
                                                         case 0:
                                                             // Failed to update, fallthrough to fail.
                                                         default:
-                                                            return $request->withStatus(403)->write("ERROR");
+                                                            return $response->withStatus(403)->write("ERROR");
                                                     }
                                                     $self->queue_github_comment($id,$_POST["status"]);
-                                                    return $request->write("OK");
+                                                    return $response->write("OK");
                                                 } else {
-                                                    return $request->withStatus(403)->write("ERROR");
+                                                    return $response->withStatus(403)->write("ERROR");
                                                 }
                                                 break;
                                             default:
@@ -122,9 +127,9 @@ class GitBotController extends BaseController
                                     break;
                                 case "upload":
                                     if($self->handle_upload($id)){
-                                        return $request->write("OK");
+                                        return $response->write("OK");
                                     } else {
-                                        return $request->withStatus(403)->write("ERROR");
+                                        return $response->withStatus(403)->write("ERROR");
                                     }
                                 default:
                                     $self->logger->warning("Unknown type: ".$_POST["type"]);
@@ -137,7 +142,9 @@ class GitBotController extends BaseController
             })->setName($self->getPageName()."_report");
             // POST: fetching the necessary data for a worker.
             $this->post('/fetch',function($request, $response, $args) use ($self) {
-                if($this->environment['HTTP_USER_AGENT'] === CCX_USER_AGENT_S) {
+                /** @var App $this */
+                /** @var Response $response */
+                if($this->environment['HTTP_USER_AGENT'] === BOT_CCX_USER_AGENT_S) {
                     if (isset($_POST["token"])) {
                         return $response->write(json_encode($self->dba->fetchDataForToken($_POST["token"])));
                     }

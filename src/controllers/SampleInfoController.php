@@ -5,7 +5,9 @@
  */
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\objects\Sample;
 use Slim\App;
+use Slim\Http\Response;
 
 /**
  * Class SampleInfoController handles all actions related to viewing samples and displaying/downloading the related media info.
@@ -31,14 +33,17 @@ class SampleInfoController extends BaseController
     {
         $self = $this;
         $app->group('/sample-info', function () use ($self) {
+            /** @var App $this */
             // GET: default; display all samples
             $this->get('[/]', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
                 $self->setDefaultBaseValues($this);
                 $this->templateValues->add("samples", $this->database->getAllSamples());
                 return $this->view->render($response,'sample-info/sample-info.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName());
             // GET: display a single sample based on id.
             $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
                 $self->setDefaultBaseValues($this);
                 // Fetch sample
                 $sample = $this->database->getSampleById($args["id"]);
@@ -58,6 +63,7 @@ class SampleInfoController extends BaseController
             })->setName($self->getPageName().'_id');
             // GET: display a single sample based on hash
             $this->get('/{hash:[a-z0-9]+}', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
                 $self->setDefaultBaseValues($this);
                 // Fetch sample
                 $sample = $this->database->getSampleByHash($args["hash"]);
@@ -77,8 +83,11 @@ class SampleInfoController extends BaseController
             })->setName($self->getPageName().'_hash');
             // GET: offers a download of the media info xml for a given id
             $this->get('/download/media-info/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
+                /** @var Response $response */
                 $self->setDefaultBaseValues($this);
                 // Fetch sample
+                /** @var Sample $sample */
                 $sample = $this->database->getSampleById($args["id"]);
                 if($sample !== false){
                     // Fetch media info

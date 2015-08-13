@@ -8,6 +8,7 @@ namespace org\ccextractor\submissionplatform\controllers;
 
 use org\ccextractor\submissionplatform\objects\Test;
 use Slim\App;
+use Slim\Http\Response;
 
 /**
  * Class TestController holds the logic for displaying test results.
@@ -31,8 +32,10 @@ class TestController extends BaseController
     function register(App $app){
         $self = $this;
         $app->group("/test", function() use ($self) {
+            /** @var App $this */
             // GET: show start of controller
             $this->get('[/]', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
                 $self->setDefaultBaseValues($this);
                 $newest = $this->bot_database->fetchLastXTests();
                 $this->templateValues->add("tests",$newest);
@@ -40,6 +43,8 @@ class TestController extends BaseController
             })->setName($self->getPageName());
             // GET: show test details with a certain id
             $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
+                /** @var Response $response */
                 $self->setDefaultBaseValues($this);
                 /** @var Test $test */
                 $test = $this->bot_database->fetchTestInformation($args["id"]);
@@ -51,6 +56,8 @@ class TestController extends BaseController
             })->setName($self->getPageName()."_id");
             // GET: show test details for a ccx version
             $this->get('/ccextractor/{version}', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
+                /** @var Response $response */
                 $self->setDefaultBaseValues($this);
                 $commit = $this->database->fetchHashForCCXVersion($args["version"]);
                 if($commit !== ""){
@@ -67,6 +74,8 @@ class TestController extends BaseController
             })->setName($self->getPageName()."_ccx");
             // GET: show test details for a certain commit
             $this->get('/commit/{hash}', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
+                /** @var Response $response */
                 $self->setDefaultBaseValues($this);
                 /** @var Test $test */
                 $test = $this->bot_database->fetchTestInformationForCommit($args["hash"]);
@@ -80,8 +89,9 @@ class TestController extends BaseController
             })->setName($self->getPageName()."_commit");
             // GET: show test details for a certain sample
             $this->get('/sample/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+                /** @var App $this */
                 $self->setDefaultBaseValues($this);
-                // TODO: fetch sample overview
+                // FUTURE: fetch sample overview
                 return $this->view->render($response,"test/sample.html.twig",$this->templateValues->getValues());
             })->setName($self->getPageName()."_sample");
         });
