@@ -7,6 +7,7 @@
         <li><i class="fa fa-li fa-ellipsis-v"></i> <a href="{{ path_for("GitBot Controller_admin_queue_vm") }}">view current VM queue</a></li>
         <li><i class="fa fa-li fa-ellipsis-v"></i> <a href="{{ path_for("GitBot Controller_admin_queue_local") }}">view current local queue</a></li>
         <li><i class="fa fa-li fa-history"></i> <a href="{{ path_for("GitBot Controller_admin_history") }}">view command history</a></li>
-        <!-- TODO: add page to manage trusted repositories and users -->
+        <li><i class="fa fa-li fa-users"></i> <a href="{{ path_for("GitBot Controller_admin_users") }}">manage trusted users</a></li>
+        <li><i class="fa fa-li fa-code-fork"></i> <a href="{{ path_for("GitBot Controller_admin_local_repos") }}">manage local repositories</a></li>
     </ul>
 {% endblock %}

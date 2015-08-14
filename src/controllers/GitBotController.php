@@ -165,6 +165,7 @@ class GitBotController extends BaseController
                     /** @var Response $response */
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_admin");
+                // Group the queue logic
                 $this->group("/queue", function() use ($self) {
                     /** @var App $this */
                     // GET: vmqueue shows the current vm queue
@@ -262,7 +263,26 @@ class GitBotController extends BaseController
                     /** @var Response $response */
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_admin_history");
-                //
+                // GET: manage trusted users
+                $this->get("/users", function($request, $response, $args) use ($self){
+                    /** @var App $this */
+                    $self->setDefaultBaseValues($this);
+                    if($this->account->getUser()->isAdmin()){
+                        // TODO: finish
+                    }
+                    /** @var Response $response */
+                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName()."_admin_users");
+                // GET: manage local repositories
+                $this->get("/local-repositories", function($request, $response, $args) use ($self){
+                    /** @var App $this */
+                    $self->setDefaultBaseValues($this);
+                    if($this->account->getUser()->isAdmin()){
+                        // TODO: finish
+                    }
+                    /** @var Response $response */
+                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName()."_admin_local_repos");
             });
         });
     }
