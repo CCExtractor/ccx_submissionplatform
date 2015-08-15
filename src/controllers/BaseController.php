@@ -6,7 +6,9 @@
 namespace org\ccextractor\submissionplatform\controllers;
 
 use org\ccextractor\submissionplatform\containers\TemplateValues;
+use org\ccextractor\submissionplatform\objects\NoticeType;
 use Slim\App;
+use Slim\Http\Request;
 
 /**
  * Class BaseController provides some base methods that can be used by all Controllers that inherit from this class.
@@ -52,6 +54,47 @@ abstract class BaseController implements IController
         $tv->add("pageDescription", $this->getPageDescription());
         $tv->add("isLoggedIn", $app->account->isLoggedIn());
         $tv->add("loggedInUser", $app->account->getUser());
+    }
+
+    /**
+     * Adds the three necessary values to produce a x notice, based on the given NoticeType.
+     *
+     * @param App $app The Slim framework app.
+     * @param NoticeType $type The type of notice to show.
+     * @param string $message The message to display.
+     */
+    protected function setNoticeValues(App $app, NoticeType $type, $message){
+        $app->templateValues->add("notice_message",$message);
+        $status = "error";
+        $icon = "remove";
+        switch($type){
+            case NoticeType::SUCCESS:
+                $status = "success";
+                $icon = "check";
+                break;
+            case NoticeType::WARNING:
+                $status = "warning";
+                $icon = "warning";
+                break;
+            case NoticeType::ERROR:
+                // Error flows through to default, which is error.
+            default:
+                // Defaults are already set before switch.
+                break;
+        }
+        $app->templateValues->add("notice_status",$status);
+        $app->templateValues->add("notice_icon",$icon);
+    }
+
+    /**
+     * Adds the two CSRF variables to the template values for rendering.
+     *
+     * @param App $app The Slim framework app.
+     * @param Request $request The request object which contains the CSRF middleware.
+     */
+    protected function setCSRF(App $app,Request $request){
+        $app->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
+        $app->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
     }
 
     /**
