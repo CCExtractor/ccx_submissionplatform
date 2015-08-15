@@ -31,6 +31,16 @@ Create a new database with the name of your wish, and then use the statements fr
 2. Copy the src/configuration-sample.php to src/configuration.php and fill in the values
 3. Install the Composer dependencies by running `composer update`
 
+#### SplEnum PECL
+
+If you don't have the SplTypes pear package installed yet, you can do this as follows:
+
+1. (optional) Install php-dev (`sudo apt-get install php-dev`).
+2. (optional) Install php-pear (`sudo apt-get install php-pear`).
+3. Install SplEnum (`sudo pecl install SPL_Types`).
+4. If the install succeeded, add the extension to your `php.ini` file: `extension=spl_types.so`.
+5. Restart the PHP service.
+
 ### Pure-FTPD configuration
 
 To allow upload of big files, FTP can be used. Since the goal is to keep the uploaded files of the users anonymous for other users, every user should get it's own FTP account.

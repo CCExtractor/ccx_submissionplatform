@@ -7,7 +7,6 @@
 namespace org\ccextractor\submissionplatform\objects;
 
 use SplEnum;
-use SplType;
 
 /**
  * Class NoticeType represents the possible types of an notice
