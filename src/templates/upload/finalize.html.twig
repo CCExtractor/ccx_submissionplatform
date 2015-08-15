@@ -2,11 +2,7 @@
 
 {% block content %}
     <h3>Finalize sample</h3>
-    {% if message is defined %}
-        <div class="notice error">
-            <i class="fa fa-remove fa-large"></i> Some values were not filled in. Please try again.
-        </div>
-    {% endif %}
+    {% include "notice.html.twig" %}
     <form method="post" action="{{ path_for("Upload_process_id", {"id": id}) }}" class="vertical">
         <label for="ccx_version">Used CCExtractor version</label>
         {% set toSelect=version|default('') %}

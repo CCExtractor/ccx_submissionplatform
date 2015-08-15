@@ -11,6 +11,7 @@
         <div class="col_2">Username:</div><div class="col_10">{{ username }}</div>
         <div class="col_2">Password:</div><div class="col_10">{{ password }}</div>
     </blockquote>
+    {# This notice is an exception, as it requires a link. #}
     <div class="notice warning">
         <i class="fa fa-warning fa-large"></i> As soon as the server detects that the file was completely uploaded, the sample will be processed, which moves it to another location. You can see a list of the successfully uploaded files at the <a href="{{ path_for("Upload") }}">upload</a> page.
     </div>

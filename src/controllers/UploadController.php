@@ -6,6 +6,7 @@
 namespace org\ccextractor\submissionplatform\controllers;
 
 use org\ccextractor\submissionplatform\objects\FTPCredentials;
+use org\ccextractor\submissionplatform\objects\NoticeType;
 use Slim\App;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -70,6 +71,7 @@ class UploadController extends BaseController
                             $this->templateValues->add("username", "Error...");
                             $this->templateValues->add("password", "Please get in touch...");
                         }
+                        // Render
                         return $this->view->render($response,"upload/explain-ftp.html.twig",$this->templateValues->getValues());
                     }
                     return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
@@ -105,7 +107,6 @@ class UploadController extends BaseController
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         $this->templateValues->add("upload_size", $this->file_handler->file_upload_max_size());
@@ -119,7 +120,6 @@ class UploadController extends BaseController
                 $this->post('[/]', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         $message = "No file given";
@@ -147,7 +147,8 @@ class UploadController extends BaseController
                             }
                         }
                         $this->templateValues->add("upload_size", $this->file_handler->file_upload_max_size());
-                        $this->templateValues->add("message", "Invalid file uploaded! Please try correct this error and try again: ".$message);
+                        // Notice
+                        $self->setNoticeValues($this,NoticeType::getError(),"Invalid file uploaded! Please try correct this error and try again: ".$message);
                         // CSRF values
                         $self->setCSRF($this,$request);
                         // Render
@@ -178,7 +179,6 @@ class UploadController extends BaseController
                     $this->get('', function ($request, $response, $args) use ($self) {
                         /** @var App $this */
                         /** @var Response $response */
-                        /** @var Request $request */
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
@@ -198,7 +198,6 @@ class UploadController extends BaseController
                     $this->post('', function ($request, $response, $args) use ($self) {
                         /** @var App $this */
                         /** @var Response $response */
-                        /** @var Request $request */
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
@@ -217,7 +216,6 @@ class UploadController extends BaseController
                                         return $this->view->render($response,"upload/process-error.html.twig",$this->templateValues->getValues());
                                     }
                                 }
-                                $this->templateValues->add("message",true);
                                 // Variables that have been filled in (if defined)
                                 if(isset($_POST["notes"])){
                                     $this->templateValues->add("notes",$_POST["notes"]);
@@ -236,6 +234,8 @@ class UploadController extends BaseController
                                 // Other variables
                                 $this->templateValues->add("id", $args["id"]);
                                 $this->templateValues->add("ccx_versions", $this->database->getAllCCExtractorVersions());
+                                // Notice
+                                $self->setNoticeValues($this,NoticeType::getError(),"Some values were not filled in. Please try again.");
                                 // Render
                                 return $this->view->render($response,"upload/finalize.html.twig",$this->templateValues->getValues());
                             }
@@ -250,7 +250,6 @@ class UploadController extends BaseController
                     $this->get('[/]', function ($request, $response, $args) use ($self) {
                         /** @var App $this */
                         /** @var Response $response */
-                        /** @var Request $request */
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
@@ -290,6 +289,7 @@ class UploadController extends BaseController
                         return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());
                     });
                 });
+                // Delete logic
                 $this->get('/delete/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
