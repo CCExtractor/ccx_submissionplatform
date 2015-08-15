@@ -22,3 +22,5 @@ define("BOT_CCX_VBOX_MANAGER","/path/to/run_vm.py");
 define("BOT_CCX_WORKER","/path/to/runNext");
 // The author of the application (don't forget the @ sign if you want to get a notification when someone uses the tool).
 define("BOT_AUTHOR","@github_username");
+// Path to the folder that holds the local clones of the repositories
+define("BOT_REPOSITORY_FOLDER","/path/to/local/clones/collection/folder/");

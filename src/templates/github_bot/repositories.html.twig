@@ -1,0 +1,66 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>GitHub bot manager</h3>
+    <h4>Local GitHub repositories</h4>
+    {% include 'notice.html.twig' %}
+    {% if repositories|length > 0 %}
+        <table class="tight striped sortable">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>GitHub link</th>
+                <th>Local folder</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for entry in repositories %}
+                <tr>
+                    <td>{{ entry.id }}</td>
+                    <td>{{ entry.github }}</td>
+                    <td>{{ entry.local }}</td>
+                    <td>
+                        <form method="post" action="{{ path_for("GitBot Controller_admin_local_repos") }}">
+                            <input type="hidden" name="action" value="remove" />
+                            <input type="hidden" name="id" value="{{ entry.id }}" />
+                            {% include "csrf.html.twig" %}
+                            <input type="submit" value="Remove repository" class="small red" />
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No local repositories so far</p>
+    {% endif %}
+    <h5>Add new repository</h5>
+    <form method="post" action="{{ path_for("GitBot Controller_admin_local_repos") }}">
+        <input type="hidden" name="action" value="add" />
+        <!-- Future: allow only clones + autoselect through API? -->
+        <table style="width: auto !important;">
+            <tr>
+                <td colspan="3">
+                    <label for="github_name">GitHub repository</label>
+                </td>
+            </tr>
+            <tr>
+                <td>git://github.com/</td>
+                <td><input id="github_name" type="text" name="name" /></td>
+                <td>.git</td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <label for="local_name">Local path (will be created)</label>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">{{ worker_folder }}</td>
+                <td><input id="local_name" type="text" name="folder" /></td>
+            </tr>
+        </table>
+        {% include "csrf.html.twig" %}
+        <input type="submit" value="Add new local repository" class="small green" />
+    </form>
+{% endblock %}

@@ -426,4 +426,18 @@ class BotDatabaseLayer implements ServiceProviderInterface
         $stmt->bindParam(":name",$name,PDO::PARAM_STR);
         return $stmt->execute() && $stmt->rowCount() === 1;
     }
+
+    /**
+     * Fetches all local repositories from the database.
+     *
+     * @return array A list with all the local repositories.
+     */
+    public function fetchLocalRepositories(){
+        $stmt = $this->pdo->query("SELECT * FROM local_repos ORDER BY id ASC;");
+        $result = [];
+        if($stmt->execute() && $stmt->rowCount() > 0){
+            $result = $stmt->fetchAll();
+        }
+        return $result;
+    }
 }

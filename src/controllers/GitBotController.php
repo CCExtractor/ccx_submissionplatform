@@ -47,6 +47,10 @@ class GitBotController extends BaseController
      * @var string The GitHub user handle of the bot author.
      */
     private $author;
+    /**
+     * @var string The folder that will hold all the local repository clones.
+     */
+    private $worker_folder;
 
     /**
      * GitBotController constructor.
@@ -57,8 +61,9 @@ class GitBotController extends BaseController
      * @param string $reportFolder The folder that holds the reports.
      * @param Logger $logger The instance of the KLogger.
      * @param string $author The GitHub user handle of the bot author.
+     * @param string $worker_folder The path to the folder that will hold all the local repository clones.
      */
-    public function __construct(BotDatabaseLayer $dba, $python_script, $worker_script, $reportFolder, Logger $logger, $author){
+    public function __construct(BotDatabaseLayer $dba, $python_script, $worker_script, $reportFolder, Logger $logger, $author, $worker_folder){
         parent::__construct("GitBot Controller");
         $this->dba = $dba;
         $this->python_script = $python_script;
@@ -66,6 +71,7 @@ class GitBotController extends BaseController
         $this->reportFolder = $reportFolder;
         $this->logger = $logger;
         $this->author = $author;
+        $this->worker_folder = $worker_folder;
     }
 
     /**
@@ -294,7 +300,38 @@ class GitBotController extends BaseController
                     /** @var App $this */
                     $self->setDefaultBaseValues($this);
                     if($this->account->getUser()->isAdmin()){
-                        // TODO: finish
+                        // Process post actions
+                        if(isset($_POST["action"])){
+                            switch($_POST["action"]){
+                                case "remove":
+                                    if(isset($_POST["id"])){
+                                        if($self->removeRepository($_POST["id"])){
+                                            $self->setNoticeValues($this,NoticeType::getSuccess(),"Repository removed");
+                                        } else {
+                                            $self->setNoticeValues($this,NoticeType::getError(),"Repository could not be removed");
+                                        }
+                                    }
+                                    break;
+                                case "add":
+                                    if(isset($_POST["name"]) && isset($_POST["folder"])){
+                                        if($self->addRepository($_POST["name"],$_POST["folder"])){
+                                            $self->setNoticeValues($this,NoticeType::getSuccess(),"Repository added");
+                                        } else {
+                                            $self->setNoticeValues($this,NoticeType::getError(),"Repository could not be added");
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        // Fetch list of all repositories
+                        $this->templateValues->add("repositories", $this->bot_database->fetchLocalRepositories());
+                        $this->templateValues->add("worker_folder", $self->worker_folder);
+                        // CSRF values
+                        $self->setCSRF($this,$request);
+                        // Render
+                        return $this->view->render($response,"github_bot/repositories.html.twig",$this->templateValues->getValues());
                     }
                     /** @var Response $response */
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
@@ -451,5 +488,30 @@ class GitBotController extends BaseController
     private function endsWith($haystack, $needle) {
         // search forward starting from end minus needle length characters
         return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
+    }
+
+    /**
+     * Adds a new repository to the database, and notifies the worker so it can be initialized.
+     *
+     * @param string $gitHub The location of the repository on GitHub.
+     * @param string $folder The local folder.
+     * @return bool True if the git was initialized and added to the database, false otherwise.
+     */
+    private function addRepository($gitHub, $folder){
+        $gitHub = "git://github.com/".$gitHub.".git";
+        $folder = $this->worker_folder.$folder;
+        // TODO: create hmac, call worker, store in db
+        return false;
+    }
+
+    /**
+     * Removes a given repository from the database, and notifies the worker so it can be deleted.
+     *
+     * @param $id
+     * @return bool True if the git was removed locally and from the database, false otherwise.
+     */
+    private function removeRepository($id){
+        // TODO: fetch data for repo from db, create hmac, call worker, remove from db
+        return false;
     }
 }
