@@ -2,5 +2,5 @@
 
 {% block content %}
     <h3>Register a new account</h3>
-    <div class="notice error"><i class="fa fa-remove fa-large"></i> The token is invalid or has expired. Please request a new one.</div>
+    {% include "notice.html.twig" %}
 {% endblock %}

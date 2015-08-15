@@ -5,6 +5,7 @@
  */
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\objects\NoticeType;
 use org\ccextractor\submissionplatform\objects\User;
 use Slim\App;
 use Slim\Http\Request;
@@ -51,21 +52,17 @@ class AccountController extends BaseController
                 // GET, to show the login page
                 $this->get('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // CSRF values
                     $self->setCSRF($this,$request);
-                    // Message box data
-                    $this->templateValues->add("message_type", "warning");
-                    $this->templateValues->add("message_icon", "fa-warning");
-                    $this->templateValues->add("message", "You are not logged in currently, so you need to login to proceed.");
-
+                    // Notice
+                    $self->setNoticeValues($this,NoticeType::getWarning(),"You are not logged in currently, so you need to login to proceed.");
+                    // Render
                     return $this->view->render($response,'account/login.html.twig',$this->templateValues->getValues());
                 })->setName($self->getPageName()."_login");
                 // POST, to process a login attempt
                 $this->post('',function ($request, $response, $args) use ($self) {
                     /** @var App $this */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Validate login
                     if(isset($_POST["email"]) && isset($_POST["password"])){
@@ -77,11 +74,9 @@ class AccountController extends BaseController
                     }
                     // CSRF values
                     $self->setCSRF($this,$request);
-                    // Message box data
-                    $this->templateValues->add("message_type", "error");
-                    $this->templateValues->add("message_icon", "fa-remove");
-                    $this->templateValues->add("message", "Login failed. Please try again");
-
+                    // Notice
+                    $self->setNoticeValues($this,NoticeType::getError(),"Login failed. Please try again");
+                    // Render
                     return $this->view->render($response,'account/login.html.twig',$this->templateValues->getValues());
                 });
             });
@@ -100,22 +95,19 @@ class AccountController extends BaseController
                 // GET: normal procedure for regular user
                 $this->get('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // CSRF values
                     $self->setCSRF($this,$request);
-                    // Message box data
-                    $this->templateValues->add("message_type", "warning");
-                    $this->templateValues->add("message_icon", "fa-warning");
-                    $this->templateValues->add("message", "In order to send you a password reset link, we need the email address linked to your account.");
+                    // Notice
+                    $self->setNoticeValues($this,NoticeType::getWarning(),"In order to send you a password reset link, we need the email address linked to your account.");
+                    // Render
                     return $this->view->render($response,"account/recover.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_recover");
                 // POST: normal procedure for regular user
                 $this->post('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
-                    $this->templateValues->add("message", "We could not retrieve an account linked to the given email address. Please try again");
+                    $message = "We could not retrieve an account linked to the given email address. Please try again";
                     // Fetch user, and send recovery email if it exists
                     if(isset($_POST["email"])){
                         /** @var User $user */
@@ -123,24 +115,25 @@ class AccountController extends BaseController
                         if($user->getId() > -1){
                             // We found the user, send recovery email and display ok message
                             if($this->account->sendRecoverEmail($user,$this->view,BaseController::$BASE_URL)){
-                                $this->templateValues->add("message","An email with instructions to reset the password has been sent.");
+                                // Notice
+                                $self->setNoticeValues($this,NoticeType::getSuccess(),"An email with instructions to reset the password has been sent.");
+                                // Render
                                 return $this->view->render($response,"account/recover-ok.html.twig",$this->templateValues->getValues());
                             } else {
-                                $this->templateValues->add("message","We could not send an email to this account. Please try again later, or get in touch.");
+                                $message = "We could not send an email to this account. Please try again later, or get in touch.";
                             }
                         }
                     }
                     // CSRF values
                     $self->setCSRF($this,$request);
-                    // Message box data
-                    $this->templateValues->add("message_type", "error");
-                    $this->templateValues->add("message_icon", "fa-remove");
+                    // Notice
+                    $self->setNoticeValues($this,NoticeType::getError(),$message);
+                    // Render
                     return $this->view->render($response,"account/recover.html.twig",$this->templateValues->getValues());
                 });
                 // GET: recover procedure step 2: choosing a new password
                 $this->get('/step2/{id:[0-9]+}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
@@ -155,21 +148,21 @@ class AccountController extends BaseController
                                 $this->templateValues->add("user", $user);
                                 // CSRF values
                                 $self->setCSRF($this,$request);
-                                // Message box data
-                                $this->templateValues->add("message_type", "warning");
-                                $this->templateValues->add("message_icon", "fa-warning");
-                                $this->templateValues->add("message", "In order to proceed with the password reset, you need to pick a new password and confirm it by entering it a second time.");
-
+                                // Notice
+                                $self->setNoticeValues($this,NoticeType::getWarning(),"In order to proceed with the password reset, you need to pick a new password and confirm it by entering it a second time.");
+                                // Render
                                 return $this->view->render($response,"account/recover-password.html.twig",$this->templateValues->getValues());
                             }
                         }
                     }
+                    // Notice
+                    $self->setNoticeValues($this,NoticeType::getError(),"The token is invalid, or the password has been reset already. Please request a new one.");
+                    // Render
                     return $this->view->render($response,"account/invalid-token.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_recover_step2");
                 // POST: recover procedure step 2: choosing a new password
                 $this->post('/step2/{id:[0-9]+}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
@@ -180,33 +173,36 @@ class AccountController extends BaseController
                             if ($expectedHash === $args["hmac"]) {
                                 // CSRF values
                                 $self->setCSRF($this,$request);
-                                // Message box data
-                                $this->templateValues->add("message_type", "error");
-                                $this->templateValues->add("message_icon", "fa-remove");
-                                $this->templateValues->add("message", "The given passwords do not match. Please try again.");
+                                $message = "The given passwords do not match. Please try again.";
                                 // Check if passwords are set and are matching
                                 if(isset($_POST["password"]) && isset($_POST["password2"]) && $_POST["password"] !== "" && $_POST["password"] === $_POST["password2"]){
                                     if($this->account->updatePassword($user,$_POST["password"],$this->view)){
-                                        $this->templateValues->add("message","The new password was set! You can now log in with it.");
+                                        // Notice
+                                        $self->setNoticeValues($this,NoticeType::getSuccess(),"The new password was set! You can now log in with it.");
+                                        // Render
                                         return $this->view->render($response,"account/recover-ok.html.twig",$this->templateValues->getValues());
                                     }
-                                    $this->templateValues->add("message", "Failed to update the password! Please try again, or get in touch.");
+                                    $message = "Failed to update the password! Please try again, or get in touch.";
                                 }
                                 // Variables
                                 $this->templateValues->add("time", $args["expires"]);
                                 $this->templateValues->add("hmac", $args["hmac"]);
                                 $this->templateValues->add("user", $user);
-
+                                // Notice
+                                $self->setNoticeValues($this,NoticeType::getError(),$message);
+                                // Render
                                 return $this->view->render($response,"account/recover-password.html.twig",$this->templateValues->getValues());
                             }
                         }
                     }
+                    // Notice
+                    $self->setNoticeValues($this,NoticeType::getError(),"The token is invalid, or the password has been reset already. Please request a new one.");
+                    // Render
                     return $this->view->render($response,"account/invalid-token.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_recover_step2_post");
                 // GET: admin only, recovery for a specific user
                 $this->get('/recover/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if(!$this->account->getUser()->isAdmin()){
                         /** @var Response $response */
@@ -228,9 +224,7 @@ class AccountController extends BaseController
                     /** @var Response $response */
                     $self->setDefaultBaseValues($this);
                     if(!$this->account->getUser()->isAdmin()) {
-                        return $this->view->render($response->withStatus(403), "forbidden.html.twig",
-                            $this->templateValues->getValues()
-                        );
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
                     }
                     $user = $this->account->findUser($args["id"]);
                     if($user === false){
@@ -239,10 +233,13 @@ class AccountController extends BaseController
                     }
                     // We found the user, send recovery email and display ok message
                     if($this->account->sendRecoverEmail($user,$this->view,BaseController::$BASE_URL)){
-                        $this->templateValues->add("message","An email with instructions to reset the password has been sent.");
+                        // Notice
+                        $self->setNoticeValues($this,NoticeType::getSuccess(),"An email with instructions to reset the password has been sent.");
+                        // Render
                         return $this->view->render($response,"account/recover-ok.html.twig",$this->templateValues->getValues());
                     } else {
-                        $this->templateValues->add("message","We could not send an email to this account. Please try again later, or get in touch.");
+                        // Notice
+                        $self->setNoticeValues($this,NoticeType::getError(),"We could not send an email to this account. Please try again later, or get in touch.");
                     }
                     $this->templateValues->add("user",$user);
                     return $this->view->render($response,"account/recover-user.html.twig",$this->templateValues->getValues());
@@ -254,23 +251,19 @@ class AccountController extends BaseController
                 // GET: first page of registering procedure
                 $this->get('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // CSRF values
                     $self->setCSRF($this,$request);
-                    // Message
-                    $this->templateValues->add("type","warning");
-                    $this->templateValues->add("type_icon","fa-warning");
-                    $this->templateValues->add("message","The registration process is split up in two steps. Please enter your email address first so we can verify it exists.");
+                    // Notice
+                    $self->setNoticeValues($this,NoticeType::getWarning(),"The registration process is split up in two steps. Please enter your email address first so we can verify it exists.");
                     // Render
                     return $this->view->render($response,"account/registration.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_register");
                 // POST: processing the register data
                 $this->post('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
-                    $this->templateValues->add("message","The given email address is invalid.");
+                    $message  = "The given email address is invalid.";
                     if(isset($_POST["email"]) && is_email($_POST["email"])){
                         // Verify if email is not already existing
                         /** @var User $user */
@@ -278,17 +271,18 @@ class AccountController extends BaseController
                         if($user->getId() === -1){
                             // Send verification email using a hash
                             if($this->account->sendRegistrationEmail($_POST["email"],$this->view, BaseController::$BASE_URL)){
-                                $this->templateValues->add("message","An email was sent to the given email address. Please follow the instructions to create an account.");
+                                // Notice
+                                $self->setNoticeValues($this,NoticeType::getSuccess(),"An email was sent to the given email address. Please follow the instructions to create an account.");
+                                // Render
                                 return $this->view->render($response,"account/registration-success.html.twig",$this->templateValues->getValues());
                             }
-                            $this->templateValues->add("message","Could not send an email. Please try again later, or get in touch.");
+                            $message = "Could not send an email. Please try again later, or get in touch.";
                         } else {
-                            $this->templateValues->add("message", "There is already a user with this email address.");
+                            $message = "There is already a user with this email address.";
                         }
                     }
-                    // Message
-                    $this->templateValues->add("type","error");
-                    $this->templateValues->add("type_icon","fa-remove");
+                    // Notice
+                    $self->setNoticeValues($this,NoticeType::getError(),$message);
                     // CSRF values
                     $self->setCSRF($this,$request);
                     // Render
@@ -297,7 +291,6 @@ class AccountController extends BaseController
                 // GET: actual creation and activation of the account
                 $this->get('/{email}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
@@ -310,25 +303,26 @@ class AccountController extends BaseController
                             $this->templateValues->add("email", $args["email"]);
                             // CSRF values
                             $self->setCSRF($this,$request);
-                            // Message
-                            $this->templateValues->add("type","warning");
-                            $this->templateValues->add("type_icon","fa-warning");
-                            $this->templateValues->add("message","To complete the registration we need your name and a password.");
+                            // Notice
+                            $self->setNoticeValues($this,NoticeType::getWarning(),"To complete the registration we need your name and a password.");
                             // Render
                             return $this->view->render($response,"account/registration-account.html.twig",$this->templateValues->getValues());
                         }
                     }
+                    // Notice
+                    $self->setNoticeValues($this,NoticeType::getError(),"The token is invalid or has expired. Please request a new one.");
+                    // Render
                     return $this->view->render($response,"account/invalid-email-token.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_register_activate");
                 // POST: processing of the actual creation
                 $this->post('/{email}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
                         // Check if there's been no tampering (and the password hasn't been changed yet with this token)
                         $expectedHash = $this->account->getRegistrationEmailHMAC($args["email"], $args["expires"]);
+                        $message = "One of the values wasn't filled in correctly!";
                         if ($expectedHash === $args["hmac"]) {
                             if(isset($_POST["name"]) && isset($_POST["password"]) && isset($_POST["password2"]) &&
                                 $_POST["password"] !== "" && $_POST["name"] !== "" && $_POST["password"] === $_POST["password2"]){
@@ -336,27 +330,30 @@ class AccountController extends BaseController
                                 $hash = password_hash($_POST["password"],PASSWORD_DEFAULT);
                                 $user = new User(-1,$_POST["name"],$args["email"],$hash);
                                 if($this->account->registerUser($user,$this->view)){
-                                    $this->templateValues->add("message","The account was created successfully. You are now logged in.");
+                                    // Notice
+                                    $self->setNoticeValues($this,NoticeType::getSuccess(),"The account was created successfully. You are now logged in.");
                                     $this->templateValues->add("isLoggedIn", $this->account->isLoggedIn());
                                     $this->templateValues->add("loggedInUser", $this->account->getUser());
                                     return $this->view->render($response,"account/registration-success.html.twig",$this->templateValues->getValues());
+                                } else {
+                                    $message = "Could not register. Please try again later or get in touch!";
                                 }
                             }
-                            // Return error message
                             // Variables
                             $this->templateValues->add("time", $args["expires"]);
                             $this->templateValues->add("hmac", $args["hmac"]);
                             $this->templateValues->add("email", $args["email"]);
                             // CSRF values
                             $self->setCSRF($this,$request);
-                            // Message
-                            $this->templateValues->add("type","error");
-                            $this->templateValues->add("type_icon","fa-remove");
-                            $this->templateValues->add("message","One of the values wasn't filled in correctly!");
+                            // Notice
+                            $self->setNoticeValues($this,NoticeType::getError(),$message);
                             // Render
                             return $this->view->render($response,"account/registration-account.html.twig",$this->templateValues->getValues());
                         }
                     }
+                    // Notice
+                    $self->setNoticeValues($this,NoticeType::getError(),"The token is invalid or has expired. Please request a new one.");
+                    // Render
                     return $this->view->render($response,"account/invalid-email-token.html.twig",$this->templateValues->getValues());
                 });
             });
@@ -367,12 +364,9 @@ class AccountController extends BaseController
                 $this->get('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->isAdmin() && $this->account->getUser()->getId() !== intval($args["id"])) {
-                        return $this->view->render($response->withStatus(403), "forbidden.html.twig",
-                            $this->templateValues->getValues()
-                        );
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
                     }
                     $user = $this->account->findUser($args["id"]);
                     if ($user === false) {
@@ -390,9 +384,7 @@ class AccountController extends BaseController
                     /** @var Response $response */
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->isAdmin() && $this->account->getUser()->getId() !== intval($args["id"])) {
-                        return $this->view->render($response->withStatus(403), "forbidden.html.twig",
-                            $this->templateValues->getValues()
-                        );
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
                     }
                     /** @var User $user */
                     $user = $this->account->findUser($args["id"]);
@@ -410,9 +402,15 @@ class AccountController extends BaseController
                             $this->templateValues->add("isLoggedIn", $this->account->isLoggedIn());
                             $this->templateValues->add("loggedInUser", $this->account->getUser());
                         }
-                        return $this->view->render($response,"account/deactivate-ok.html.twig",$this->templateValues->getValues());
+                        // Notice
+                        $self->setNoticeValues($this,NoticeType::getSuccess(),"The account has been deactivated with success.");
+                        // Render
+                        return $this->view->render($response,"account/deactivate-message.html.twig",$this->templateValues->getValues());
                     }
-                    return $this->view->render($response,"account/deactivate-fail.html.twig",$this->templateValues->getValues());
+                    // Notice
+                    $self->setNoticeValues($this,NoticeType::getError(),"The account could not be deactivated. Please get in touch with us, or try again later.");
+                    // Render
+                    return $this->view->render($response,"account/deactivate-message.html.twig",$this->templateValues->getValues());
                 });
             });
             // User manage page logic
@@ -422,7 +420,6 @@ class AccountController extends BaseController
                 $this->get('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if(intval($args["id"]) === $this->account->getUser()->getId()){
                         $this->templateValues->add("user",$this->account->getUser());
@@ -437,16 +434,11 @@ class AccountController extends BaseController
                 $this->post('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
-                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     /** @var User $user */
                     $user = $this->account->getUser();
                     if(intval($args["id"]) === $user->getId()){
-                        // Message box data
-                        $this->templateValues->add("message_type", "error");
-                        $this->templateValues->add("message_icon", "fa-remove");
-                        $this->templateValues->add("message", "Some values were not filled in correctly, please try again");
-
+                        $error = true;
                         // Check if the minimum values have been set
                         if(isset($_POST["name"]) && isset($_POST["email"]) && isset($_POST["password"])){
                             // Verify that we can change (password must be correct)
@@ -482,23 +474,25 @@ class AccountController extends BaseController
                                         }
                                         $this->email->sendEmailToUser($user, "Password changed", $message);
                                     }
-                                    // Message box data
-                                    $this->templateValues->add("message_type", "success");
-                                    $this->templateValues->add("message_icon", "fa-check");
-                                    $this->templateValues->add("message", "The changes were stored successfully.");
+                                    $error = false;
                                 }
                             }
                         }
                         $this->templateValues->add("user",$this->account->getUser());
                         // CSRF values
                         $self->setCSRF($this,$request);
+                        // Notice
+                        if($error){
+                            $self->setNoticeValues($this,NoticeType::getError(),"Some values were not filled in correctly, please try again");
+                        } else {
+                            $self->setNoticeValues($this,NoticeType::getSuccess(),"The changes were stored successfully.");
+                        }
                         // Render
                         return $this->view->render($response,"account/manage.html.twig",$this->templateValues->getValues());
                     }
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                 });
             });
-
             // View user page logic
             $this->group("/view", function () use ($self) {
                 /** @var App $this */

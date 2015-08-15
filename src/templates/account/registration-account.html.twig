@@ -2,7 +2,7 @@
 
 {% block content %}
     <h3>Register a new account</h3>
-    <div class="notice {{ type }}"><i class="fa {{ type_icon }} fa-large"></i> {{ message }}</div>
+    {% include "notice.html.twig" %}
     <form class="vertical" method="post" action="{{ path_for('My Account_register_activate', { 'email': email, 'expires': time, 'hmac': hmac}) }}">
         <label for="name">Name</label>
         <input id="name" name="name" type="text" placeholder="John Doe / My username here" />

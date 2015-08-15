@@ -2,7 +2,7 @@
 
 {% block content %}
     <h3>Password recovery</h3>
-    <div class="notice {{ message_type }}"><i class="fa {{ message_icon }} fa-large"></i> {{ message }}</div>
+    {% include "notice.html.twig" %}
     <form class="vertical" method="post" action="{{ path_for('My Account_recover') }}">
         <label for="email">Email address</label>
         <input id="email" name="email" type="email" placeholder="email@address.com" />

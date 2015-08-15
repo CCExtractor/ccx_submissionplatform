@@ -2,6 +2,7 @@
 
 {% block content %}
     <h3>Password recovery</h3>
+    {% include "notice.html.twig" %}
     <form class="vertical" method="post" action="{{ path_for('My Account_recover_id', {'id': user.id }) }}">
         <p>Are you sure you want to send a password recovery for {{ user.name }}?</p>
         {% include "csrf.html.twig" %}

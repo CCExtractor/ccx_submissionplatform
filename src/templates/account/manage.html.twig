@@ -3,9 +3,7 @@
 {% block content %}
     <h3>Manage your account</h3>
     <p>Below you can change the settings of your account.</p>
-    {% if message is defined %}
-    <div class="notice {{ message_type }}"><i class="fa {{ message_icon }} fa-large"></i> {{ message }}</div>
-    {% endif %}
+    {% include "notice.html.twig" %}
     <form class="vertical" method="post" action="{{ path_for('My Account_manage', { 'id': user.id }) }}">
         <label for="name">Name</label>
         <input id="name" name="name" type="text" value="{{ user.name }}" />
@@ -33,7 +31,7 @@
             {% set link_icon="fa-chain" %}
             {% set link_text="link" %}
         {% endif %}
-        <!-- FIXME: provide links for this action -->
+        <!-- FIXME: provide link for this action -->
         <li><i class="fa fa-li {{ link_icon }}"></i> <a href="">{{ link_text }} GitHub</a></li>
         <li><i class="fa fa-li fa-trash-o"></i> <a href="{{ path_for('My Account_deactivate', { 'id': user.id }) }}">Deactivate my account</a></li>
     </ul>
