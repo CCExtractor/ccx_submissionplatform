@@ -388,4 +388,42 @@ class BotDatabaseLayer implements ServiceProviderInterface
         }
         return $result;
     }
+
+    /**
+     * Fetches all trusted users from the database.
+     *
+     * @return array The list of users that are trusted.
+     */
+    public function fetchTrustedUsers(){
+        $stmt = $this->pdo->query("SELECT * FROM trusted_users ORDER BY user ASC");
+        $result = [];
+        if($stmt->execute() && $stmt->rowCount() > 0){
+            $result = $stmt->fetchAll();
+        }
+        return $result;
+    }
+
+    /**
+     * Removes a user from the trusted users table.
+     *
+     * @param int $id The id of the trusted user to remove.
+     * @return bool True on success, false on failure.
+     */
+    public function removeTrustedUser($id){
+        $stmt = $this->pdo->prepare("DELETE FROM trusted_users WHERE id = :id LIMIT 1;");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
+
+    /**
+     * Adds a new GitHub user to the list of trusted users.
+     *
+     * @param string $name The GitHub username of the user to add to the trusted users.
+     * @return bool True on success, false on failure.
+     */
+    public function addTrustedUser($name){
+        $stmt = $this->pdo->prepare("INSERT INTO trusted_users VALUES(NULL,:name);");
+        $stmt->bindParam(":name",$name,PDO::PARAM_STR);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
 }

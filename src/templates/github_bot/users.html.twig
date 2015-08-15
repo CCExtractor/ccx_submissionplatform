@@ -1,0 +1,44 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>GitHub bot manager</h3>
+    <h4>Trusted GitHub users</h4>
+    {% include 'notice.html.twig' %}
+    {% if users|length > 0 %}
+        <table class="tight striped sortable">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>GitHub username</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for entry in users %}
+                <tr>
+                    <td>{{ entry.id }}</td>
+                    <td>{{ entry.user }}</td>
+                    <td>
+                        <form method="post" action="{{ path_for("GitBot Controller_admin_users") }}">
+                            <input type="hidden" name="action" value="remove" />
+                            <input type="hidden" name="id" value="{{ entry.id }}" />
+                            {% include "csrf.html.twig" %}
+                            <input type="submit" value="Remove user" class="small red" />
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No entries in the history</p>
+    {% endif %}
+    <h5>Add new user</h5>
+    <form method="post" action="{{ path_for("GitBot Controller_admin_users") }}">
+        <input type="hidden" name="action" value="add" />
+        <label for="github_name">GitHub username</label>
+        <input id="github_name" type="text" name="name" />
+        {% include "csrf.html.twig" %}
+        <input type="submit" value="Add new user" class="small green" />
+    </form>
+{% endblock %}
