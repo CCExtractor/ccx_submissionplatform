@@ -110,8 +110,7 @@ class UploadController extends BaseController
                     if($this->account->isLoggedIn()){
                         $this->templateValues->add("upload_size", $this->file_handler->file_upload_max_size());
                         // CSRF values
-                        $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                        $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                        $self->setCSRF($this,$request);
                         // Render
                         return $this->view->render($response,"upload/new.html.twig",$this->templateValues->getValues());
                     }
@@ -150,8 +149,7 @@ class UploadController extends BaseController
                         $this->templateValues->add("upload_size", $this->file_handler->file_upload_max_size());
                         $this->templateValues->add("message", "Invalid file uploaded! Please try correct this error and try again: ".$message);
                         // CSRF values
-                        $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                        $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                        $self->setCSRF($this,$request);
                         // Render
                         return $this->view->render($response,"upload/new.html.twig",$this->templateValues->getValues());
                     }
@@ -186,8 +184,7 @@ class UploadController extends BaseController
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
                             if($data !== false){
                                 // CSRF values
-                                $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                                $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                                $self->setCSRF($this,$request);
                                 // Other variables
                                 $this->templateValues->add("id", $args["id"]);
                                 $this->templateValues->add("ccx_versions", $this->database->getAllCCExtractorVersions());
@@ -235,8 +232,7 @@ class UploadController extends BaseController
                                     $this->templateValues->add("os",$_POST["ccx_os"]);
                                 }
                                 // CSRF values
-                                $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                                $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                                $self->setCSRF($this,$request);
                                 // Other variables
                                 $this->templateValues->add("id", $args["id"]);
                                 $this->templateValues->add("ccx_versions", $this->database->getAllCCExtractorVersions());
@@ -260,8 +256,7 @@ class UploadController extends BaseController
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
                             if($data !== false){
                                 // CSRF values
-                                $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                                $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                                $self->setCSRF($this,$request);
                                 // Other variables
                                 $this->templateValues->add("queued", $data);
                                 $this->templateValues->add("samples", $this->database->getSamplesForUser($this->account->getUser()));

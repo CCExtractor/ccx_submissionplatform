@@ -54,8 +54,7 @@ class AccountController extends BaseController
                     /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // CSRF values
-                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    $self->setCSRF($this,$request);
                     // Message box data
                     $this->templateValues->add("message_type", "warning");
                     $this->templateValues->add("message_icon", "fa-warning");
@@ -77,8 +76,7 @@ class AccountController extends BaseController
                         }
                     }
                     // CSRF values
-                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    $self->setCSRF($this,$request);
                     // Message box data
                     $this->templateValues->add("message_type", "error");
                     $this->templateValues->add("message_icon", "fa-remove");
@@ -105,8 +103,7 @@ class AccountController extends BaseController
                     /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // CSRF values
-                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    $self->setCSRF($this,$request);
                     // Message box data
                     $this->templateValues->add("message_type", "warning");
                     $this->templateValues->add("message_icon", "fa-warning");
@@ -134,8 +131,7 @@ class AccountController extends BaseController
                         }
                     }
                     // CSRF values
-                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    $self->setCSRF($this,$request);
                     // Message box data
                     $this->templateValues->add("message_type", "error");
                     $this->templateValues->add("message_icon", "fa-remove");
@@ -158,8 +154,7 @@ class AccountController extends BaseController
                                 $this->templateValues->add("hmac", $args["hmac"]);
                                 $this->templateValues->add("user", $user);
                                 // CSRF values
-                                $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                                $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                                $self->setCSRF($this,$request);
                                 // Message box data
                                 $this->templateValues->add("message_type", "warning");
                                 $this->templateValues->add("message_icon", "fa-warning");
@@ -184,8 +179,7 @@ class AccountController extends BaseController
                             $expectedHash = $this->account->getPasswordResetHMAC($user, $args["expires"]);
                             if ($expectedHash === $args["hmac"]) {
                                 // CSRF values
-                                $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                                $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                                $self->setCSRF($this,$request);
                                 // Message box data
                                 $this->templateValues->add("message_type", "error");
                                 $this->templateValues->add("message_icon", "fa-remove");
@@ -219,8 +213,7 @@ class AccountController extends BaseController
                         return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                     }
                     // CSRF values
-                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    $self->setCSRF($this,$request);
                     $user = $this->account->findUser($args["id"]);
                     if($user === false){
                         $d = $this->notFoundHandler;
@@ -264,8 +257,7 @@ class AccountController extends BaseController
                     /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // CSRF values
-                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    $self->setCSRF($this,$request);
                     // Message
                     $this->templateValues->add("type","warning");
                     $this->templateValues->add("type_icon","fa-warning");
@@ -298,8 +290,7 @@ class AccountController extends BaseController
                     $this->templateValues->add("type","error");
                     $this->templateValues->add("type_icon","fa-remove");
                     // CSRF values
-                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    $self->setCSRF($this,$request);
                     // Render
                     return $this->view->render($response,"account/registration.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_register");
@@ -318,8 +309,7 @@ class AccountController extends BaseController
                             $this->templateValues->add("hmac", $args["hmac"]);
                             $this->templateValues->add("email", $args["email"]);
                             // CSRF values
-                            $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                            $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                            $self->setCSRF($this,$request);
                             // Message
                             $this->templateValues->add("type","warning");
                             $this->templateValues->add("type_icon","fa-warning");
@@ -358,8 +348,7 @@ class AccountController extends BaseController
                             $this->templateValues->add("hmac", $args["hmac"]);
                             $this->templateValues->add("email", $args["email"]);
                             // CSRF values
-                            $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                            $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                            $self->setCSRF($this,$request);
                             // Message
                             $this->templateValues->add("type","error");
                             $this->templateValues->add("type_icon","fa-remove");
@@ -392,8 +381,7 @@ class AccountController extends BaseController
                     }
                     $this->templateValues->add("user",$user);
                     // CSRF values
-                    $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                    $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                    $self->setCSRF($this,$request);
                     return $this->view->render($response,"account/deactivate-confirm.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName() . "_deactivate");
                 // POST: process confirmation
@@ -439,8 +427,7 @@ class AccountController extends BaseController
                     if(intval($args["id"]) === $this->account->getUser()->getId()){
                         $this->templateValues->add("user",$this->account->getUser());
                         // CSRF values
-                        $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                        $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                        $self->setCSRF($this,$request);
                         // Render
                         return $this->view->render($response,"account/manage.html.twig",$this->templateValues->getValues());
                     }
@@ -504,8 +491,7 @@ class AccountController extends BaseController
                         }
                         $this->templateValues->add("user",$this->account->getUser());
                         // CSRF values
-                        $this->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-                        $this->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+                        $self->setCSRF($this,$request);
                         // Render
                         return $this->view->render($response,"account/manage.html.twig",$this->templateValues->getValues());
                     }
