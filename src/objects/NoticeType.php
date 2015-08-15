@@ -21,13 +21,16 @@ class NoticeType extends SplEnum
     const ERROR = 1;
     // Warning notice
     const WARNING = 2;
-    // Pass/ok notice
+    // Success notice
     const SUCCESS = 3;
+    // Information notice
+    const INFORMATION = 4;
 
     // Static fields for shortcut usage instead of constructor.
     private static $ok = null;
     private static $warning = null;
     private static $error = null;
+    private static $information = null;
 
     /**
      * Gets the Success instance of this Enum.
@@ -63,5 +66,17 @@ class NoticeType extends SplEnum
             self::$error = new NoticeType(NoticeType::ERROR);
         }
         return self::$error;
+    }
+
+    /**
+     * Gets the Information instance of this Enum.
+     *
+     * @return NoticeType
+     */
+    public static function getInformation(){
+        if(self::$information === null){
+            self::$information = new NoticeType(NoticeType::INFORMATION);
+        }
+        return self::$information;
     }
 }

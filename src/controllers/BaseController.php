@@ -76,6 +76,10 @@ abstract class BaseController implements IController
                 $status = "warning";
                 $icon = "warning";
                 break;
+            case NoticeType::INFORMATION:
+                $status = "information";
+                $icon = "info-circle";
+                break;
             case NoticeType::ERROR:
                 // Error flows through to default, which is error.
             default:
