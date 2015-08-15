@@ -16,11 +16,7 @@
 <!-- Temporary untill it's out of beta -->
 <div class="grid">
     <div class="col_12">
-        <!-- Warning -->
-        <div class="notice warning">
-            <i class="fa fa-warning"></i>
-            Please note that this platform is still in beta phase! Not everything is working, and bugs can occur.
-        </div>
+        {% include "notice.html.twig" with { 'notice_status': 'warning', 'notice_icon': 'warning', 'notice_message': 'Please note that this platform is still in beta phase! Not everything is working, and bugs can occur.'} %}
     </div>
 </div>
 <div class="clear"></div>
