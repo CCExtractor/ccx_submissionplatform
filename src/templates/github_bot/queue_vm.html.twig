@@ -3,8 +3,6 @@
 {% block content %}
     <h3>GitHub bot manager</h3>
     <h4>Current pending entries for the VM queue</h4>
-    {% if message is defined %}
-        <div class="notice {{ message_status }}"><i class="fa fa-large fa-{{ message_icon }}"></i> {{ message }}</div>
-    {% endif %}
+    {% include 'notice.html.twig' %}
     {% include 'github_bot/queue.html.twig' with {'queue': queue, 'path': 'vm'} %}
 {% endblock %}
