@@ -97,8 +97,13 @@ abstract class BaseController implements IController
      * @param Request $request The request object which contains the CSRF middleware.
      */
     protected function setCSRF(App $app,Request $request){
-        $app->templateValues->add("csrf_name", $request->getAttribute('csrf_name'));
-        $app->templateValues->add("csrf_value", $request->getAttribute('csrf_value'));
+        $nameKey = $app->csrf->getTokenNameKey();
+        $valueKey = $app->csrf->getTokenValueKey();
+        // Register values for template rendering
+        $app->templateValues->add("csrf_name_key",$nameKey);
+        $app->templateValues->add("csrf_name_value", $request->getAttribute($nameKey));
+        $app->templateValues->add("csrf_value_key",$valueKey);
+        $app->templateValues->add("csrf_value_value", $request->getAttribute($valueKey));
     }
 
     /**
