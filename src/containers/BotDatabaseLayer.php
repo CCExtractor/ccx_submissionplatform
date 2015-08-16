@@ -440,4 +440,46 @@ class BotDatabaseLayer implements ServiceProviderInterface
         }
         return $result;
     }
+
+    /**
+     * Adds a given repository to the local repositories table.
+     *
+     * @param string $gitHub The github of the repository.
+     * @param string $folder The local folder for the worker.
+     * @return bool True on success, false otherwise.
+     */
+    public function addLocalRepository($gitHub, $folder){
+        $stmt = $this->pdo->prepare("INSERT INTO local_repos VALUES(NULL,:github,:folder);");
+        $stmt->bindParam(":github",$gitHub,PDO::PARAM_STR);
+        $stmt->bindParam(":folder",$folder,PDO::PARAM_STR);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
+
+    /**
+     * Fetches the data on a given local repository.
+     *
+     * @param int $id The id of the local repository in the table.
+     * @return bool|array False on error, array on success.
+     */
+    public function getLocalRepository($id){
+        $stmt = $this->pdo->prepare("SELECT * FROM local_repos WHERE id = :id LIMIT 1;");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        $result = false;
+        if($stmt->execute() && $stmt->rowCount() === 1){
+            $result = $stmt->fetch();
+        }
+        return $result;
+    }
+
+    /**
+     * Deletes a given repository from the database.
+     *
+     * @param int $id The id of the repository to delete.
+     * @return bool True on success, false otherwise.
+     */
+    public function removeLocalRepository($id){
+        $stmt = $this->pdo->prepare("DELETE FROM local_repos WHERE id = :id LIMIT 1;");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
 }

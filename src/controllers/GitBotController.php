@@ -51,6 +51,14 @@ class GitBotController extends BaseController
      * @var string The folder that will hold all the local repository clones.
      */
     private $worker_folder;
+    /**
+     * @var string The HMAC used for adding/removing repositories from the worker.
+     */
+    private $hmac;
+    /**
+     * @var string The location where the worker can be contacted for repository management.
+     */
+    private $worker_url;
 
     /**
      * GitBotController constructor.
@@ -62,8 +70,10 @@ class GitBotController extends BaseController
      * @param Logger $logger The instance of the KLogger.
      * @param string $author The GitHub user handle of the bot author.
      * @param string $worker_folder The path to the folder that will hold all the local repository clones.
+     * @param string $hmac The HMAC used for adding/removing repositories from the worker.
+     * @param string $worker_url The location where the worker can be contacted for repository management.
      */
-    public function __construct(BotDatabaseLayer $dba, $python_script, $worker_script, $reportFolder, Logger $logger, $author, $worker_folder){
+    public function __construct(BotDatabaseLayer $dba, $python_script, $worker_script, $reportFolder, Logger $logger, $author, $worker_folder, $hmac, $worker_url){
         parent::__construct("GitBot Controller");
         $this->dba = $dba;
         $this->python_script = $python_script;
@@ -72,6 +82,8 @@ class GitBotController extends BaseController
         $this->logger = $logger;
         $this->author = $author;
         $this->worker_folder = $worker_folder;
+        $this->hmac = $hmac;
+        $this->worker_url = $worker_url;
     }
 
     /**
@@ -500,7 +512,9 @@ class GitBotController extends BaseController
     private function addRepository($gitHub, $folder){
         $gitHub = "git://github.com/".$gitHub.".git";
         $folder = $this->worker_folder.$folder;
-        // TODO: create hmac, call worker, store in db
+        if($this->callWorker($gitHub,$folder,"add")){
+            return $this->dba->addLocalRepository($gitHub,$folder);
+        }
         return false;
     }
 
@@ -511,7 +525,26 @@ class GitBotController extends BaseController
      * @return bool True if the git was removed locally and from the database, false otherwise.
      */
     private function removeRepository($id){
-        // TODO: fetch data for repo from db, create hmac, call worker, remove from db
+        $data = $this->dba->getLocalRepository($id);
+        if($data !== false){
+            if($this->callWorker($data["github"],$data["local"],"remove")){
+                return $this->dba->removeLocalRepository($id);
+            }
+        }
         return false;
+    }
+
+    private function callWorker($gitHub, $folder, $action){
+        $data = "github=".urlencode($gitHub)."&folder=".urlencode($folder)."&action=".urlencode($action);
+        $hmac = hash_hmac("sha256",$data,$this->hmac);
+        // Make POST request to the worker
+        $ch = curl_init();
+        curl_setopt($ch,CURLOPT_URL,$this->worker_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // Need to return the result to the variable
+        curl_setopt($ch,CURLOPT_POST,4);
+        curl_setopt($ch,CURLOPT_POSTFIELDS,$data."&hmac=".urlencode($hmac));
+        $result = curl_exec($ch);
+        curl_close($ch);
+        return $result === "OK";
     }
 }

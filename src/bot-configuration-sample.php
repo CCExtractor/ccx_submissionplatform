@@ -24,3 +24,7 @@ define("BOT_CCX_WORKER","/path/to/runNext");
 define("BOT_AUTHOR","@github_username");
 // Path to the folder that holds the local clones of the repositories
 define("BOT_REPOSITORY_FOLDER","/path/to/local/clones/collection/folder/");
+// HMAC private key. This is used for the HMAC used during repository exchange with the worker.
+define("BOT_HMAC_KEY","Random_characters_here");
+// URL to the worker script for repository management
+define("BOT_WORKER_URL","http://my.domain/subfolder/repository.php");
