@@ -194,7 +194,7 @@ class GitBotController extends BaseController
                         $self->setDefaultBaseValues($this);
                         if($this->account->getUser()->isAdmin()){
                             // Check if POST's are set
-                            if(isset($_POST["action"]) && isset($_POST["id"])){
+                            if($request->getAttribute('csrf_status',true) === true && isset($_POST["action"]) && isset($_POST["id"])){
                                 // Execute action
                                 switch($_POST["action"]){
                                     case "abort":
@@ -232,7 +232,7 @@ class GitBotController extends BaseController
                         $self->setDefaultBaseValues($this);
                         if($this->account->getUser()->isAdmin()){
                             // Check if POST's are set
-                            if(isset($_POST["action"]) && isset($_POST["id"])){
+                            if($request->getAttribute('csrf_status',true) === true && isset($_POST["action"]) && isset($_POST["id"])){
                                 // Execute action
                                 switch($_POST["action"]){
                                     case "remove":
@@ -273,7 +273,7 @@ class GitBotController extends BaseController
                     /** @var App $this */
                     $self->setDefaultBaseValues($this);
                     if($this->account->getUser()->isAdmin()){
-                        if(isset($_POST["action"])){
+                        if($request->getAttribute('csrf_status',true) === true && isset($_POST["action"])){
                             switch($_POST["action"]){
                                 case "remove":
                                     if(isset($_POST["id"])){
@@ -313,7 +313,7 @@ class GitBotController extends BaseController
                     $self->setDefaultBaseValues($this);
                     if($this->account->getUser()->isAdmin()){
                         // Process post actions
-                        if(isset($_POST["action"])){
+                        if($request->getAttribute('csrf_status',true) === true && isset($_POST["action"])){
                             switch($_POST["action"]){
                                 case "remove":
                                     if(isset($_POST["id"])){

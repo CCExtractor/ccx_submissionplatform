@@ -122,27 +122,30 @@ class UploadController extends BaseController
                     /** @var Response $response */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
-                        $message = "No file given";
-                        if(isset($_FILES["new_sample"])){
-                            // Undefined | Multiple Files | $_FILES Corruption Attack
-                            if (isset($_FILES['new_sample']['error']) && !is_array($_FILES['new_sample']['error'])) {
-                                switch ($_FILES['new_sample']['error']) {
-                                    case UPLOAD_ERR_OK:
-                                        $spl = new SplFileInfo($_FILES['new_sample']['tmp_name']);
-                                        // Call file handler
-                                        $this->file_handler->process($this->account->getUser(),$spl,$_FILES["new_sample"]["name"]);
-                                        // Redirect to process page
-                                        $url = $this->router->pathFor($self->getPageName()."_process");
-                                        return $response->withStatus(302)->withHeader('Location',$url);
-                                    case UPLOAD_ERR_NO_FILE:
-                                        $message = 'No file sent.';
-                                        break;
-                                    case UPLOAD_ERR_INI_SIZE:
-                                    case UPLOAD_ERR_FORM_SIZE:
-                                        $message = 'Exceeded filesize limit.';
-                                        break;
-                                    default:
-                                        $message = 'Unknown errors.';
+                        $message = "CSRF token invalid";
+                        if($request->getAttribute('csrf_status',true) === true){
+                            $message = "No file given";
+                            if(isset($_FILES["new_sample"])){
+                                // Undefined | Multiple Files | $_FILES Corruption Attack
+                                if(isset($_FILES['new_sample']['error']) && !is_array($_FILES['new_sample']['error'])){
+                                    switch($_FILES['new_sample']['error']){
+                                        case UPLOAD_ERR_OK:
+                                            $spl = new SplFileInfo($_FILES['new_sample']['tmp_name']);
+                                            // Call file handler
+                                            $this->file_handler->process($this->account->getUser(), $spl, $_FILES["new_sample"]["name"]);
+                                            // Redirect to process page
+                                            $url = $this->router->pathFor($self->getPageName() . "_process");
+                                            return $response->withStatus(302)->withHeader('Location', $url);
+                                        case UPLOAD_ERR_NO_FILE:
+                                            $message = 'No file sent.';
+                                            break;
+                                        case UPLOAD_ERR_INI_SIZE:
+                                        case UPLOAD_ERR_FORM_SIZE:
+                                            $message = 'Exceeded filesize limit.';
+                                            break;
+                                        default:
+                                            $message = 'Unknown errors.';
+                                    }
                                 }
                             }
                         }
@@ -203,7 +206,7 @@ class UploadController extends BaseController
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
                             if($data !== false){
                                 // Verify posted values
-                                if(isset($_POST["ccx_version"]) && isset($_POST["ccx_os"]) && isset($_POST["ccx_params"]) &&
+                                if($request->getAttribute('csrf_status',true) === true && isset($_POST["ccx_version"]) && isset($_POST["ccx_os"]) && isset($_POST["ccx_params"]) &&
                                     isset($_POST["notes"]) && strlen($_POST["ccx_params"]) > 0 && strlen($_POST["notes"]) > 0){
                                     $version = $this->database->isCCExtractorVersion($_POST["ccx_version"]);
                                     if($version){
@@ -273,7 +276,7 @@ class UploadController extends BaseController
                         if($this->account->isLoggedIn()){
                             $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
                             if($data !== false){
-                                if(isset($_POST["link_id"])){
+                                if($request->getAttribute('csrf_status',true) === true && isset($_POST["link_id"])){
                                     $sample = $this->database->getSampleForUser($this->account->getUser(), $_POST["link_id"]);
                                     if($sample !== false){
                                         // Process
