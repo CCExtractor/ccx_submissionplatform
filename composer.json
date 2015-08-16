@@ -12,7 +12,7 @@
   "repositories": [
     {
       "type": "git",
-      "url": "https://github.com/wforums/Slim-Csrf"
+      "url": "https://github.com/slimphp/Slim-Csrf"
     },
     {
       "type": "git",
