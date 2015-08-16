@@ -37,24 +37,31 @@ $container = new Container();
 $app = new App($container);
 
 // Add CSRF protection middleware
-$app->add(new Guard());
+$container['csrf'] = function ($c) {
+    return new Guard();
+};
+
+$app->add($container->get('csrf'));
 
 // Twig
-$view = new Twig('../src/templates', [
-    /*'cache' => '../twig_cache',*/
-    'strict_variables' => true,
-    'autoescape' => true,
-    'debug' => true
-]);
+$container['view'] = function ($c) {
+    $view = new Twig('../src/templates', [
+        /*'cache' => '../twig_cache',*/
+        'strict_variables' => true,
+        'autoescape' => true,
+        'debug' => true
+    ]);
 
-$view->addExtension(new TwigExtension(
-    $container->get('router'),
-    $container->get('request')->getUri()
-));
+    // Instantiate and add Slim specific extension
+    $view->addExtension(new TwigExtension(
+        $c['router'],
+        $c['request']->getUri()
+    ));
 
-$view->getEnvironment()->addExtension(new Twig_Extensions_Extension_I18n());
+    $view->getEnvironment()->addExtension(new Twig_Extensions_Extension_I18n());
 
-$container->register($view);
+    return $view;
+};
 
 // Database
 $dba = new DatabaseLayer(DATABASE_SOURCE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD);
