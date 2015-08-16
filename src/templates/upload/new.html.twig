@@ -1,6 +1,7 @@
 {% extends "base.html.twig" %}
 
 {% block content %}
+    {% set accept=".ts, .txt, .srt, .png, video/*" %}
     <h3>Upload a new sample</h3>
     <p>Please select a file using the "browse" button below, and then press the "Upload sample" button. This can take a while though! For bigger files it's recommended to use <a href="{{ path_for("Upload_ftp") }}">FTP upload</a> instead.</p>
     <p>The maximum allowed upload size is: {{ upload_size }}</p>
@@ -11,6 +12,5 @@
         {% include "csrf.html.twig" %}
         <input type="submit" name="submit" value="Upload sample" />
     </form>
-    {% set accept=".ts, .txt, .srt, .png, video/*" %}
     {% include "notice.html.twig" with { "notice_status": "information", "notice_icon": "info-circle", "notice_message": "Accepted files: " ~ accept ~ ". If you want to upload another type, please make a request to get it added." } %}
 {% endblock %}
