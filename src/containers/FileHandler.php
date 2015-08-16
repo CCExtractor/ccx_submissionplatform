@@ -331,4 +331,15 @@ class FileHandler implements ServiceProviderInterface
 
         return round($bytes, $precision) . ' ' . $units[$pow];
     }
+
+    /**
+     * Checks if a sample is small enough to be server through HTTP.
+     *
+     * @param SampleData $sample The sample we want to check.
+     * @return bool True if the file is small enough, false otherwise.
+     */
+    public function isSmallEnough(SampleData $sample){
+        $finfo = new SplFileInfo($this->store_dir.$sample->getSampleFileName());
+        return $finfo->getSize() < $this->parse_size("1gb");
+    }
 }

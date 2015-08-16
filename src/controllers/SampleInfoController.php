@@ -53,6 +53,7 @@ class SampleInfoController extends BaseController
                     if($media !== false){
                         $this->templateValues->add("sample",$sample);
                         $this->templateValues->add("media",$media);
+                        $this->templateValues->add("http_download",$this->file_handler->isSmallEnough($sample));
                         return $this->view->render($response,'sample-info/sample-info-common.html.twig',$this->templateValues->getValues());
                     }
                     $this->templateValues->add("error","error obtaining media info");
@@ -73,6 +74,7 @@ class SampleInfoController extends BaseController
                     if($media !== false){
                         $this->templateValues->add("sample",$sample);
                         $this->templateValues->add("media",$media);
+                        $this->templateValues->add("http_download",$this->file_handler->isSmallEnough($sample));
                         return $this->view->render($response,'sample-info/sample-info-common.html.twig',$this->templateValues->getValues());
                     }
                     $this->templateValues->add("error","error obtaining media info");
@@ -81,29 +83,54 @@ class SampleInfoController extends BaseController
                 }
                 return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
             })->setName($self->getPageName().'_hash');
-            // GET: offers a download of the media info xml for a given id
-            $this->get('/download/media-info/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
+            // Download logic
+            $this->group('/download/{id:[0-9]+}', function() use ($self){
                 /** @var App $this */
-                /** @var Response $response */
-                $self->setDefaultBaseValues($this);
-                // Fetch sample
-                /** @var Sample $sample */
-                $sample = $this->database->getSampleById($args["id"]);
-                if($sample !== false){
-                    // Fetch media info
-                    $media = $this->file_handler->fetchMediaInfo($sample,true,false);
-                    if($media !== false){
-                        // Create headers
-                        $response = $response->withHeader("Content-type","text/xml");
-                        $response = $response->withHeader("Content-Disposition",'attachment; filename="'.$sample->getHash().'.xml"');
-                        return $response->write($media);
+                // GET: download of small enough files through HTTP
+                $this->get('[/]', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    $self->setDefaultBaseValues($this);
+                    // Fetch sample
+                    /** @var Sample $sample */
+                    $sample = $this->database->getSampleById($args["id"]);
+                    if($sample !== false){
+                        // TODO: finish
+//                        if($media !== false){
+//                            // Create headers
+//                            $response = $response->withHeader("Content-Disposition",'attachment; filename="'.$sample->getSampleFileName().'"');
+//                            return $response->write($media);
+//                        }
+                          $this->templateValues->add("error","error obtaining media info");
+                    } else {
+                        $this->templateValues->add("error","invalid sample id");
                     }
-                    $this->templateValues->add("error","error obtaining media info");
-                } else {
-                    $this->templateValues->add("error","invalid sample id");
-                }
-                return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
-            })->setName($self->getPageName().'_media_download');
+                    return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
+                })->setName($self->getPageName().'_download');
+                // GET: offers a download of the media info xml for a given id
+                $this->get('/media-info', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    $self->setDefaultBaseValues($this);
+                    // Fetch sample
+                    /** @var Sample $sample */
+                    $sample = $this->database->getSampleById($args["id"]);
+                    if($sample !== false){
+                        // Fetch media info
+                        $media = $this->file_handler->fetchMediaInfo($sample,true,false);
+                        if($media !== false){
+                            // Create headers
+                            $response = $response->withHeader("Content-type","text/xml");
+                            $response = $response->withHeader("Content-Disposition",'attachment; filename="'.$sample->getHash().'.xml"');
+                            return $response->write($media);
+                        }
+                        $this->templateValues->add("error","error obtaining media info");
+                    } else {
+                        $this->templateValues->add("error","invalid sample id");
+                    }
+                    return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
+                })->setName($self->getPageName().'_download_media');
+            });
         });
     }
 }

@@ -39,6 +39,11 @@
     <h5>Actions</h5>
     <ul class="icons">
         <!-- TODO: add more actions (GitHub post, ...) -->
-        <li><i class="fa fa-li fa-download"></i> <a href="{{ path_for("Sample Info_media_download", { 'id': sample.id }) }}">Download media info xml</a></li>
+        {% if http_download %}
+            <li><i class="fa fa-li fa-download"></i> <a href="{{ path_for("Sample Info_download", { 'id' : sample.id }) }}">Download sample</a></li>
+        {% else %}
+            <li><i class="fa fa-li fa-book"></i> <a href="">View sample download instructions (FTP)</a></li>
+        {% endif %}
+        <li><i class="fa fa-li fa-file-code-o"></i> <a href="{{ path_for("Sample Info_download_media", { 'id': sample.id }) }}">Download media info xml</a></li>
     </ul>
 {% endblock %}
