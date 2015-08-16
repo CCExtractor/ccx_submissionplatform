@@ -65,7 +65,8 @@ class AccountController extends BaseController
                     /** @var App $this */
                     $self->setDefaultBaseValues($this);
                     // Validate login
-                    if(isset($_POST["email"]) && isset($_POST["password"])){
+                    /** @var Request $request */
+                    if($request->getAttribute('csrf_status',true) === true && isset($_POST["email"]) && isset($_POST["password"])){
                         if($this->account->performLogin($_POST["email"],$_POST["password"])){
                             $url = $this->router->pathFor("Home");
                             /** @var Response $response */
@@ -107,9 +108,10 @@ class AccountController extends BaseController
                 $this->post('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     $self->setDefaultBaseValues($this);
-                    $message = "We could not retrieve an account linked to the given email address. Please try again";
+                    $message = "We could not retrieve an account linked to the given email address, or the CSRF protection is invalid. Please try again";
                     // Fetch user, and send recovery email if it exists
-                    if(isset($_POST["email"])){
+                    /** @var Request $request */
+                    if($request->getAttribute('csrf_status',true) === true && isset($_POST["email"])){
                         /** @var User $user */
                         $user = $this->database->getUserWithEmail($_POST["email"]);
                         if($user->getId() > -1){
@@ -175,7 +177,7 @@ class AccountController extends BaseController
                                 $self->setCSRF($this,$request);
                                 $message = "The given passwords do not match. Please try again.";
                                 // Check if passwords are set and are matching
-                                if(isset($_POST["password"]) && isset($_POST["password2"]) && $_POST["password"] !== "" && $_POST["password"] === $_POST["password2"]){
+                                if($request->getAttribute('csrf_status',true) === true && isset($_POST["password"]) && isset($_POST["password2"]) && $_POST["password"] !== "" && $_POST["password"] === $_POST["password2"]){
                                     if($this->account->updatePassword($user,$_POST["password"],$this->view)){
                                         // Notice
                                         $self->setNoticeValues($this,NoticeType::getSuccess(),"The new password was set! You can now log in with it.");
@@ -226,6 +228,9 @@ class AccountController extends BaseController
                     if(!$this->account->getUser()->isAdmin()) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
                     }
+                    if($request->getAttribute('csrf_status') === false){
+                        return $response->withStatus(302)->withHeader("Location",$this->router->pathFor($self->getPageName()."_recover_id",["id" => $args["id"]]));
+                    }
                     $user = $this->account->findUser($args["id"]);
                     if($user === false){
                         $d = $this->notFoundHandler;
@@ -264,7 +269,7 @@ class AccountController extends BaseController
                     /** @var App $this */
                     $self->setDefaultBaseValues($this);
                     $message  = "The given email address is invalid.";
-                    if(isset($_POST["email"]) && is_email($_POST["email"])){
+                    if($request->getAttribute('csrf_status',true) === true && isset($_POST["email"]) && is_email($_POST["email"])){
                         // Verify if email is not already existing
                         /** @var User $user */
                         $user = $this->database->getUserWithEmail($_POST["email"]);
@@ -324,7 +329,7 @@ class AccountController extends BaseController
                         $expectedHash = $this->account->getRegistrationEmailHMAC($args["email"], $args["expires"]);
                         $message = "One of the values wasn't filled in correctly!";
                         if ($expectedHash === $args["hmac"]) {
-                            if(isset($_POST["name"]) && isset($_POST["password"]) && isset($_POST["password2"]) &&
+                            if($request->getAttribute('csrf_status',true) === true && isset($_POST["name"]) && isset($_POST["password"]) && isset($_POST["password2"]) &&
                                 $_POST["password"] !== "" && $_POST["name"] !== "" && $_POST["password"] === $_POST["password2"]){
                                 // Register account
                                 $hash = password_hash($_POST["password"],PASSWORD_DEFAULT);
@@ -386,6 +391,11 @@ class AccountController extends BaseController
                     if (!$this->account->getUser()->isAdmin() && $this->account->getUser()->getId() !== intval($args["id"])) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
                     }
+                    /** @var Request $request */
+                    if($request->getAttribute('csrf_status') === false){
+                        // Failed CSRF, redirect to previous page.
+                        return $response->withStatus(302)->withHeader("Location",$this->router->pathFor($self->getPageName()."_deactivate",["id" => $args["id"]]));
+                    }
                     /** @var User $user */
                     $user = $this->account->findUser($args["id"]);
                     if ($user === false) {
@@ -434,13 +444,14 @@ class AccountController extends BaseController
                 $this->post('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     /** @var User $user */
                     $user = $this->account->getUser();
                     if(intval($args["id"]) === $user->getId()){
                         $error = true;
                         // Check if the minimum values have been set
-                        if(isset($_POST["name"]) && isset($_POST["email"]) && isset($_POST["password"])){
+                        if($request->getAttribute('csrf_status',true) === true && isset($_POST["name"]) && isset($_POST["email"]) && isset($_POST["password"])){
                             // Verify that we can change (password must be correct)
                             if(password_verify($_POST["password"], $user->getHash())){
                                 // Verify values
