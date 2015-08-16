@@ -38,7 +38,12 @@ $app = new App($container);
 
 // Add CSRF protection middleware
 $container['csrf'] = function ($c) {
-    return new Guard();
+    $guard = new Guard();
+    $guard->setFailureCallable(function ($request, $response, $next) {
+        $request = $request->withAttribute("csrf_status", false);
+        return $next($request, $response);
+    });
+    return $guard;
 };
 
 $app->add($container->get('csrf'));
