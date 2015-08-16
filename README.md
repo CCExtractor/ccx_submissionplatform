@@ -1,4 +1,4 @@
-# CCExctractor Sample Submission Platform
+# CCExtractor Sample Submission Platform
 
 This repository contains the code for a Sample Submission Platform, which allows for a unified place to report errors, submit samples, view existing samples and more. It was developed during GSoC 2015.
 
@@ -16,7 +16,7 @@ It will be closely integrated with GitHub and the [GitHub bot](https://github.co
 
 ### Requirements
 
-* PHP >= 5.5
+* PHP >= 5.5, with CURL
 * MySQL
 * Pure-FTPD with mysql
 * Composer

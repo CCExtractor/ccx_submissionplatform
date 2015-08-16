@@ -534,6 +534,14 @@ class GitBotController extends BaseController
         return false;
     }
 
+    /**
+     * Makes a CURL call to the worker instance to perform an action.
+     *
+     * @param string $gitHub The GitHub git url.
+     * @param string $folder The local worker folder to store.
+     * @param string $action The action to perform for this repository.
+     * @return bool True if the call succeeded, false otherwise.
+     */
     private function callWorker($gitHub, $folder, $action){
         $data = "github=".urlencode($gitHub)."&folder=".urlencode($folder)."&action=".urlencode($action);
         $hmac = hash_hmac("sha256",$data,$this->hmac);
