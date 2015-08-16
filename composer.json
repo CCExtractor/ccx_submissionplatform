@@ -24,7 +24,7 @@
     "slim/slim": "3.x-dev",
     "slim/twig-view": "dev-master",
     "milo/github-api": "^1.4",
-    "slim/csrf": "dev-composer-fix",
+    "slim/csrf": "dev-master",
     "phpmailer/phpmailer": "^5.2",
     "dominicsayers/isemail": "dev-master",
     "katzgrau/klogger": "dev-master"
