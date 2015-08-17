@@ -32,6 +32,7 @@ class HomeController extends BaseController
     public function register(App $app)
     {
         $self = $this;
+        // GET: start page of the site/application
         $app->get('/[home]',function($request, $response, $args) use ($self) {
             /** @var App $this */
             $self->setDefaultBaseValues($this);
@@ -61,8 +62,15 @@ class HomeController extends BaseController
 
             $this->templateValues->add("ccx_last_release", $this->database->getLatestCCExtractorVersion());
             $this->templateValues->add("ccx_latest_commit", $commit);
-
+            // Render
             return $this->view->render($response,'home/home.html.twig',$this->templateValues->getValues());
         })->setName($this->getPageName());
+        // GET: about page
+        $app->get("/about",function($request, $response, $args) use ($self) {
+            /** @var App $this */
+            $self->setDefaultBaseValues($this);
+            // Render
+            return $this->view->render($response,'home/about.html.twig',$this->templateValues->getValues());
+        })->setName($this->getPageName()."_about");
     }
 }
