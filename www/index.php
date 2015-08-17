@@ -64,6 +64,7 @@ $container['view'] = function ($c) {
     ));
 
     $view->getEnvironment()->addExtension(new Twig_Extensions_Extension_I18n());
+    $view->getEnvironment()->addExtension(new Twig_Extension_Debug()); // FUTURE: remove
 
     return $view;
 };
