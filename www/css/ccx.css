@@ -5,7 +5,7 @@
     color: blue;
 }
 
-input[type="submit"].small {
+input[type="submit"].small, input[type="button"].small {
     font-size: 0.8em;
     padding: 5px 10px;
 }
