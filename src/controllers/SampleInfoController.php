@@ -95,13 +95,13 @@ class SampleInfoController extends BaseController
                     /** @var Sample $sample */
                     $sample = $this->database->getSampleById($args["id"]);
                     if($sample !== false){
-                        // TODO: finish
-//                        if($media !== false){
-//                            // Create headers
-//                            $response = $response->withHeader("Content-Disposition",'attachment; filename="'.$sample->getSampleFileName().'"');
-//                            return $response->write($media);
-//                        }
-                          $this->templateValues->add("error","error obtaining media info");
+                        if($this->file_handler->isSmallEnough($sample)){
+                            $response = $response->withHeader("X-Accel-Redirect", "/protected/" . $sample->getSampleFileName());
+                            $response = $response->withHeader("Content-type", "application/octet-stream");
+                            $response = $response->withHeader("Content-Disposition", 'attachment; filename="' . $sample->getSampleFileName() . '"');
+                            return $response;
+                        }
+                        $this->templateValues->add("error","sample too big to download over http; please use ftp as instructed.");
                     } else {
                         $this->templateValues->add("error","invalid sample id");
                     }

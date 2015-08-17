@@ -16,6 +16,7 @@ It will be closely integrated with GitHub and the [GitHub bot](https://github.co
 
 ### Requirements
 
+* Nginx (Other possible when modifying the sample download section)
 * PHP >= 5.5, with CURL
 * MySQL
 * Pure-FTPD with mysql
@@ -40,6 +41,21 @@ If you don't have the SplTypes pear package installed yet, you can do this as fo
 3. Install SplEnum (`sudo pecl install SPL_Types`).
 4. If the install succeeded, add the extension to your `php.ini` file: `extension=spl_types.so`.
 5. Restart the PHP service.
+
+### Nginx configuration for X-Accel-Redirect
+
+To serve files without any PHP overhead, the X-Accel-Redirect is used. For this to work, the section below needs to be added to the nginx configuration file:
+
+```
+location /protected/ {
+    internal;
+    alias /path/to/storage/of/samples/; # Trailing slash is important!
+}
+```
+
+More info on this is available at the [Nginx wiki](http://wiki.nginx.org/NginxXSendfile).
+
+Other webservers can be configured too, but will require a small modification in the relevant section of the SampleInfoController that handles the download.
 
 ### Pure-FTPD configuration
 
