@@ -6,6 +6,9 @@
     <p>Name: {{ user.name }}</p>
     <p>Email: {{ user.email }}</p>
     <p>GitHub linked? {{ user.isGithub ? "Yes":"No" }}</p>
+    {% if loggedInUser.isAdmin %}
+        <p>Is admin? {{ user.isAdmin ? "Yes":"No" }}</p>
+    {% endif %}
     <h4>Submitted samples</h4>
     {% set noSampleMessage="This user didn't submit any samples yet." %}
     {% set useSampleOriginal=true %}

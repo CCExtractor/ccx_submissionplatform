@@ -537,6 +537,67 @@ class AccountController extends BaseController
                     return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                 })->setName($self->getPageName()."_view_id");
             });
+            // Manage user rights logic
+            $this->group("/rights/{id:[0-9]+}", function() use ($self){
+                /** @var App $this */
+                // GET: request confirmation to change rights
+                $this->get('[/]', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    $self->setDefaultBaseValues($this);
+                    if (!$this->account->getUser()->isAdmin()) {
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
+                    }
+                    $user = $this->account->findUser($args["id"]);
+                    if ($user === false) {
+                        $d = $this->notFoundHandler;
+                        return $d($request, $response);
+                    }
+                    $this->templateValues->add("user",$user);
+                    // CSRF
+                    $self->setCSRF($this,$request);
+                    // render
+                    return $this->view->render($response,"account/rights-confirm.html.twig",$this->templateValues->getValues());
+                })->setName($self->getPageName()."_rights");
+                // POST: process rights change
+                $this->post('[/]', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    /** @var Request $request */
+                    $self->setDefaultBaseValues($this);
+                    if (!$this->account->getUser()->isAdmin()) {
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
+                    }
+                    /** @var User $user */
+                    $user = $this->account->findUser($args["id"]);
+                    if ($user === false) {
+                        $d = $this->notFoundHandler;
+                        return $d($request, $response);
+                    }
+                    // Anti-CSRF
+                    if($request->getAttribute('csrf_status',true) === true){
+                        $admin = (isset($_POST["admin"]) && $_POST["admin"] === "on");
+                        if($admin !== $user->isAdmin()){
+                            // Update user
+                            $user->setAdmin($admin);
+                            if($this->database->updateUser($user)){
+                                // Redirect to list
+                                return $response->withStatus(302)->withHeader('Location',$this->router->pathFor($self->getPageName()."_view"));
+                            }
+                            $self->setNoticeValues($this,NoticeType::getError(),"Failed to update user");
+                        } else {
+                            $self->setNoticeValues($this,NoticeType::getWarning(),"Nothing changed, so nothing was stored");
+                        }
+                    } else {
+                        $self->setNoticeValues($this,NoticeType::getError(),"CSRF values incorrect");
+                    }
+                    $this->templateValues->add("user",$user);
+                    // CSRF
+                    $self->setCSRF($this,$request);
+                    // render
+                    return $this->view->render($response,"account/rights-confirm.html.twig",$this->templateValues->getValues());
+                });
+            });
         });
     }
 }
