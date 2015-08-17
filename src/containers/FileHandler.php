@@ -166,13 +166,13 @@ class FileHandler implements ServiceProviderInterface
     /**
      * Fetches the media info for a given sample.
      *
-     * @param SampleData $sample The sample.
+     * @param Sample $sample The sample.
      * @param bool $generate If true, it will generate the media info if it's missing.
      * @param bool $filter If true, it will filter out the media info and return a formatted string. If false,
      * it'll return the full XML string.
      * @return bool|string The media info if it's loaded, false otherwise.
      */
-    public function fetchMediaInfo(SampleData $sample, $generate = false, $filter=true){
+    public function fetchMediaInfo(Sample $sample, $generate = false, $filter=true){
         // Media info, if existing, is stored in $store_dir/media/hash.xml
         $finfo = new SplFileInfo($this->store_dir."media/".$sample->getHash().".xml");
         $media = false;
@@ -333,13 +333,32 @@ class FileHandler implements ServiceProviderInterface
     }
 
     /**
-     * Checks if a sample is small enough to be server through HTTP.
+     * Fetches a list of additional files for given sample.
      *
-     * @param SampleData $sample The sample we want to check.
-     * @return bool True if the file is small enough, false otherwise.
+     * @param Sample $sample The sample we want to get the additional files for.
+     * @return array A list of the additional files.
      */
-    public function isSmallEnough(SampleData $sample){
-        $finfo = new SplFileInfo($this->store_dir.$sample->getSampleFileName());
-        return $finfo->getSize() < $this->parse_size("1gb");
+    public function fetchAdditionalFiles(Sample $sample){
+        $result = [];
+        foreach(glob($this->store_dir."extra/".$sample->getHash()."_*") as $file){
+            $result[] = new SplFileInfo($file);
+        }
+        return $result;
+    }
+
+    /**
+     * Fetches the SplFileInfo for an additional file from given sample and index number.
+     *
+     * @param Sample $sample The sample to fetch the additional file info for.
+     * @param int $index The index of the additional file.
+     * @return bool|SplFileInfo False on failure, SplFileInfo instance of the file otherwise.
+     */
+    public function fetchAdditionalFileName(Sample $sample, $index){
+        $matches = glob($this->store_dir."extra/".$sample->getHash()."_".$index.".*");
+        // There should be just a single file with this exact hash & number...
+        if(sizeof($matches)  === 1){
+            return new SplFileInfo($matches[0]);
+        }
+        return false;
     }
 }

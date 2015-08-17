@@ -19,6 +19,30 @@
             Notes: {{ sample.notes }}<br />
         </p>
     </blockquote>
+    {% if additional_files is defined and additional_files|length > 0 %}
+        <h4>Additional files</h4>
+        <table class="tight striped sortable">
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in additional_files %}
+                    <tr>
+                        <td>{{ file.fileName[:5] }}..._{{ loop.index0 }}.{{ file.extension }}</td>
+                        <td>
+                            <a href="{{ path_for("Sample Info_download_additional", { 'id' : sample.id, 'additional': loop.index0 }) }}" title="Download additional file"><i class="fa fa-download"></i></a>
+                            {% if loggedInUser.isAdmin %}
+                                &nbsp;<a href="{{ path_for("Sample Info_delete_additional", { 'id' : sample.id, 'additional': loop.index0 }) }}" title="Delete additional file"><i class="fa fa-remove"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
     <h4>Test status</h4>
     <p>Repository: <!-- TODO: insert test status --></p>
     <p>Last release: <!-- TODO: insert test status --></p>
@@ -39,11 +63,11 @@
     <h5>Actions</h5>
     <ul class="icons">
         <!-- TODO: add more actions (GitHub post, ...) -->
-        {% if http_download %}
-            <li><i class="fa fa-li fa-download"></i> <a href="{{ path_for("Sample Info_download", { 'id' : sample.id }) }}">Download sample</a></li>
-        {% else %}
-            <li><i class="fa fa-li fa-book"></i> <a href="">View sample download instructions (FTP)</a></li>
-        {% endif %}
+        <li><i class="fa fa-li fa-download"></i> <a href="{{ path_for("Sample Info_download", { 'id' : sample.id }) }}">Download sample</a></li>
         <li><i class="fa fa-li fa-file-code-o"></i> <a href="{{ path_for("Sample Info_download_media", { 'id': sample.id }) }}">Download media info xml</a></li>
+        {% if loggedInUser.isAdmin %}
+            <li><i class="fa fa-li fa-edit"></i> <a href="{{ path_for("Sample Info_edit", { 'id' : sample.id }) }}">Edit sample</a></li>
+            <li><i class="fa fa-li fa-remove"></i> <a href="{{ path_for("Sample Info_delete", { 'id' : sample.id }) }}">Delete sample</a></li>
+        {% endif %}
     </ul>
 {% endblock %}

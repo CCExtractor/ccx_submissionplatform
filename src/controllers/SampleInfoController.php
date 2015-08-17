@@ -6,8 +6,10 @@
 namespace org\ccextractor\submissionplatform\controllers;
 
 use org\ccextractor\submissionplatform\objects\Sample;
+use org\ccextractor\submissionplatform\objects\SampleData;
 use Slim\App;
 use Slim\Http\Response;
+use Symfony\Component\Finder\SplFileInfo;
 
 /**
  * Class SampleInfoController handles all actions related to viewing samples and displaying/downloading the related media info.
@@ -46,6 +48,7 @@ class SampleInfoController extends BaseController
                 /** @var App $this */
                 $self->setDefaultBaseValues($this);
                 // Fetch sample
+                /** @var SampleData $sample */
                 $sample = $this->database->getSampleById($args["id"]);
                 if($sample !== false){
                     // Fetch media info
@@ -53,7 +56,9 @@ class SampleInfoController extends BaseController
                     if($media !== false){
                         $this->templateValues->add("sample",$sample);
                         $this->templateValues->add("media",$media);
-                        $this->templateValues->add("http_download",$this->file_handler->isSmallEnough($sample));
+                        if($sample->getNrExtraFiles() > 0){
+                            $this->templateValues->add("additional_files", $this->file_handler->fetchAdditionalFiles($sample));
+                        }
                         return $this->view->render($response,'sample-info/sample-info-common.html.twig',$this->templateValues->getValues());
                     }
                     $this->templateValues->add("error","error obtaining media info");
@@ -67,6 +72,7 @@ class SampleInfoController extends BaseController
                 /** @var App $this */
                 $self->setDefaultBaseValues($this);
                 // Fetch sample
+                /** @var SampleData $sample */
                 $sample = $this->database->getSampleByHash($args["hash"]);
                 if($sample !== false){
                     // Fetch media info
@@ -74,7 +80,9 @@ class SampleInfoController extends BaseController
                     if($media !== false){
                         $this->templateValues->add("sample",$sample);
                         $this->templateValues->add("media",$media);
-                        $this->templateValues->add("http_download",$this->file_handler->isSmallEnough($sample));
+                        if($sample->getNrExtraFiles() > 0){
+                            $this->templateValues->add("additional_files", $this->file_handler->fetchAdditionalFiles($sample));
+                        }
                         return $this->view->render($response,'sample-info/sample-info-common.html.twig',$this->templateValues->getValues());
                     }
                     $this->templateValues->add("error","error obtaining media info");
@@ -95,13 +103,10 @@ class SampleInfoController extends BaseController
                     /** @var Sample $sample */
                     $sample = $this->database->getSampleById($args["id"]);
                     if($sample !== false){
-                        if($this->file_handler->isSmallEnough($sample)){
-                            $response = $response->withHeader("X-Accel-Redirect", "/protected/" . $sample->getSampleFileName());
-                            $response = $response->withHeader("Content-type", "application/octet-stream");
-                            $response = $response->withHeader("Content-Disposition", 'attachment; filename="' . $sample->getSampleFileName() . '"');
-                            return $response;
-                        }
-                        $this->templateValues->add("error","sample too big to download over http; please use ftp as instructed.");
+                        $response = $response->withHeader("X-Accel-Redirect", "/protected/" . $sample->getSampleFileName());
+                        $response = $response->withHeader("Content-type", "application/octet-stream");
+                        $response = $response->withHeader("Content-Disposition", 'attachment; filename="' . $sample->getSampleFileName() . '"');
+                        return $response;
                     } else {
                         $this->templateValues->add("error","invalid sample id");
                     }
@@ -130,6 +135,112 @@ class SampleInfoController extends BaseController
                     }
                     return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
                 })->setName($self->getPageName().'_download_media');
+                // GET: offers a download of an additional file
+                $this->get('/additional/{additional:[0-9]+}', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    $self->setDefaultBaseValues($this);
+                    // Fetch sample
+                    /** @var Sample $sample */
+                    $sample = $this->database->getSampleById($args["id"]);
+                    if($sample !== false){
+                        // Fetch extra file information
+                        /** @var SplFileInfo $extra */
+                        $extra = $this->file_handler->fetchAdditionalFileName($sample,$args["additional"]);
+                        if($extra !== false){
+                            $response = $response->withHeader("X-Accel-Redirect", "/protected/extra/" . $extra->getFilename());
+                            $response = $response->withHeader("Content-type", "application/octet-stream");
+                            $response = $response->withHeader("Content-Disposition", 'attachment; filename="' . $extra->getFilename() . '"');
+                            return $response;
+                        }
+                        $this->templateValues->add("error","invalid index or file not found");
+                    } else {
+                        $this->templateValues->add("error","invalid sample id");
+                    }
+                    return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
+                })->setName($self->getPageName().'_download_additional');
+            });
+            // Group edit logic
+            $this->group("/edit/{id:[0-9]+}", function() use ($self){
+                /** @var App $this */
+                // GET: edit sample
+                $this->get('[/]', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    $self->setDefaultBaseValues($this);
+                    if (!$this->account->getUser()->isAdmin()) {
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
+                    }
+                    /** @var SampleData $sample */
+                    $sample = $this->database->getSampleById($args["id"]);
+                    if($sample !== false){
+                        // TODO: finish
+                    } else {
+                        $this->templateValues->add("error","invalid sample id");
+                    }
+                    return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
+                })->setName($self->getPageName().'_edit');
+            });
+            // Group delete logic
+            $this->group("/delete/{id:[0-9]+}", function() use ($self){
+                /** @var App $this */
+                // GET: delete sample
+                $this->map(["GET","POST"],'[/]', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    $self->setDefaultBaseValues($this);
+                    if (!$this->account->getUser()->isAdmin()) {
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
+                    }
+                    // TODO: check posts and delete if necessary
+
+                    /** @var SampleData $sample */
+                    $sample = $this->database->getSampleById($args["id"]);
+                    if($sample !== false){
+                        // Values
+                        $this->templateValues->add("sample",$sample);
+                        // CSRF
+                        $self->setCSRF($this,$request);
+                        // Render
+                        return $this->view->render($response,"sample-info/delete.html.twig",$this->templateValues->getValues());
+                    } else {
+                        $this->templateValues->add("error","invalid sample id");
+                    }
+                    return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
+                })->setName($self->getPageName().'_delete');
+                // GET: delete additional file
+                $this->map(["GET","POST"],'/additional/{additional:[0-9]+}', function ($request, $response, $args) use ($self) {
+                    /** @var App $this */
+                    /** @var Response $response */
+                    $self->setDefaultBaseValues($this);
+                    if (!$this->account->getUser()->isAdmin()) {
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
+                    }
+                    // TODO: check posts and delete if necessary
+
+                    /** @var SampleData $sample */
+                    $sample = $this->database->getSampleById($args["id"]);
+                    if($sample !== false){
+                        // Fetch extra file information
+                        /** @var SplFileInfo $extra */
+                        $extra = $this->file_handler->fetchAdditionalFileName($sample,$args["additional"]);
+                        if($extra !== false){
+                            // Values
+                            $this->templateValues->add("sample",$sample);
+                            $this->templateValues->add("additional",$args["additional"]);
+                            $this->templateValues->add("extra",$extra);
+                            // CSRF
+                            $self->setCSRF($this,$request);
+                            // Render
+                            return $this->view->render($response,"sample-info/delete-additional.html.twig",$this->templateValues->getValues());
+                        }
+                        $this->templateValues->add("error","invalid additional index");
+
+                    } else {
+                        $this->templateValues->add("error","invalid sample id");
+                    }
+                    return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
+                })->setName($self->getPageName().'_delete_additional');
             });
         });
     }
