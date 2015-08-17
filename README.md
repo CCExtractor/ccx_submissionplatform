@@ -55,7 +55,7 @@ location /protected/ {
 
 More info on this is available at the [Nginx wiki](http://wiki.nginx.org/NginxXSendfile).
 
-Other webservers can be configured too, but will require a small modification in the relevant section of the SampleInfoController that handles the download.
+Other webservers can be configured too (see this excellent [SO](http://stackoverflow.com/a/3731639) answer), but will require a small modification in the relevant section of the SampleInfoController that handles the download.
 
 ### Pure-FTPD configuration
 
