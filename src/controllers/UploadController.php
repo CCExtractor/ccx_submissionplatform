@@ -46,6 +46,11 @@ class UploadController extends BaseController
                     // Table rendering
                     $this->templateValues->add("queue",$this->database->getQueuedSamples($this->account->getUser()));
                     $this->templateValues->add("messages",$this->database->getQueuedMessages($this->account->getUser()));
+                    // Admin view
+                    if($this->account->getUser()->isAdmin()){
+                        $this->templateValues->add("a_queue",$this->database->getQueuedSamples());
+                        $this->templateValues->add("a_messages",$this->database->getQueuedMessages());
+                    }
                     // Render
                     return $this->view->render($response,"upload/explain.html.twig",$this->templateValues->getValues());
                 }
@@ -307,10 +312,12 @@ class UploadController extends BaseController
                     /** @var Response $response */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
-                        if($this->file_handler->remove($this->account->getUser(),$args["id"])){
+                        if($this->account->getUser()->isAdmin() && $this->file_handler->remove($args["id"])){
+                            return $response->withRedirect($this->router->pathFor($self->getPageName()));
+                        } else if($this->file_handler->remove($args["id"],$this->account->getUser())){
                             return $response->withRedirect($this->router->pathFor($self->getPageName()."_process"));
                         }
-                        $this->templateValues->add("error","could not remove sample.");
+                        $this->templateValues->add("error","could not remove sample");
                         return $this->view->render($response,"upload/process-error.html.twig",$this->templateValues->getValues());
                     }
                     return $this->view->render($response->withStatus(403),"login-required.html.twig",$this->templateValues->getValues());

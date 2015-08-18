@@ -5,6 +5,9 @@
         <tr>
             <th>Name</th>
             <th>Extension</th>
+            {% if admin is defined %}
+                <th>User</th>
+            {% endif %}
             <th>Actions</th>
         </tr>
         </thead>
@@ -13,9 +16,16 @@
             <tr>
                 <td>{{ entry.originalName }}</td>
                 <td>{{ entry.extension }}</td>
+                {% if admin is defined %}
+                    <td>
+                        <a href="{{ path_for('My Account_view_id', { 'id': entry.user.id }) }}" title="View user info">{{ entry.user.name }}</a>
+                    </td>
+                {% endif %}
                 <td>
-                    <a href="{{ path_for('Upload_process_id', { 'id': entry.id }) }}" title="Finish submission"><i class="fa fa-edit"></i></a>&nbsp;
-                    <a href="{{ path_for('Upload_process_link', { 'id': entry.id }) }}" title="Link to sample"><i class="fa fa-link"></i></a>&nbsp;
+                    {% if admin is not defined %}
+                        <a href="{{ path_for('Upload_process_id', { 'id': entry.id }) }}" title="Finish submission"><i class="fa fa-edit"></i></a>&nbsp;
+                        <a href="{{ path_for('Upload_process_link', { 'id': entry.id }) }}" title="Link to sample"><i class="fa fa-link"></i></a>&nbsp;
+                    {% endif %}
                     <a href="{{ path_for('Upload_process_delete', { 'id': entry.id }) }}" title="Delete"><i class="fa fa-trash"></i></a>
                 </td>
             </tr>
@@ -29,8 +39,14 @@
     <h5>Error messages</h5>
     <p>This are the last 10 error messages that occurred during processing uploaded files</p>
     <ul class="icons">
-        {% for message in messages %}
-            <li><i class="fa fa-li fa-exclamation-circle"></i> {{ message }}</li>
+        {% for entry in messages %}
+            <li>
+                <i class="fa fa-li fa-exclamation-circle"></i>&nbsp;
+                {{ entry.message }}&nbsp;
+                {% if admin is defined %}
+                    (user: <a href="{{ path_for('My Account_view_id', { 'id': entry.user.id }) }}" title="View user info">{{ entry.user.name }}</a>)
+                {% endif %}
+            </li>
         {% endfor %}
     </ul>
 {% endif %}

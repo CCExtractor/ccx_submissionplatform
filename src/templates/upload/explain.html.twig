@@ -9,4 +9,8 @@
     </ul>
     <p>After you upload them, they are added into the queue below, from where you can add the necessary details in order to submit the sample.</p>
     {% include "upload/process-table.html.twig" %}
+    {% if loggedInUser.isAdmin %}
+        <h3>All currently queued samples/messages</h3>
+        {% include "upload/process-table.html.twig" with { 'queue': a_queue, 'messages': a_messages, 'admin': true } %}
+    {% endif %}
 {% endblock %}

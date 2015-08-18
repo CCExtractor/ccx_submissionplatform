@@ -107,12 +107,12 @@ class FileHandler implements ServiceProviderInterface
     /**
      * Removes an item from the queue and the disk.
      *
-     * @param User $user The user that manages the queued item.
      * @param int $id The id of the queued item.
+     * @param User $user The user that manages the queued item.
      * @return bool True if the file was removed and scrapped from the queue.
      */
-    public function remove(User $user, $id){
-        $queued = $this->dba->getQueuedSample($user,$id);
+    public function remove($id, User $user = null){
+        $queued = $this->dba->getQueuedSample($id, $user);
         if($queued !== false){
             if(unlink($this->temp_dir.$queued->getSampleFileName())){
                 return $this->dba->removeQueue($id);
@@ -133,7 +133,7 @@ class FileHandler implements ServiceProviderInterface
      * @return bool True if the queue item existed, the file was moved and stored in the database.
      */
     public function submitSample(User $user, $id, $ccx_version_id, $platform, $params, $notes){
-        $queued = $this->dba->getQueuedSample($user,$id);
+        $queued = $this->dba->getQueuedSample($id, $user);
         if($queued !== false){
             if(rename($this->temp_dir.$queued->getSampleFileName(),$this->store_dir.$queued->getSampleFileName())){
                 return $this->dba->moveQueueToSample($user, $id, $ccx_version_id, $platform, $params, $notes);
@@ -151,7 +151,7 @@ class FileHandler implements ServiceProviderInterface
      * @return bool True if the queue item exists, the sample exists, the file was moved and this was registered in the database.
      */
     public function appendSample(User $user, $queue_id, $sample_id){
-        $queued = $this->dba->getQueuedSample($user,$queue_id);
+        $queued = $this->dba->getQueuedSample($queue_id, $user);
         if($queued !== false){
             $sample = $this->dba->getSampleForUser($user, $sample_id);
             if($sample !== false) {

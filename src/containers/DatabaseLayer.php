@@ -451,14 +451,22 @@ WHERE s.hash = :hash LIMIT 1;");
      * @param User $user The user we want the samples for.
      * @return array A list of all queued samples.
      */
-    public function getQueuedSamples(User $user){
-        $uid = $user->getId();
-        $stmt = $this->pdo->prepare("SELECT * FROM processing_queued WHERE user_id = :id ORDER BY id ASC");
-        $stmt->bindParam(":id",$uid,PDO::PARAM_INT);
+    public function getQueuedSamples(User $user = null){
+        $setUser = ($user === null);
+        if($setUser){
+            $stmt = $this->pdo->prepare("SELECT p.*,u.email,u.name  FROM processing_queued p JOIN user u ON u.id = p.user_id ORDER BY id ASC;");
+        } else{
+            $uid = $user->getId();
+            $stmt = $this->pdo->prepare("SELECT * FROM processing_queued WHERE user_id = :id ORDER BY id ASC");
+            $stmt->bindParam(":id", $uid, PDO::PARAM_INT);
+        }
         $result = [];
         if($stmt->execute()){
             $data = $stmt->fetch();
             while($data !== false){
+                if($setUser){
+                    $user = new User($data["user_id"],$data["name"],$data["email"]);
+                }
                 $result[] = new QueuedSample($data["id"],$data["hash"],$data["extension"],$data["original"],$user);
                 $data = $stmt->fetch();
             }
@@ -469,18 +477,26 @@ WHERE s.hash = :hash LIMIT 1;");
     /**
      * Gets a queued sample for a given used and id.
      *
-     * @param User $user The user that submitted the sample.
      * @param int $id The id of the sample.
+     * @param User $user The user that submitted the sample.
      * @return bool|QueuedSample False on failure, the object otherwise.
      */
-    public function getQueuedSample(User $user, $id){
-        $uid = $user->getId();
-        $stmt = $this->pdo->prepare("SELECT * FROM processing_queued WHERE user_id = :uid AND id = :id LIMIT 1");
-        $stmt->bindParam(":uid",$uid,PDO::PARAM_INT);
+    public function getQueuedSample($id, User $user = null){
+        $setUser = ($user === null);
+        if($setUser){
+            $stmt = $this->pdo->prepare("SELECT p.*,u.email,u.name  FROM processing_queued p JOIN user u ON u.id = p.user_id WHERE p.id = :id LIMIT 1;");
+        } else {
+            $uid = $user->getId();
+            $stmt = $this->pdo->prepare("SELECT * FROM processing_queued WHERE user_id = :uid AND id = :id LIMIT 1");
+            $stmt->bindParam(":uid", $uid, PDO::PARAM_INT);
+        }
         $stmt->bindParam(":id",$id,PDO::PARAM_INT);
         $result = false;
         if($stmt->execute() && $stmt->rowCount() == 1){
             $data = $stmt->fetch();
+            if($setUser){
+                $user = new User($data["user_id"],$data["name"],$data["email"]);
+            }
             $result = new QueuedSample($data["id"],$data["hash"],$data["extension"],$data["original"],$user);
         }
         return $result;
@@ -492,15 +508,26 @@ WHERE s.hash = :hash LIMIT 1;");
      * @param User $user The user to get the messages for.
      * @return array The last 10 messages for this user.
      */
-    public function getQueuedMessages(User $user){
-        $uid = $user->getId();
-        $stmt = $this->pdo->prepare("SELECT message FROM processing_messages WHERE user_id = :id ORDER BY id DESC LIMIT 10");
-        $stmt->bindParam(":id",$uid,PDO::PARAM_INT);
+    public function getQueuedMessages(User $user = null){
+        $setUser = ($user === null);
+        if($setUser){
+            $stmt = $this->pdo->prepare("SELECT p.*,u.email,u.name FROM processing_messages p JOIN user u ON u.id = p.user_id ORDER BY id DESC LIMIT 20;");
+        } else{
+            $uid = $user->getId();
+            $stmt = $this->pdo->prepare("SELECT message FROM processing_messages WHERE user_id = :id ORDER BY id DESC LIMIT 10");
+            $stmt->bindParam(":id", $uid, PDO::PARAM_INT);
+        }
         $result = [];
         if($stmt->execute()){
             $data = $stmt->fetch();
             while($data !== false) {
-                $result[] = $data["message"];
+                if($setUser){
+                    $user = new User($data["user_id"],$data["name"],$data["email"]);
+                }
+                $result[] = [
+                    "message" => $data["message"],
+                    "user" => $user
+                ];
                 $data = $stmt->fetch();
             }
         }
@@ -533,7 +560,7 @@ WHERE s.hash = :hash LIMIT 1;");
      */
     public function moveQueueToSample(User $user, $id, $ccx_version_id, $platform, $params, $notes)
     {
-        $queue = $this->getQueuedSample($user,$id);
+        $queue = $this->getQueuedSample($id, $user);
         if($queue !== false){
             $this->pdo->beginTransaction();
             // Insert sample
@@ -608,6 +635,12 @@ WHERE s.hash = :hash LIMIT 1;");
         return "";
     }
 
+    /**
+     * Removes a sample with given id from the database.
+     *
+     * @param int $id The id of the sample to remove.
+     * @return bool True on success, false on failure.
+     */
     public function removeSample($id){
         if($this->pdo->beginTransaction()){
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
