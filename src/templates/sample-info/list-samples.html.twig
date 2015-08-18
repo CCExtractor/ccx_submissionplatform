@@ -25,6 +25,10 @@
                 <td>{{ sample.extension }}</td>
                 <td>
                     <a href="{{ path_for('Sample Info_hash', { 'hash': sample.hash }) }}" title="View details"><i class="fa fa-info-circle"></i></a>
+                    {% if loggedInUser.isAdmin %}
+                        &nbsp;<a href="{{ path_for("Sample Info_edit", { 'id' : sample.id }) }}" title="Edit sample"><i class="fa fa-li fa-edit"></i></a>
+                        &nbsp;<a href="{{ path_for("Sample Info_delete", { 'id' : sample.id }) }}" title="Delete sample"><i class="fa fa-remove"></i></a>
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}
