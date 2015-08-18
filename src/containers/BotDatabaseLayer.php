@@ -353,6 +353,9 @@ class BotDatabaseLayer implements ServiceProviderInterface
                 $m->bindParam(":test_id",$id,PDO::PARAM_INT);
                 $m->bindParam(":message",$message,PDO::PARAM_STR);
                 $m->execute();
+                $m = $this->pdo->prepare("INSERT INTO test_progress VALUES (NULL, :test_id, NOW(), 'error', 'removed by admin');");
+                $m->bindParam(":test_id",$id,PDO::PARAM_INT);
+                $m->execute();
                 $m = $this->pdo->prepare("UPDATE test SET finished = '1' WHERE id = :test_id");
                 $m->bindParam(":test_id",$id,PDO::PARAM_INT);
                 $m->execute();
