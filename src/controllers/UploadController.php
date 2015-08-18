@@ -281,8 +281,20 @@ class UploadController extends BaseController
                                         if($this->file_handler->appendSample($this->account->getUser(), $args["id"], $_POST["link_id"])){
                                             return $response->withRedirect($this->router->pathFor($self->getPageName()."_process"));
                                         }
+                                        $self->setNoticeValues($this,NoticeType::getError(),"Could not save the data");
+                                    } else {
+                                        $self->setNoticeValues($this,NoticeType::getError(),"Invalid sample id");
                                     }
+                                } else {
+                                    $self->setNoticeValues($this,NoticeType::getError(),"CSRF failed");
                                 }
+                                // CSRF values
+                                $self->setCSRF($this,$request);
+                                // Other variables
+                                $this->templateValues->add("queued", $data);
+                                $this->templateValues->add("samples", $this->database->getSamplesForUser($this->account->getUser()));
+                                // Render
+                                return $this->view->render($response,"upload/link.html.twig",$this->templateValues->getValues());
                             }
                             return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
                         }

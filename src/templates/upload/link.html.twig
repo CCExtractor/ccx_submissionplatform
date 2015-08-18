@@ -1,6 +1,7 @@
 {% extends "base.html.twig" %}
 
 {% block content %}
+    {% include "notice.html.twig" %}
     {% if samples|length >= 1 %}
         <p>Select a previously submitted sample to link the file ({{ queued.originalName }}) to:</p>
         <table class="sortable tight striped">
