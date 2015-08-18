@@ -134,8 +134,7 @@ class UploadController extends BaseController
                                             // Call file handler
                                             $this->file_handler->process($this->account->getUser(), $spl, $_FILES["new_sample"]["name"]);
                                             // Redirect to process page
-                                            $url = $this->router->pathFor($self->getPageName() . "_process");
-                                            return $response->withStatus(302)->withHeader('Location', $url);
+                                            return $response->withRedirect($this->router->pathFor($self->getPageName() . "_process"));
                                         case UPLOAD_ERR_NO_FILE:
                                             $message = 'No file sent.';
                                             break;
@@ -212,8 +211,7 @@ class UploadController extends BaseController
                                     if($version){
                                         // Store, and redirect
                                         if($this->file_handler->submitSample($this->account->getUser(),$args["id"],$_POST["ccx_version"],$_POST["ccx_os"],$_POST["ccx_params"],$_POST["notes"])){
-                                            $url = $this->router->pathFor($self->getPageName()."_process");
-                                            return $response->withStatus(302)->withHeader('Location',$url);
+                                            return $response->withRedirect($this->router->pathFor($self->getPageName()."_process"));
                                         }
                                         $this->templateValues->add("error","could not submit data.");
                                         return $this->view->render($response,"upload/process-error.html.twig",$this->templateValues->getValues());
@@ -281,8 +279,7 @@ class UploadController extends BaseController
                                     if($sample !== false){
                                         // Process
                                         if($this->file_handler->appendSample($this->account->getUser(), $args["id"], $_POST["link_id"])){
-                                            $url = $this->router->pathFor($self->getPageName()."_process");
-                                            return $response->withStatus(302)->withHeader('Location',$url);
+                                            return $response->withRedirect($this->router->pathFor($self->getPageName()."_process"));
                                         }
                                     }
                                 }
@@ -299,8 +296,7 @@ class UploadController extends BaseController
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         if($this->file_handler->remove($this->account->getUser(),$args["id"])){
-                            $url = $this->router->pathFor($self->getPageName()."_process");
-                            return $response->withStatus(302)->withHeader('Location',$url);
+                            return $response->withRedirect($this->router->pathFor($self->getPageName()."_process"));
                         }
                         $this->templateValues->add("error","could not remove sample.");
                         return $this->view->render($response,"upload/process-error.html.twig",$this->templateValues->getValues());
