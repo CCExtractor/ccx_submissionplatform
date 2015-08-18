@@ -44,7 +44,7 @@ class AccountController extends BaseController
                     $url = $this->router->pathFor($self->getPageName()."_manage",["id" => $this->account->getUser()->getId()]);
                 }
                 /** @var Response $response */
-                return $response->withStatus(302)->withHeader('Location',$url);
+                return $response->withRedirect($url);
             })->setName($self->getPageName());
             // Login page logic
             $this->group('/login', function () use ($self) {
@@ -63,14 +63,13 @@ class AccountController extends BaseController
                 // POST, to process a login attempt
                 $this->post('',function ($request, $response, $args) use ($self) {
                     /** @var App $this */
+                    /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Validate login
-                    /** @var Request $request */
                     if($request->getAttribute('csrf_status',true) === true && isset($_POST["email"]) && isset($_POST["password"])){
                         if($this->account->performLogin($_POST["email"],$_POST["password"])){
-                            $url = $this->router->pathFor("Home");
-                            /** @var Response $response */
-                            return $response->withStatus(302)->withHeader('Location',$url);
+                            return $response->withRedirect($this->router->pathFor("Home"));
                         }
                     }
                     // CSRF values
@@ -84,11 +83,10 @@ class AccountController extends BaseController
             // Logout page logic
             $this->get('/logout', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
+                /** @var Response $response */
                 $self->setDefaultBaseValues($this);
                 $this->account->performLogout();
-                $url = $this->router->pathFor("Home");
-                /** @var Response $response */
-                return $response->withStatus(302)->withHeader('Location',$url);
+                return $response->withRedirect($this->router->pathFor("Home"));
             })->setName($self->getPageName()."_logout");
             // Recover page logic
             $this->group('/recover', function () use ($self) {
@@ -224,12 +222,13 @@ class AccountController extends BaseController
                 $this->post('/recover/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if(!$this->account->getUser()->isAdmin()) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
                     }
                     if($request->getAttribute('csrf_status') === false){
-                        return $response->withStatus(302)->withHeader("Location",$this->router->pathFor($self->getPageName()."_recover_id",["id" => $args["id"]]));
+                        return $response->withRedirect($this->router->pathFor($self->getPageName()."_recover_id",["id" => $args["id"]]));
                     }
                     $user = $this->account->findUser($args["id"]);
                     if($user === false){
@@ -394,7 +393,7 @@ class AccountController extends BaseController
                     /** @var Request $request */
                     if($request->getAttribute('csrf_status') === false){
                         // Failed CSRF, redirect to previous page.
-                        return $response->withStatus(302)->withHeader("Location",$this->router->pathFor($self->getPageName()."_deactivate",["id" => $args["id"]]));
+                        return $response->withRedirect($this->router->pathFor($self->getPageName()."_deactivate",["id" => $args["id"]]));
                     }
                     /** @var User $user */
                     $user = $this->account->findUser($args["id"]);
@@ -582,7 +581,7 @@ class AccountController extends BaseController
                             $user->setAdmin($admin);
                             if($this->database->updateUser($user)){
                                 // Redirect to list
-                                return $response->withStatus(302)->withHeader('Location',$this->router->pathFor($self->getPageName()."_view"));
+                                return $response->withRedirect($this->router->pathFor($self->getPageName()."_view"));
                             }
                             $self->setNoticeValues($this,NoticeType::getError(),"Failed to update user");
                         } else {
