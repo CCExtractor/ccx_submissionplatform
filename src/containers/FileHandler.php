@@ -361,4 +361,44 @@ class FileHandler implements ServiceProviderInterface
         }
         return false;
     }
+
+    /**
+     * Deletes a sample and the associated files from the disk & database.
+     *
+     * @param Sample $sample The sample to delete
+     * @return bool True on success, false on failure.
+     */
+    public function deleteSample(Sample $sample){
+        // Unlink additional files
+        $additional = $this->fetchAdditionalFiles($sample);
+        if(sizeof($additional) > 0){
+            /** @var SplFileInfo $extra */
+            foreach($additional as $extra){
+                @unlink($extra->getRealPath());
+            }
+        }
+        // Unlink media info
+        $finfo = new SplFileInfo($this->store_dir."media/".$sample->getHash().".xml");
+        if($finfo->isFile()){
+            @unlink($finfo->getRealPath());
+        }
+        // Unlink sample itself
+        if(unlink($this->store_dir.$sample->getSampleFileName())){
+            // Remove from DB
+            return $this->dba->removeSample($sample->getId());
+        }
+        return false;
+    }
+
+    /**
+     * Deletes a given additional file from the disk.
+     *
+     * @param Sample $sample The sample of the additional file
+     * @param SplFileInfo $additionalFile The file info of the additional file.
+     * @return bool True on success, false on failure.
+     */
+    public function deleteAdditionalFile(Sample $sample,SplFileInfo $additionalFile){
+        return unlink($additionalFile->getRealPath());
+        // FUTURE: improve
+    }
 }

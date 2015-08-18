@@ -13,6 +13,7 @@ use org\ccextractor\submissionplatform\objects\Sample;
 use org\ccextractor\submissionplatform\objects\SampleData;
 use org\ccextractor\submissionplatform\objects\User;
 use PDO;
+use PDOException;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 
@@ -605,5 +606,35 @@ WHERE s.hash = :hash LIMIT 1;");
             return $data["hash"];
         }
         return "";
+    }
+
+    public function removeSample($id){
+        if($this->pdo->beginTransaction()){
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+            try{
+                $stmt = $this->pdo->prepare("DELETE FROM ccextractor_reference WHERE sample_id = :id;");
+                $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+                $stmt->execute();
+                $stmt = $this->pdo->prepare("DELETE FROM regression_tests WHERE sample_id = :id;");
+                $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+                $stmt->execute();
+                $stmt = $this->pdo->prepare("DELETE FROM sample_tests WHERE sample_id = :id;");
+                $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+                $stmt->execute();
+                $stmt = $this->pdo->prepare("DELETE FROM upload WHERE sample_id = :id;");
+                $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+                $stmt->execute();
+                $stmt = $this->pdo->prepare("DELETE FROM sample WHERE id = :id;");
+                $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+                $stmt->execute();
+                $this->pdo->commit();
+                return true;
+            } catch(PDOException $e){
+                $this->pdo->rollBack();
+            } finally {
+                $this->pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_SILENT);
+            }
+        }
+        return false;
     }
 }

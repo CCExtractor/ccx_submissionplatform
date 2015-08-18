@@ -5,9 +5,11 @@
  */
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\objects\NoticeType;
 use org\ccextractor\submissionplatform\objects\Sample;
 use org\ccextractor\submissionplatform\objects\SampleData;
 use Slim\App;
+use Slim\Http\Request;
 use Slim\Http\Response;
 use Symfony\Component\Finder\SplFileInfo;
 
@@ -188,15 +190,25 @@ class SampleInfoController extends BaseController
                 $this->map(["GET","POST"],'[/]', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->isAdmin()) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
                     }
-                    // TODO: check posts and delete if necessary
-
                     /** @var SampleData $sample */
                     $sample = $this->database->getSampleById($args["id"]);
                     if($sample !== false){
+                        if(isset($_POST["submit"])){
+                            // Validate CSRF before deleting
+                            if($request->getAttribute('csrf_status',true) === true){
+                                // Delete sample and related files
+                                if($this->file_handler->deleteSample($sample)){
+                                    return $response->withRedirect($this->router->pathFor($self->getPageName()));
+                                }
+                                $self->setNoticeValues($this,NoticeType::getError(),"Could not remove sample");
+                            }
+                            $self->setNoticeValues($this,NoticeType::getError(),"Invalid CSRF");
+                        }
                         // Values
                         $this->templateValues->add("sample",$sample);
                         // CSRF
@@ -212,12 +224,11 @@ class SampleInfoController extends BaseController
                 $this->map(["GET","POST"],'/additional/{additional:[0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->isAdmin()) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
                     }
-                    // TODO: check posts and delete if necessary
-
                     /** @var SampleData $sample */
                     $sample = $this->database->getSampleById($args["id"]);
                     if($sample !== false){
@@ -225,6 +236,17 @@ class SampleInfoController extends BaseController
                         /** @var SplFileInfo $extra */
                         $extra = $this->file_handler->fetchAdditionalFileName($sample,$args["additional"]);
                         if($extra !== false){
+                            if(isset($_POST["submit"])){
+                                // Validate CSRF before deleting
+                                if($request->getAttribute('csrf_status',true) === true){
+                                    // Delete sample and related files
+                                    if($this->file_handler->deleteAdditionalFile($sample,$extra)){
+                                        return $response->withRedirect($this->router->pathFor($self->getPageName()));
+                                    }
+                                    $self->setNoticeValues($this,NoticeType::getError(),"Could not remove additional file");
+                                }
+                                $self->setNoticeValues($this,NoticeType::getError(),"Invalid CSRF");
+                            }
                             // Values
                             $this->templateValues->add("sample",$sample);
                             $this->templateValues->add("additional",$args["additional"]);

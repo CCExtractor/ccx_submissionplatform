@@ -7,8 +7,8 @@
     <form method="post" action="{{ path_for("Sample Info_delete",{ "id": sample.id }) }}">
         {% include "csrf.html.twig" %}
         <p>
-            <input type="button" class="green" value="Cancel and return" onclick="history.back();" />
-            <input type="submit" class="red" value="Yes, delete this sample" />
+            <input type="button" class="green small" value="Cancel and return" onclick="history.back();" />
+            <input type="submit" name="submit" class="red small" value="Yes, delete this sample" />
         </p>
     </form>
 {% endblock %}
