@@ -57,6 +57,30 @@ More info on this is available at the [Nginx wiki](http://wiki.nginx.org/NginxXS
 
 Other webservers can be configured too (see this excellent [SO](http://stackoverflow.com/a/3731639) answer), but will require a small modification in the relevant section of the SampleInfoController that handles the download.
 
+### File upload size for HTTP
+
+There are a couple of places where you need to take care to set a big enough size (depending on your wishes) when you want to set/increase the upload limit for HTTP uploads.
+
+#### Nginx
+
+If the upload is too large, Nginx will throw a `413 Request entity too large`. This can be solved by adding
+
+'''
+# Increase Nginx upload limit
+client_max_body_size 1G;
+'''
+
+And setting it to an appropriate limit.
+
+#### PHP
+
+The `php.ini` contains two places where it limits the file upload size:
+
+1. post_max_size
+2. upload_max_filesize
+
+Set these to an appropriate value.
+
 ### Pure-FTPD configuration
 
 To allow upload of big files, FTP can be used. Since the goal is to keep the uploaded files of the users anonymous for other users, every user should get it's own FTP account.
