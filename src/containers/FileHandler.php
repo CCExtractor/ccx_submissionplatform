@@ -91,14 +91,18 @@ class FileHandler implements ServiceProviderInterface
         } else {
             // Get SHA256 of file
             $hash = hash_file('sha256',$file->getPathname());
-            // FIXME: check if there's no samples (queued) yet with the same hash
-            $ext = ($extension !== "")?".".$extension:"";
-            $original_name = str_replace($ext,"",$fName);
-            // Copy file to processing folder
-            copy($file->getPathname(),$this->temp_dir.Sample::getFileName($hash,$extension));
-            // Store in processing queue.
-            $sample = new QueuedSample(-1,$hash,$extension,$original_name,$user);
-            $this->dba->storeQueue($sample);
+            if($this->dba->getSampleByHash($hash) === false && !$this->dba->queuedSampleExist($hash)){
+                $ext = ($extension !== "") ? "." . $extension : "";
+                $original_name = str_replace($ext, "", $fName);
+                // Copy file to processing folder
+                copy($file->getPathname(), $this->temp_dir . Sample::getFileName($hash, $extension));
+                // Store in processing queue.
+                $sample = new QueuedSample(-1, $hash, $extension, $original_name, $user);
+                $this->dba->storeQueue($sample);
+            } else {
+                // Store deletion message
+                $this->dba->storeProcessMessage($user, "File ".$fName." was removed because there is already a (queued) sample with the same hash submitted.");
+            }
         }
         // Delete file
         unlink($file->getPathname());

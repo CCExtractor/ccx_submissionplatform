@@ -685,11 +685,23 @@ WHERE s.hash = :hash LIMIT 1;");
         $notes = $sample->getNotes();
         // Query
         $stmt = $this->pdo->prepare("UPDATE upload SET ccx_used = :version, platform = :platform, parameters = :params, notes = :notes WHERE sample_id = :id LIMIT 1;");
-        $stmt->bindParam(":id",$id);
-        $stmt->bindParam(":version",$ccx);
-        $stmt->bindParam(":platform",$platform);
-        $stmt->bindParam(":params",$params);
-        $stmt->bindParam(":notes",$notes);
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        $stmt->bindParam(":version",$ccx,PDO::PARAM_INT);
+        $stmt->bindParam(":platform",$platform,PDO::PARAM_STR);
+        $stmt->bindParam(":params",$params,PDO::PARAM_STR);
+        $stmt->bindParam(":notes",$notes,PDO::PARAM_STR);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
+
+    /**
+     * Checks if a given queued sample exists by checking if the hash is in the table.
+     *
+     * @param string $hash The hash to check for.
+     * @return bool True if the hash exists, false otherwise.
+     */
+    public function queuedSampleExist($hash){
+        $stmt = $this->pdo->prepare("SELECT hash FROM processing_queued WHERE hash = :hash LIMIT 1;");
+        $stmt->bindParam(":hash",$hash,PDO::PARAM_STR);
         return $stmt->execute() && $stmt->rowCount() === 1;
     }
 }
