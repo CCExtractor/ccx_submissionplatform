@@ -116,4 +116,34 @@ class SampleData extends Sample
     public function getAdditionalFileName($additionalFileExtension){
         return parent::getFileName($this->getHash()."_".$this->getNrExtraFiles(),$additionalFileExtension);
     }
+
+    /**
+     * @param string $notes
+     */
+    public function setNotes($notes){
+        $this->notes = $notes;
+    }
+
+    /**
+     * @param string $parameters
+     */
+    public function setParameters($parameters){
+        $this->parameters = $parameters;
+    }
+
+    /**
+     * @param string $platform
+     */
+    public function setPlatform($platform){
+        $this->platform = $platform;
+    }
+
+    /**
+     * @param CCExtractorVersion $ccextractor_version
+     */
+    public function setCcextractorVersion($ccextractor_version){
+        $this->ccextractor_version = $ccextractor_version;
+    }
+
+
 }

@@ -670,4 +670,26 @@ WHERE s.hash = :hash LIMIT 1;");
         }
         return false;
     }
+
+    /**
+     * Updates a given sample.
+     *
+     * @param SampleData $sample The sample to update.
+     * @return bool True on success, false on failure.
+     */
+    public function editSample(SampleData $sample){
+        $id = $sample->getId();
+        $ccx = $sample->getCCExtractorVersion()->getId();
+        $platform = $sample->getPlatform();
+        $params = $sample->getParameters();
+        $notes = $sample->getNotes();
+        // Query
+        $stmt = $this->pdo->prepare("UPDATE upload SET ccx_used = :version, platform = :platform, parameters = :params, notes = :notes WHERE sample_id = :id LIMIT 1;");
+        $stmt->bindParam(":id",$id);
+        $stmt->bindParam(":version",$ccx);
+        $stmt->bindParam(":platform",$platform);
+        $stmt->bindParam(":params",$params);
+        $stmt->bindParam(":notes",$notes);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
 }

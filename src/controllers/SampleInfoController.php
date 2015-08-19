@@ -5,6 +5,8 @@
  */
 namespace org\ccextractor\submissionplatform\controllers;
 
+use DateTime;
+use org\ccextractor\submissionplatform\objects\CCExtractorVersion;
 use org\ccextractor\submissionplatform\objects\NoticeType;
 use org\ccextractor\submissionplatform\objects\Sample;
 use org\ccextractor\submissionplatform\objects\SampleData;
@@ -162,27 +164,59 @@ class SampleInfoController extends BaseController
                     return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
                 })->setName($self->getPageName().'_download_additional');
             });
-            // Group edit logic
-            $this->group("/edit/{id:[0-9]+}", function() use ($self){
+            // GET/POST: edit sample
+            $this->map(["GET","POST"],"/edit/{id:[0-9]+}", function ($request, $response, $args) use ($self) {
                 /** @var App $this */
-                // GET: edit sample
-                $this->get('[/]', function ($request, $response, $args) use ($self) {
-                    /** @var App $this */
-                    /** @var Response $response */
-                    $self->setDefaultBaseValues($this);
-                    if (!$this->account->getUser()->isAdmin()) {
-                        return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
+                /** @var Response $response */
+                /** @var Request $request */
+                $self->setDefaultBaseValues($this);
+                if (!$this->account->getUser()->isAdmin()) {
+                    return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
+                }
+                /** @var SampleData $sample */
+                $sample = $this->database->getSampleById($args["id"]);
+                if($sample !== false){
+                    // Check posts
+                    if($request->isPost()){
+                        if(isset($_POST["ccx_version"]) && isset($_POST["ccx_os"]) && isset($_POST["ccx_params"]) &&
+                            isset($_POST["notes"]) && strlen($_POST["ccx_params"]) > 0 && strlen($_POST["notes"]) > 0
+                        ){
+                            // Save modified values in the sample
+                            $sample->setNotes($_POST["notes"]);
+                            $sample->setParameters($_POST["ccx_params"]);
+                            $sample->setPlatform($_POST["ccx_os"]);
+                            $version = $this->database->isCCExtractorVersion($_POST["ccx_version"]);
+                            if($version){
+                                $sample->setCcextractorVersion(new CCExtractorVersion($_POST["ccx_version"],"",new DateTime(),""));
+                                // Check CSRF
+                                if($request->getAttribute('csrf_status', true) === true){
+                                    // Save modified values
+                                    if($this->database->editSample($sample)){
+                                        $self->setNoticeValues($this, NoticeType::getSuccess(), "Changes saved");
+                                    } else {
+                                        $self->setNoticeValues($this,NoticeType::getError(),"Could not save the changes");
+                                    }
+                                } else{
+                                    $self->setNoticeValues($this, NoticeType::getError(), "CSRF error");
+                                }
+                            } else {
+                                $self->setNoticeValues($this, NoticeType::getError(), "Invalid CCX version");
+                            }
+                        } else {
+                            $self->setNoticeValues($this,NoticeType::getError(),"Not all values were filled in!");
+                        }
                     }
-                    /** @var SampleData $sample */
-                    $sample = $this->database->getSampleById($args["id"]);
-                    if($sample !== false){
-                        // TODO: finish
-                    } else {
-                        $this->templateValues->add("error","invalid sample id");
-                    }
-                    return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
-                })->setName($self->getPageName().'_edit');
-            });
+                    $this->templateValues->add("sample",$sample);
+                    $this->templateValues->add("ccx_versions", $this->database->getAllCCExtractorVersions());
+                    // CSRF
+                    $self->setCSRF($this,$request);
+                    // Render
+                    return $this->view->render($response,"sample-info/edit.html.twig",$this->templateValues->getValues());
+                } else {
+                    $this->templateValues->add("error","invalid sample id");
+                }
+                return $this->view->render($response,'sample-info/sample-info-error.html.twig',$this->templateValues->getValues());
+            })->setName($self->getPageName().'_edit');
             // Group delete logic
             $this->group("/delete/{id:[0-9]+}", function() use ($self){
                 /** @var App $this */
