@@ -6,6 +6,7 @@
 
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\objects\SampleData;
 use org\ccextractor\submissionplatform\objects\Test;
 use Slim\App;
 use Slim\Http\Response;
@@ -91,8 +92,13 @@ class TestController extends BaseController
             $this->get('/sample/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
                 $self->setDefaultBaseValues($this);
-                // FUTURE: fetch sample overview
-                return $this->view->render($response,"test/sample.html.twig",$this->templateValues->getValues());
+                /** @var SampleData $sample */
+                $sample = $this->database->getSampleById($args["id"]);
+                if($sample !== false){
+                    $this->templateValues->add("sample",$sample);
+                    // FUTURE: fetch tests for sample
+                    return $this->view->render($response,"test/sample.html.twig",$this->templateValues->getValues());
+                }
             })->setName($self->getPageName()."_sample");
         });
     }

@@ -2,6 +2,6 @@
 
 {% block content %}
     <h3>Test overview</h3>
-    <p>Below you can see the overview of the test runs that were performed for <!-- TODO: add sample info -->:</p>
+    <p>Below you can see the overview of the test runs that were performed for <a href="{{ path_for("Sample Info_hash", {'hash': sample.hash}) }}">{{ sample.getSampleFileName }}</a>:</p>
     <!-- TODO: add tests -->
 {% endblock %}
