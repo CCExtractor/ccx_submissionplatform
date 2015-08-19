@@ -201,8 +201,11 @@ class FileHandler implements ServiceProviderInterface
         if($reader->open($mediaInfo->getPathname())){
             if($reader->read()){
                 if(!$filter){
-                    // FUTURE: strip path info. Will require some processing.
-                    return file_get_contents($mediaInfo->getPathname());
+                    $xml = new SimpleXMLElement($reader->readInnerXml());
+                    foreach($xml->xpath("//track[@type='General']") as $node){
+                        $node->Complete_name = str_replace($this->store_dir,"",(string)$node->Complete_name);
+                    }
+                    return $xml->asXML();
                 }
                 // Build up information...
                 $message = [];
