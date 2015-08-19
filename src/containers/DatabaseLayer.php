@@ -279,7 +279,7 @@ FROM sample s
 WHERE s.id = :id LIMIT 1;");
         $p->bindParam(":id",$id,PDO::PARAM_INT);
         $result = false;
-        if($p->execute()){
+        if($p->execute() && $p->rowCount() === 1){
             $data = $p->fetch();
             $result = new SampleData(
                 $data["id"], $data["hash"], $data["extension"], $data["original_name"],
@@ -307,7 +307,7 @@ FROM sample s
 WHERE s.hash = :hash LIMIT 1;");
         $p->bindParam(":hash",$hash,PDO::PARAM_INT);
         $result = false;
-        if($p->execute()){
+        if($p->execute() && $p->rowCount() === 1){
             $data = $p->fetch();
             $result = new SampleData(
                 $data["id"], $data["hash"], $data["extension"], $data["original_name"],
