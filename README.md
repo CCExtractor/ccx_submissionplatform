@@ -66,6 +66,7 @@ There are a couple of places where you need to take care to set a big enough siz
 If the upload is too large, Nginx will throw a `413 Request entity too large`. This can be solved by adding
 
 '''
+\# Increase Nginx upload limit
 client_max_body_size 1G;
 '''
 
