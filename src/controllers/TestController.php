@@ -68,7 +68,7 @@ class TestController extends BaseController
                         $this->templateValues->add("test",$test);
                         return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
                     } else {
-                        // TODO: run tests for this hash, if it exists in the main CCX repository!
+
                     }
                 }
                 return $this->view->render($response->withStatus(404),"test/notfound.html.twig",$this->templateValues->getValues());
@@ -84,7 +84,7 @@ class TestController extends BaseController
                     $this->templateValues->add("test",$test);
                     return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
                 } else {
-                    // TODO: run tests for this hash, if it exists in the main CCX repository!
+
                 }
                 return $this->view->render($response->withStatus(404),"test/notfound.html.twig",$this->templateValues->getValues());
             })->setName($self->getPageName()."_commit");
@@ -96,7 +96,7 @@ class TestController extends BaseController
                 $sample = $this->database->getSampleById($args["id"]);
                 if($sample !== false){
                     $this->templateValues->add("sample",$sample);
-                    // FUTURE: fetch tests for sample
+
                     return $this->view->render($response,"test/sample.html.twig",$this->templateValues->getValues());
                 }
             })->setName($self->getPageName()."_sample");

@@ -25,7 +25,7 @@ use Slim\Views\TwigExtension;
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-session_start(); // FIXME: replace with session middleware
+session_start();
 
 include_once '../src/configuration.php';
 include_once '../src/bot-configuration.php';
@@ -64,7 +64,6 @@ $container['view'] = function ($c) {
     ));
 
     $view->getEnvironment()->addExtension(new Twig_Extensions_Extension_I18n());
-    $view->getEnvironment()->addExtension(new Twig_Extension_Debug()); // FUTURE: remove
 
     return $view;
 };
@@ -96,7 +95,7 @@ $container->register($ftp);
 $file_handler = new FileHandler($dba, TEMP_STORAGE, PERM_STORAGE);
 $container->register($file_handler);
 // Logger (non added right now)
-$logger = new Logger(__DIR__."/../private/logs"); // FUTURE: create wrapper layer for slim
+$logger = new Logger(__DIR__."/../private/logs");
 
 //Override the default Not Found Handler
 $container['notFoundHandler'] = function ($c) {
@@ -119,8 +118,6 @@ $pages = [
     // new TestSuiteController(),
     new AccountController()
 ];
-
-// FUTURE: add global middleware: session, authentication, ...
 
 $templateValues->add("pages",$pages);
 

@@ -84,7 +84,6 @@ class FileHandler implements ServiceProviderInterface
             $fName = $file->getFilename();
             $extension = $file->getExtension();
         }
-        // FUTURE: more extensive mime-type checking?
         if(in_array($extension,$this->forbiddenExtensions)){
             // Store deletion message
             $this->dba->storeProcessMessage($user, "File ".$fName." was removed due to an illegal extension.");

@@ -44,8 +44,9 @@
         </table>
     {% endif %}
     <h4>Test status</h4>
-    <p>Repository: <!-- TODO: insert test status --></p>
-    <p>Last release: <!-- TODO: insert test status --></p>
+    <!--
+    <p>Repository: </p>
+    <p>Last release: </p> -->
     <p><a href="{{ path_for("Test results_sample", {'id': sample.id}) }}">View all available tests for this sample</a></p>
     <h4>Media info</h4>
     <p class="small">Full media info can be downloaded using the link at the right -->.</p>
@@ -62,7 +63,6 @@
 {% block sidebar %}
     <h5>Actions</h5>
     <ul class="icons">
-        <!-- TODO: add more actions (GitHub post, ...) -->
         <li><i class="fa fa-li fa-download"></i> <a href="{{ path_for("Sample Info_download", { 'id' : sample.id }) }}">Download sample</a></li>
         <li><i class="fa fa-li fa-file-code-o"></i> <a href="{{ path_for("Sample Info_download_media", { 'id': sample.id }) }}">Download media info xml</a></li>
         {% if loggedInUser.isAdmin %}
