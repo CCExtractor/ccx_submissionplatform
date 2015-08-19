@@ -201,11 +201,7 @@ class FileHandler implements ServiceProviderInterface
         if($reader->open($mediaInfo->getPathname())){
             if($reader->read()){
                 if(!$filter){
-                    $xml = new SimpleXMLElement($reader->readInnerXml());
-                    foreach($xml->xpath("//track[@type='General']") as $node){
-                        $node->Complete_name = str_replace($this->store_dir,"",(string)$node->Complete_name);
-                    }
-                    return $xml->asXML();
+                    return file_get_contents($mediaInfo->getPathname());
                 }
                 // Build up information...
                 $message = [];
@@ -278,6 +274,13 @@ class FileHandler implements ServiceProviderInterface
     private function createMediaInfo(SplFileInfo $mediaInfo, SplFileInfo $sample, $filter=true){
         $command = "mediainfo --Output=XML ".escapeshellarg($sample->getPathname())." > ".escapeshellarg($mediaInfo->getPathname());
         shell_exec($command);
+        // Strip path info
+        $xml = new SimpleXMLElement($mediaInfo->getRealPath(),0,true);
+        foreach($xml->xpath("//track[@type='General']") as $node){
+            $node->Complete_name = str_replace($this->store_dir,"",(string)$node->Complete_name);
+        }
+        $xml->asXML($mediaInfo->getRealPath());
+
         return $this->loadMediaInfo($mediaInfo, $filter);
     }
 

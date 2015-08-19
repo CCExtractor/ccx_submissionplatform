@@ -127,6 +127,7 @@ class SampleInfoController extends BaseController
                     if($sample !== false){
                         // Fetch media info
                         $media = $this->file_handler->fetchMediaInfo($sample,true,false);
+                        // FUTURE: use nginx pass through instead?
                         if($media !== false){
                             // Create headers
                             $response = $response->withHeader("Content-type","text/xml");
