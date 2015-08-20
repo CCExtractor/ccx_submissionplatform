@@ -1,10 +1,10 @@
 {% extends "base.html.twig" %}
 
 {% block content %}
-    <h3>Delete additional file {{ additional }} (.{{ extra.extension }}) from sample {{ sample.id }}</h3>
-    <p>Are you sure you want to delete this additional file?</p>
+    <h3>Delete additional file</h3>
+    <p>Are you sure you want to delete the additional file for sample {{ sample.id }} with the original name {{ extra.originalName }}.{{ extra.extension }}?</p>
     {% include "notice.html.twig" %}
-    <form method="post" action="{{ path_for("Sample Info_delete_additional",{ "id": sample.id, "additional": additional }) }}">
+    <form method="post" action="{{ path_for("Sample Info_delete_additional",{ "id": sample.id, "additional": extra.id }) }}">
         {% include "csrf.html.twig" %}
         <p>
             <input type="button" class="green small" value="Cancel and return" onclick="history.back();" />
