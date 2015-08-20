@@ -1,0 +1,12 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Admin overview</h3>
+    <p>Here you can find an overview of all administrative functions you can perform.</p>
+    <ul class="icons">
+        <li><i class="fa fa-li fa-users"></i> <a href="{{ path_for("My Account_view") }}">View users</a></li>
+        <li><i class="fa fa-li fa-github"></i> <a href="{{ path_for("GitBot Controller_admin") }}">Manage bot</a></li>
+        <li> Extension blacklist</li>
+        <li> Reference versions</li>
+    </ul>
+{% endblock %}

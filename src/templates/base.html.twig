@@ -50,6 +50,7 @@
                 {% if loggedInUser.isAdmin %}
                     <h6>Admin shortcuts</h6>
                     <ul class="icons">
+                        <li><i class="fa fa-li fa-magic"></i> <a href="{{ path_for("Admin") }}">Admin panel</a></li>
                         <li><i class="fa fa-li fa-users"></i> <a href="{{ path_for("My Account_view") }}">View users</a></li>
                         <li><i class="fa fa-li fa-github"></i> <a href="{{ path_for("GitBot Controller_admin") }}">Manage bot</a></li>
                     </ul>
