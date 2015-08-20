@@ -167,6 +167,20 @@ CREATE TABLE `user` (
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
 
+/*Table structure for table `additional_file` */
+
+DROP TABLE IF EXISTS `additional_file`;
+
+CREATE TABLE `additional_file` (
+  `id` int(11) NOT NULL,
+  `sample_id` int(11) NOT NULL,
+  `original_name` varchar(150) NOT NULL,
+  `extension` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_additional_sample` (`sample_id`),
+  CONSTRAINT `FK_additional_sample` FOREIGN KEY (`sample_id`) REFERENCES `sample` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
