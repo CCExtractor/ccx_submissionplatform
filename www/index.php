@@ -9,6 +9,7 @@ use org\ccextractor\submissionplatform\containers\FTPConnector;
 use org\ccextractor\submissionplatform\containers\GitWrapper;
 use org\ccextractor\submissionplatform\containers\TemplateValues;
 use org\ccextractor\submissionplatform\controllers\AccountController;
+use org\ccextractor\submissionplatform\controllers\AdminController;
 use org\ccextractor\submissionplatform\controllers\BaseController;
 use org\ccextractor\submissionplatform\controllers\GitBotController;
 use org\ccextractor\submissionplatform\controllers\HomeController;
@@ -110,7 +111,7 @@ $container['notFoundHandler'] = function ($c) {
     };
 };
 
-$pages = [
+$menuPages = [
     new HomeController(),
     new SampleInfoController(),
     new UploadController(),
@@ -119,18 +120,26 @@ $pages = [
     new AccountController()
 ];
 
-$templateValues->add("pages",$pages);
+$templateValues->add("pages",$menuPages);
 
 // Define routes
 
 /** @var IController $page */
-foreach($pages as $page){
+foreach($menuPages as $page){
     $page->register($app);
 }
-// These stay out of the regular pages, but need to be registered anyway
-$gitBotController = new GitBotController(
-    $bdba, BOT_CCX_VBOX_MANAGER, BOT_CCX_WORKER, __DIR__."/reports", $logger, BOT_AUTHOR, BOT_REPOSITORY_FOLDER,
-    BOT_HMAC_KEY, BOT_WORKER_URL);
-$gitBotController->register($app);
+
+// These stay out of the pages that will be rendered in the menu, but need to be registered anyway
+$nonMenuPages = [
+    new GitBotController(
+        $bdba, BOT_CCX_VBOX_MANAGER, BOT_CCX_WORKER, __DIR__."/reports", $logger, BOT_AUTHOR, BOT_REPOSITORY_FOLDER,
+        BOT_HMAC_KEY, BOT_WORKER_URL),
+    new AdminController()
+];
+
+/** @var IController $page */
+foreach($nonMenuPages as $page){
+    $page->register($app);
+}
 
 $app->run();
