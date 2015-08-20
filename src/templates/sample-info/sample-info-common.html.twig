@@ -19,23 +19,29 @@
             Notes: {{ sample.notes }}<br />
         </p>
     </blockquote>
-    {% if additional_files is defined and additional_files|length > 0 %}
+    {% if additional_files|length > 0 %}
         <h4>Additional files</h4>
         <table class="tight striped sortable">
             <thead>
                 <tr>
                     <th>File</th>
+                    {% if loggedInUser.isAdmin or loggedInUser.id == sample.user.id %}
+                        <th>Original name</th>
+                    {% endif %}
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for file in additional_files %}
                     <tr>
-                        <td>{{ file.fileName[:5] }}..._{{ loop.index0 }}.{{ file.extension }}</td>
+                        <td>{{ file.getShortName }}</td>
+                        {% if loggedInUser.isAdmin or loggedInUser.id == sample.user.id %}
+                            <td>{{ file.originalName }}</td>
+                        {% endif %}
                         <td>
-                            <a href="{{ path_for("Sample Info_download_additional", { 'id' : sample.id, 'additional': loop.index0 }) }}" title="Download additional file"><i class="fa fa-download"></i></a>
+                            <a href="{{ path_for("Sample Info_download_additional", { 'id' : sample.id, 'additional': file.id }) }}" title="Download additional file"><i class="fa fa-download"></i></a>
                             {% if loggedInUser.isAdmin %}
-                                &nbsp;<a href="{{ path_for("Sample Info_delete_additional", { 'id' : sample.id, 'additional': loop.index0 }) }}" title="Delete additional file"><i class="fa fa-remove"></i></a>
+                                &nbsp;<a href="{{ path_for("Sample Info_delete_additional", { 'id' : sample.id, 'additional': file.id }) }}" title="Delete additional file"><i class="fa fa-remove"></i></a>
                             {% endif %}
                         </td>
                     </tr>

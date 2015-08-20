@@ -33,10 +33,6 @@ class SampleData extends Sample
      * @var string Additional notes about the sample.
      */
     private $notes;
-    /**
-     * @var int The number of added additional files.
-     */
-    private $nr_extra_files;
 
     /**
      * SampleData constructor.
@@ -54,7 +50,7 @@ class SampleData extends Sample
      */
     public function __construct(
         $id, $hash, $extension, $original_name, User $user, CCExtractorVersion $ccextractor_version,
-        $platform = "Windows", $parameters = "", $notes ="" , $nr_extra_files = 0
+        $platform = "Windows", $parameters = "", $notes =""
     ){
         parent::__construct($id,$hash,$extension,$original_name);
         $this->user = $user;
@@ -62,7 +58,6 @@ class SampleData extends Sample
         $this->platform = $platform;
         $this->parameters = $parameters;
         $this->notes = $notes;
-        $this->nr_extra_files = $nr_extra_files;
     }
 
     /**
@@ -101,23 +96,6 @@ class SampleData extends Sample
     }
 
     /**
-     * @return int
-     */
-    public function getNrExtraFiles(){
-        return $this->nr_extra_files;
-    }
-
-    /**
-     * Gets the file name for an additional file.
-     *
-     * @param string $additionalFileExtension The extension of the file that's been added to this sample.
-     * @return string The concatenated string (hash_nr.ext)
-     */
-    public function getAdditionalFileName($additionalFileExtension){
-        return parent::getFileName($this->getHash()."_".$this->getNrExtraFiles(),$additionalFileExtension);
-    }
-
-    /**
      * @param string $notes
      */
     public function setNotes($notes){
@@ -144,6 +122,4 @@ class SampleData extends Sample
     public function setCcextractorVersion($ccextractor_version){
         $this->ccextractor_version = $ccextractor_version;
     }
-
-
 }

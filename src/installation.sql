@@ -142,7 +142,6 @@ CREATE TABLE `upload` (
   `platform` varchar(50) NOT NULL,
   `parameters` text NOT NULL,
   `notes` text NOT NULL,
-  `additional_files` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `sample_id` (`sample_id`,`user_id`),
   KEY `FK_upload_ccx_version` (`ccx_used`),
@@ -172,7 +171,7 @@ CREATE TABLE `user` (
 DROP TABLE IF EXISTS `additional_file`;
 
 CREATE TABLE `additional_file` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `sample_id` int(11) NOT NULL,
   `original_name` varchar(150) NOT NULL,
   `extension` varchar(50) NOT NULL,

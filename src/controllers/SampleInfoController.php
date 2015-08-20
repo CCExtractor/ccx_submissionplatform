@@ -6,6 +6,7 @@
 namespace org\ccextractor\submissionplatform\controllers;
 
 use DateTime;
+use org\ccextractor\submissionplatform\objects\AdditionalFile;
 use org\ccextractor\submissionplatform\objects\CCExtractorVersion;
 use org\ccextractor\submissionplatform\objects\NoticeType;
 use org\ccextractor\submissionplatform\objects\Sample;
@@ -60,9 +61,8 @@ class SampleInfoController extends BaseController
                     if($media !== false){
                         $this->templateValues->add("sample",$sample);
                         $this->templateValues->add("media",$media);
-                        if($sample->getNrExtraFiles() > 0){
-                            $this->templateValues->add("additional_files", $this->file_handler->fetchAdditionalFiles($sample));
-                        }
+                        $this->templateValues->add("additional_files", $this->database->getAdditionalFiles($sample));
+                        // Render
                         return $this->view->render($response,'sample-info/sample-info-common.html.twig',$this->templateValues->getValues());
                     }
                     $this->templateValues->add("error","error obtaining media info");
@@ -84,9 +84,8 @@ class SampleInfoController extends BaseController
                     if($media !== false){
                         $this->templateValues->add("sample",$sample);
                         $this->templateValues->add("media",$media);
-                        if($sample->getNrExtraFiles() > 0){
-                            $this->templateValues->add("additional_files", $this->file_handler->fetchAdditionalFiles($sample));
-                        }
+                        $this->templateValues->add("additional_files", $this->database->getAdditionalFiles($sample));
+                        // Render
                         return $this->view->render($response,'sample-info/sample-info-common.html.twig',$this->templateValues->getValues());
                     }
                     $this->templateValues->add("error","error obtaining media info");
@@ -149,15 +148,15 @@ class SampleInfoController extends BaseController
                     $sample = $this->database->getSampleById($args["id"]);
                     if($sample !== false){
                         // Fetch extra file information
-                        /** @var SplFileInfo $extra */
-                        $extra = $this->file_handler->fetchAdditionalFileName($sample,$args["additional"]);
+                        /** @var AdditionalFile $extra */
+                        $extra = $this->database->getAdditionalFile($sample,$args["additional"]);
                         if($extra !== false){
                             $response = $response->withHeader("X-Accel-Redirect", "/protected/extra/" . $extra->getFilename());
                             $response = $response->withHeader("Content-type", "application/octet-stream");
                             $response = $response->withHeader("Content-Disposition", 'attachment; filename="' . $extra->getFilename() . '"');
                             return $response;
                         }
-                        $this->templateValues->add("error","invalid index or file not found");
+                        $this->templateValues->add("error","invalid extra file id");
                     } else {
                         $this->templateValues->add("error","invalid sample id");
                     }
@@ -240,8 +239,9 @@ class SampleInfoController extends BaseController
                                     return $response->withRedirect($this->router->pathFor($self->getPageName()));
                                 }
                                 $self->setNoticeValues($this,NoticeType::getError(),"Could not remove sample");
+                            } else{
+                                $self->setNoticeValues($this, NoticeType::getError(), "Invalid CSRF");
                             }
-                            $self->setNoticeValues($this,NoticeType::getError(),"Invalid CSRF");
                         }
                         // Values
                         $this->templateValues->add("sample",$sample);
@@ -267,14 +267,14 @@ class SampleInfoController extends BaseController
                     $sample = $this->database->getSampleById($args["id"]);
                     if($sample !== false){
                         // Fetch extra file information
-                        /** @var SplFileInfo $extra */
-                        $extra = $this->file_handler->fetchAdditionalFileName($sample,$args["additional"]);
+                        /** @var AdditionalFile $extra */
+                        $extra = $this->database->getAdditionalFile($sample,$args["additional"]);
                         if($extra !== false){
                             if(isset($_POST["submit"])){
                                 // Validate CSRF before deleting
                                 if($request->getAttribute('csrf_status',true) === true){
                                     // Delete sample and related files
-                                    if($this->file_handler->deleteAdditionalFile($sample,$extra)){
+                                    if($this->file_handler->deleteAdditionalFile($extra)){
                                         return $response->withRedirect($this->router->pathFor($self->getPageName()));
                                     }
                                     $self->setNoticeValues($this,NoticeType::getError(),"Could not remove additional file");
@@ -283,7 +283,6 @@ class SampleInfoController extends BaseController
                             }
                             // Values
                             $this->templateValues->add("sample",$sample);
-                            $this->templateValues->add("additional",$args["additional"]);
                             $this->templateValues->add("extra",$extra);
                             // CSRF
                             $self->setCSRF($this,$request);

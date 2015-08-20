@@ -5,9 +5,9 @@
  */
 namespace org\ccextractor\submissionplatform\containers;
 
+use org\ccextractor\submissionplatform\objects\AdditionalFile;
 use org\ccextractor\submissionplatform\objects\QueuedSample;
 use org\ccextractor\submissionplatform\objects\Sample;
-use org\ccextractor\submissionplatform\objects\SampleData;
 use org\ccextractor\submissionplatform\objects\User;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
@@ -158,8 +158,9 @@ class FileHandler implements ServiceProviderInterface
         if($queued !== false){
             $sample = $this->dba->getSampleForUser($user, $sample_id);
             if($sample !== false) {
-                if (rename($this->temp_dir . $queued->getSampleFileName(), $this->store_dir ."extra/". $sample->getAdditionalFileName($queued->getExtension()))) {
-                    return $this->dba->moveQueueToAppend($queue_id, $sample_id);
+                $additional = $this->dba->moveQueueToAppend(new AdditionalFile(-1,$sample,$queued->getOriginalName(),$queued->getExtension()),$queue_id);
+                if($additional !== null){
+                    return rename($this->temp_dir . $queued->getSampleFileName(), $this->store_dir ."extra/". $additional->getFileName());
                 }
             }
         }
@@ -342,36 +343,6 @@ class FileHandler implements ServiceProviderInterface
     }
 
     /**
-     * Fetches a list of additional files for given sample.
-     *
-     * @param Sample $sample The sample we want to get the additional files for.
-     * @return array A list of the additional files.
-     */
-    public function fetchAdditionalFiles(Sample $sample){
-        $result = [];
-        foreach(glob($this->store_dir."extra/".$sample->getHash()."_*") as $file){
-            $result[] = new SplFileInfo($file);
-        }
-        return $result;
-    }
-
-    /**
-     * Fetches the SplFileInfo for an additional file from given sample and index number.
-     *
-     * @param Sample $sample The sample to fetch the additional file info for.
-     * @param int $index The index of the additional file.
-     * @return bool|SplFileInfo False on failure, SplFileInfo instance of the file otherwise.
-     */
-    public function fetchAdditionalFileName(Sample $sample, $index){
-        $matches = glob($this->store_dir."extra/".$sample->getHash()."_".$index.".*");
-        // There should be just a single file with this exact hash & number...
-        if(sizeof($matches)  === 1){
-            return new SplFileInfo($matches[0]);
-        }
-        return false;
-    }
-
-    /**
      * Deletes a sample and the associated files from the disk & database.
      *
      * @param Sample $sample The sample to delete
@@ -379,11 +350,13 @@ class FileHandler implements ServiceProviderInterface
      */
     public function deleteSample(Sample $sample){
         // Unlink additional files
-        $additional = $this->fetchAdditionalFiles($sample);
+        $additional = $this->dba->getAdditionalFiles($sample);
         if(sizeof($additional) > 0){
-            /** @var SplFileInfo $extra */
+            /** @var AdditionalFile $extra */
             foreach($additional as $extra){
-                @unlink($extra->getRealPath());
+                if($this->dba->removeAdditionalFile($extra)){
+                    @unlink($this->store_dir . "extra/" . $extra->getFileName());
+                }
             }
         }
         // Unlink media info
@@ -392,9 +365,9 @@ class FileHandler implements ServiceProviderInterface
             @unlink($finfo->getRealPath());
         }
         // Unlink sample itself
-        if(unlink($this->store_dir.$sample->getSampleFileName())){
+        if($this->dba->removeSample($sample->getId())){
             // Remove from DB
-            return $this->dba->removeSample($sample->getId());
+            return @unlink($this->store_dir.$sample->getSampleFileName());
         }
         return false;
     }
@@ -402,12 +375,12 @@ class FileHandler implements ServiceProviderInterface
     /**
      * Deletes a given additional file from the disk.
      *
-     * @param Sample $sample The sample of the additional file
-     * @param SplFileInfo $additionalFile The file info of the additional file.
+     * @param AdditionalFile $additional
      * @return bool True on success, false on failure.
      */
-    public function deleteAdditionalFile(Sample $sample,SplFileInfo $additionalFile){
-        return unlink($additionalFile->getRealPath());
-        // FUTURE: improve
+    public function deleteAdditionalFile(AdditionalFile $additional){
+        if($this->dba->removeAdditionalFile($additional)){
+            return unlink($this->store_dir."extra/".$additional->getFileName());
+        }
     }
 }

@@ -6,6 +6,7 @@
 namespace org\ccextractor\submissionplatform\containers;
 
 use DateTime;
+use org\ccextractor\submissionplatform\objects\AdditionalFile;
 use org\ccextractor\submissionplatform\objects\CCExtractorVersion;
 use org\ccextractor\submissionplatform\objects\FTPCredentials;
 use org\ccextractor\submissionplatform\objects\QueuedSample;
@@ -244,7 +245,7 @@ class DatabaseLayer implements ServiceProviderInterface
     public function getSampleForUser(User $user, $id){
         $uid = $user->getId();
         $p = $this->pdo->prepare("
-SELECT s.*, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash', u.additional_files, u.notes, u.parameters, u.platform
+SELECT s.*, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash', u.notes, u.parameters, u.platform
 FROM sample s
 	JOIN upload u ON s.id = u.sample_id
 	JOIN ccextractor_versions c ON c.id = u.ccx_used
@@ -257,7 +258,7 @@ WHERE u.user_id = :uid AND s.id = :id LIMIT 1;");
             $result = new SampleData(
                 $data["id"], $data["hash"], $data["extension"], $data["original_name"], $user,
                 new CCExtractorVersion($data["ccx_id"],$data["version"],new DateTime($data["released"]),$data["ccx_hash"]),
-                $data["platform"], $data["parameters"], $data["notes"], $data["additional_files"]
+                $data["platform"], $data["parameters"], $data["notes"]
             );
         }
         return $result;
@@ -271,7 +272,7 @@ WHERE u.user_id = :uid AND s.id = :id LIMIT 1;");
      */
     public function getSampleById($id){
         $p = $this->pdo->prepare("
-SELECT s.*, uu.id AS 'user_id', uu.name AS 'user_name', uu.email, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash', u.additional_files, u.notes, u.parameters, u.platform
+SELECT s.*, uu.id AS 'user_id', uu.name AS 'user_name', uu.email, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash', u.notes, u.parameters, u.platform
 FROM sample s
   JOIN upload u ON s.id = u.sample_id
   JOIN user uu ON uu.id = u.user_id
@@ -285,7 +286,7 @@ WHERE s.id = :id LIMIT 1;");
                 $data["id"], $data["hash"], $data["extension"], $data["original_name"],
                 new User($data["user_id"],$data["user_name"],$data["email"]),
                 new CCExtractorVersion($data["ccx_id"],$data["version"],new DateTime($data["released"]),$data["ccx_hash"]),
-                $data["platform"], $data["parameters"], $data["notes"], $data["additional_files"]
+                $data["platform"], $data["parameters"], $data["notes"]
             );
         }
         return $result;
@@ -299,7 +300,7 @@ WHERE s.id = :id LIMIT 1;");
      */
     public function getSampleByHash($hash){
         $p = $this->pdo->prepare("
-SELECT s.*, uu.id AS 'user_id', uu.name AS 'user_name', uu.email, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash', u.additional_files, u.notes, u.parameters, u.platform
+SELECT s.*, uu.id AS 'user_id', uu.name AS 'user_name', uu.email, c.id AS 'ccx_id', c.released, c.version, c.hash AS 'ccx_hash', u.notes, u.parameters, u.platform
 FROM sample s
   JOIN upload u ON s.id = u.sample_id
   JOIN user uu ON uu.id = u.user_id
@@ -313,7 +314,7 @@ WHERE s.hash = :hash LIMIT 1;");
                 $data["id"], $data["hash"], $data["extension"], $data["original_name"],
                 new User($data["user_id"],$data["user_name"],$data["email"]),
                 new CCExtractorVersion($data["ccx_id"],$data["version"],new DateTime($data["released"]),$data["ccx_hash"]),
-                $data["platform"], $data["parameters"], $data["notes"], $data["additional_files"]
+                $data["platform"], $data["parameters"], $data["notes"]
             );
         }
         return $result;
@@ -575,7 +576,7 @@ WHERE s.hash = :hash LIMIT 1;");
                 $sampleId = $this->pdo->lastInsertId();
                 $uid = $user->getId();
                 // Insert upload
-                $upload = $this->pdo->prepare("INSERT INTO upload VALUES (NULL, :uid, :sample, :version, :platform, :params, :notes, 0);");
+                $upload = $this->pdo->prepare("INSERT INTO upload VALUES (NULL, :uid, :sample, :version, :platform, :params, :notes);");
                 $upload->bindParam(":uid",$uid,PDO::PARAM_INT);
                 $upload->bindParam(":sample",$sampleId,PDO::PARAM_INT);
                 $upload->bindParam(":version",$ccx_version_id,PDO::PARAM_INT);
@@ -598,24 +599,85 @@ WHERE s.hash = :hash LIMIT 1;");
     /**
      * Moves a given queued item to the appended sample files.
      *
+     * @param AdditionalFile $additional The additional file.
      * @param int $queue_id The id of the queued item.
-     * @param int $sample_id The id of the sample where the queued item will be added to.
-     * @return bool
+     * @return null|AdditionalFile Null on failure, the instance with the id added on success.
      */
-    public function moveQueueToAppend($queue_id, $sample_id)
+    public function moveQueueToAppend(AdditionalFile $additional, $queue_id)
     {
+        $original = $additional->getOriginalName();
+        $extension = $additional->getExtension();
+        $sampleId = $additional->getSample()->getId();
         $this->pdo->beginTransaction();
-        $upload = $this->pdo->prepare("UPDATE upload SET additional_files = additional_files + 1 WHERE sample_id = :id");
-        $upload->bindParam(":id",$sample_id,PDO::PARAM_INT);
+        $upload = $this->pdo->prepare("INSERT INTO additional_file VALUES(NULL,:sample,:original,:extension);");
+        $upload->bindParam(":sample",$sampleId,PDO::PARAM_INT);
+        $upload->bindParam(":original",$original,PDO::PARAM_STR);
+        $upload->bindParam(":extension",$extension,PDO::PARAM_STR);
         if($upload->execute() && $upload->rowCount() === 1){
+            $id = $this->pdo->lastInsertId();
             // Remove from queue
             if($this->removeQueue($queue_id)){
                 $this->pdo->commit();
-                return true;
+                $additional->setId($id);
+                return $additional;
             }
         }
         $this->pdo->rollBack();
-        return false;
+        return null;
+    }
+
+    /**
+     * Gets the additional files for given sample.
+     *
+     * @param Sample $sample The sample to get the additional files for.
+     * @return array A list of additional files for given sample.
+     */
+    public function getAdditionalFiles(Sample $sample){
+        $sampleId = $sample->getId();
+        $stmt = $this->pdo->prepare("SELECT * FROM additional_file WHERE sample_id = :id ORDER BY id ASC;");
+        $stmt->bindParam(":id",$sampleId,PDO::PARAM_INT);
+        $result = [];
+        if($stmt->execute() && $stmt->rowCount() > 0){
+            $data = $stmt->fetch();
+            while($data !== false){
+                $result[] = new AdditionalFile($data["id"],$sample,$data["original_name"],$data["extension"]);
+                $data = $stmt->fetch();
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Gets the additional file for given sample.
+     *
+     * @param Sample $sample The sample to get the additional files for.
+     * @param int $id The id of the additional file.
+     * @return false|AdditionalFile A list of additional files for given sample.
+     */
+    public function getAdditionalFile(Sample $sample,$id){
+        $sampleId = $sample->getId();
+        $stmt = $this->pdo->prepare("SELECT * FROM additional_file WHERE sample_id = :sample_id AND id = :id LIMIT 1;");
+        $stmt->bindParam(":sample_id",$sampleId,PDO::PARAM_INT);
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        $result = false;
+        if($stmt->execute() && $stmt->rowCount() > 0){
+            $data = $stmt->fetch();
+            $result = new AdditionalFile($data["id"],$sample,$data["original_name"],$data["extension"]);
+        }
+        return $result;
+    }
+
+    /**
+     * Removes given additional file from the database.
+     *
+     * @param AdditionalFile $additional The additional file to remove
+     * @return bool True on success, false on failure.
+     */
+    public function removeAdditionalFile(AdditionalFile $additional){
+        $id = $additional->getId();
+        $stmt = $this->pdo->prepare("DELETE FROM additional_file WHERE id = :id LIMIT 1;");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        return $stmt->execute() && $stmt->rowCount() === 1;
     }
 
     /**
