@@ -188,7 +188,7 @@ class UploadController extends BaseController
                         /** @var Response $response */
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
-                            $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
+                            $data = $this->database->getQueuedSample($args["id"],$this->account->getUser());
                             if($data !== false){
                                 // CSRF values
                                 $self->setCSRF($this,$request);
@@ -258,7 +258,7 @@ class UploadController extends BaseController
                         /** @var Response $response */
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
-                            $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
+                            $data = $this->database->getQueuedSample($args["id"],$this->account->getUser());
                             if($data !== false){
                                 // CSRF values
                                 $self->setCSRF($this,$request);
@@ -277,7 +277,7 @@ class UploadController extends BaseController
                         /** @var Response $response */
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
-                            $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
+                            $data = $this->database->getQueuedSample($args["id"],$this->account->getUser());
                             if($data !== false){
                                 if($request->getAttribute('csrf_status',true) === true && isset($_POST["link_id"])){
                                     $sample = $this->database->getSampleForUser($this->account->getUser(), $_POST["link_id"]);
