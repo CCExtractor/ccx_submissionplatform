@@ -207,7 +207,7 @@ class UploadController extends BaseController
                         /** @var Response $response */
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
-                            $data = $this->database->getQueuedSample($this->account->getUser(), $args["id"]);
+                            $data = $this->database->getQueuedSample($args["id"],$this->account->getUser());
                             if($data !== false){
                                 // Verify posted values
                                 if($request->getAttribute('csrf_status',true) === true && isset($_POST["ccx_version"]) && isset($_POST["ccx_os"]) && isset($_POST["ccx_params"]) &&
@@ -218,7 +218,7 @@ class UploadController extends BaseController
                                         if($this->file_handler->submitSample($this->account->getUser(),$args["id"],$_POST["ccx_version"],$_POST["ccx_os"],$_POST["ccx_params"],$_POST["notes"])){
                                             return $response->withRedirect($this->router->pathFor($self->getPageName()."_process"));
                                         }
-                                        $this->templateValues->add("error","could not submit data.");
+                                        $this->templateValues->add("error","could not submit data");
                                         return $this->view->render($response,"upload/process-error.html.twig",$this->templateValues->getValues());
                                     }
                                 }
