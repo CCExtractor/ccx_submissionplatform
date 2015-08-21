@@ -52,7 +52,7 @@ class AdminController extends BaseController
                 if($this->account->getUser()->isAdmin()){
                     if($request->isPost()){
                         if($request->getAttribute('csrf_status',true) === true){
-                            if(isset($_POST["action"]) && isset($_POST["extension"])){
+                            if(isset($_POST["action"]) && isset($_POST["extension"]) && strlen($_POST["extension"]) > 0){
                                 // Process request
                                 switch($_POST["action"]){
                                     case "add":
