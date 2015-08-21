@@ -57,7 +57,7 @@ class SampleInfoController extends BaseController
                 $sample = $this->database->getSampleById($args["id"]);
                 if($sample !== false){
                     // Fetch media info
-                    $media = $this->file_handler->fetchMediaInfo($sample,true);
+                    $media = $this->file_handler->fetchMediaInfo($sample);
                     if($media !== false){
                         $this->templateValues->add("sample",$sample);
                         $this->templateValues->add("media",$media);
@@ -80,7 +80,7 @@ class SampleInfoController extends BaseController
                 $sample = $this->database->getSampleByHash($args["hash"]);
                 if($sample !== false){
                     // Fetch media info
-                    $media = $this->file_handler->fetchMediaInfo($sample,true);
+                    $media = $this->file_handler->fetchMediaInfo($sample);
                     if($media !== false){
                         $this->templateValues->add("sample",$sample);
                         $this->templateValues->add("media",$media);
@@ -125,9 +125,11 @@ class SampleInfoController extends BaseController
                     $sample = $this->database->getSampleById($args["id"]);
                     if($sample !== false){
                         // Fetch media info
-                        $media = $this->file_handler->fetchMediaInfo($sample,true,false);
-                        if($media !== false){
+                        /** @var SplFileInfo $media */
+                        $media = $this->file_handler->getMediaInfoPath($sample);
+                        if($media->isFile()){
                             // Create headers
+                            $response = $response->withHeader("X-Accel-Redirect", "/protected/media/" . $media->getFilename());
                             $response = $response->withHeader("Content-type","text/xml");
                             $response = $response->withHeader("Content-Disposition",'attachment; filename="'.$sample->getHash().'.xml"');
                             return $response->write($media);

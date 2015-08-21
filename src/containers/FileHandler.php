@@ -171,92 +171,95 @@ class FileHandler implements ServiceProviderInterface
      * Fetches the media info for a given sample.
      *
      * @param Sample $sample The sample.
-     * @param bool $generate If true, it will generate the media info if it's missing.
-     * @param bool $filter If true, it will filter out the media info and return a formatted string. If false,
-     * it'll return the full XML string.
-     * @return bool|string The media info if it's loaded, false otherwise.
+     * @return bool|array False on failure or an array with key-value pairs to display.
      */
-    public function fetchMediaInfo(Sample $sample, $generate = false, $filter=true){
+    public function fetchMediaInfo(Sample $sample){
         // Media info, if existing, is stored in $store_dir/media/hash.xml
-        $finfo = new SplFileInfo($this->store_dir."media/".$sample->getHash().".xml");
-        $media = false;
-        if($finfo->isFile()){
-            $media = $this->loadMediaInfo($finfo,$filter);
-        } else if($generate){
-            $media = $this->createMediaInfo($finfo, new SplFileInfo($this->store_dir.$sample->getSampleFileName()), $filter);
+        $fileInfo = $this->getMediaInfoPath($sample);
+        return $this->loadMediaInfo($fileInfo);
+    }
+
+    /**
+     * Gets the media info path for a given sample. Will create the media info if it doesn't exist.
+     *
+     * @param Sample $sample The sample to get the MediaInfo for.
+     * @return SplFileInfo The object with the path.
+     */
+    public function getMediaInfoPath(Sample $sample){
+        // Media info, if existing, is stored in $store_dir/media/hash.xml
+        $fileInfo = new SplFileInfo($this->store_dir."media/".$sample->getHash().".xml");
+        if(!$fileInfo->isFile()){
+            $this->createMediaInfo($fileInfo,new SplFileInfo($this->store_dir.$sample->getSampleFileName()));
         }
-        return $media;
+        return $fileInfo;
     }
 
     /**
      * Loads and parses the media info from given file.
      *
      * @param SplFileInfo $mediaInfo The mediainfo xml containing the metadata.
-     * @param bool $filter If true, it will filter out the media info and return a formatted string. If false,
-     * it'll return the full XML string.
-     * @return bool|string|array False on failure, a string with the contents if no filter, or an array with key-value pairs to display.
+     * @return bool|array False on failure or an array with key-value pairs to display.
      */
-    private function loadMediaInfo(SplFileInfo $mediaInfo, $filter=true){
-        $reader = new XMLReader();
-        if($reader->open($mediaInfo->getPathname())){
-            if($reader->read()){
-                if(!$filter){
-                    return file_get_contents($mediaInfo->getPathname());
-                }
-                // Build up information...
-                $message = [];
-                if($reader->name === "Mediainfo"){
-                    $message["Media info version"] = $reader->getAttribute("version");
-                    // SimpleXML is easier to process...
-                    $node = new SimpleXMLElement($reader->readInnerXml());
-                    // Fetch general information
-                    $general_elems = $node->xpath("track[@type='General']");
-                    if(sizeof($general_elems) === 1){
-                        $general = $general_elems[0];
-                        $message["General info"] = [
-                            "Format" => (string)$general->Format,
-                            "Codec id" => (string)$general->Codec_ID,
-                            "File size" => (string)$general->File_size,
-                            "Duration" => (string)$general->Duration
-                        ];
-                    } else {
-                        $message["General info"] = "Could not fetch general info";
-                    }
-                    // Fetch video info
-                    $video_elems = $node->xpath("track[@type='Video']");
-                    if(sizeof($video_elems) >= 1){
-                        $video = $video_elems[0];
-                        $format_info = (string)$video->Format_Info;
-                        $frame_mode = (string)$video->Frame_rate_mode;
-                        $scan_order = (string)$video->Scan_order;
-                        $message["Video info (first only)"] = [
-                            "Format" => ((string)$video->Format).(($format_info !== "")?(" (".$format_info.")"):""),
-                            "Duration" => (string)$video->Duration,
-                            "Size" => ((string)$video->Width)." x ".((string)$video->Height),
-                            "Display ratio" => (string)$video->Display_aspect_ratio,
-                            "Frame rate" => ((string)$video->Frame_rate).(($frame_mode !== "")?(" (mode: ".$frame_mode.")"):""),
-                            "Scan type" => ((string)$video->Scan_type).(($scan_order !== "")?(" (".$scan_order.")"):""),
-                            "Writing library" => (string)$video->Writing_library
-                        ];
-                    } else {
-                        $message["Video info (first only)"] = "No video info found";
-                    }
-                    // Fetch subtitles info
-                    $text_elems = $node->xpath("track[@type='Text']");
-                    if(sizeof($text_elems) >= 1){
-                        $message["Text info"] = [];
-                        foreach($text_elems as $text){
-                            $message["Text info"]["ID ".((string)$text->ID)] = [
-                                "Menu ID"     => (string)$text->Menu_ID,
-                                "Format"      => (string)$text->Format,
-                                "Muxing mode" => (string)$text->Muxing_mode
+    private function loadMediaInfo(SplFileInfo $mediaInfo){
+        if($mediaInfo->isFile()){
+            $reader = new XMLReader();
+            if($reader->open($mediaInfo->getPathname())){
+                if($reader->read()){
+                    // Build up information...
+                    $message = [];
+                    if($reader->name === "Mediainfo"){
+                        $message["Media info version"] = $reader->getAttribute("version");
+                        // SimpleXML is easier to process...
+                        $node = new SimpleXMLElement($reader->readInnerXml());
+                        // Fetch general information
+                        $general_elems = $node->xpath("track[@type='General']");
+                        if(sizeof($general_elems) === 1){
+                            $general = $general_elems[0];
+                            $message["General info"] = [
+                                "Format"    => (string)$general->Format,
+                                "Codec id"  => (string)$general->Codec_ID,
+                                "File size" => (string)$general->File_size,
+                                "Duration"  => (string)$general->Duration
                             ];
+                        } else{
+                            $message["General info"] = "Could not fetch general info";
                         }
-                    } else {
-                        $message["Text info"] = "No text info found";
+                        // Fetch video info
+                        $video_elems = $node->xpath("track[@type='Video']");
+                        if(sizeof($video_elems) >= 1){
+                            $video = $video_elems[0];
+                            $format_info = (string)$video->Format_Info;
+                            $frame_mode = (string)$video->Frame_rate_mode;
+                            $scan_order = (string)$video->Scan_order;
+                            $message["Video info (first only)"] = [
+                                "Format"          => ((string)$video->Format) . (($format_info !== "") ? (" (" . $format_info . ")") : ""),
+                                "Duration"        => (string)$video->Duration,
+                                "Size"            => ((string)$video->Width) . " x " . ((string)$video->Height),
+                                "Display ratio"   => (string)$video->Display_aspect_ratio,
+                                "Frame rate"      => ((string)$video->Frame_rate) . (($frame_mode !== "") ? (" (mode: " . $frame_mode . ")") : ""),
+                                "Scan type"       => ((string)$video->Scan_type) . (($scan_order !== "") ? (" (" . $scan_order . ")") : ""),
+                                "Writing library" => (string)$video->Writing_library
+                            ];
+                        } else{
+                            $message["Video info (first only)"] = "No video info found";
+                        }
+                        // Fetch subtitles info
+                        $text_elems = $node->xpath("track[@type='Text']");
+                        if(sizeof($text_elems) >= 1){
+                            $message["Text info"] = [];
+                            foreach($text_elems as $text){
+                                $message["Text info"]["ID " . ((string)$text->ID)] = [
+                                    "Menu ID"     => (string)$text->Menu_ID,
+                                    "Format"      => (string)$text->Format,
+                                    "Muxing mode" => (string)$text->Muxing_mode
+                                ];
+                            }
+                        } else{
+                            $message["Text info"] = "No text info found";
+                        }
                     }
+                    return $message;
                 }
-                return $message;
             }
         }
         return false;
@@ -267,11 +270,8 @@ class FileHandler implements ServiceProviderInterface
      *
      * @param SplFileInfo $mediaInfo The mediainfo xml that will contain the metadata.
      * @param SplFileInfo $sample The sample that needs the media info.
-     * @param bool $filter If true, it will filter out the media info and return a formatted string. If false,
-     * it'll return the full XML string.
-     * @return bool|string False on failure, a string with the mediainfo contents otherwise.
      */
-    private function createMediaInfo(SplFileInfo $mediaInfo, SplFileInfo $sample, $filter=true){
+    private function createMediaInfo(SplFileInfo $mediaInfo, SplFileInfo $sample){
         $command = "mediainfo --Output=XML ".escapeshellarg($sample->getPathname())." > ".escapeshellarg($mediaInfo->getPathname());
         shell_exec($command);
         // Strip path info
@@ -280,8 +280,6 @@ class FileHandler implements ServiceProviderInterface
             $node->Complete_name = str_replace($this->store_dir,"",(string)$node->Complete_name);
         }
         $xml->asXML($mediaInfo->getRealPath());
-
-        return $this->loadMediaInfo($mediaInfo, $filter);
     }
 
     /**
