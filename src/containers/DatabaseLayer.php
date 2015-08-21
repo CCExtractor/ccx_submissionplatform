@@ -411,6 +411,30 @@ WHERE s.hash = :hash LIMIT 1;");
     }
 
     /**
+     * Adds a given extension to the blacklist.
+     *
+     * @param string $extension The extension to add to the blacklist.
+     * @return bool True on success, false on failure.
+     */
+    public function addForbiddenExtension($extension){
+        $stmt = $this->pdo->prepare("INSERT INTO blacklist_extension VALUES (:extension);");
+        $stmt->bindParam(":extension",$extension,PDO::PARAM_STR);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
+
+    /**
+     * Deletes a given extension from the blacklist.
+     *
+     * @param string $extension The extension to delete from the blacklist.
+     * @return bool True on success, false on failure.
+     */
+    public function deleteForbiddenExtension($extension){
+        $stmt = $this->pdo->prepare("DELETE FROM blacklist_extension WHERE extension = :extension LIMIT 1;");
+        $stmt->bindParam(":extension",$extension,PDO::PARAM_STR);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
+
+    /**
      * Stores a processing message in the database for given user.
      *
      * @param User $user The user to store the message for.

@@ -1,0 +1,43 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Upload extension blacklist</h3>
+    <p>Files that have an extension that is on the list below will be automatically deleted by the system after uploading.</p>
+    {% include "notice.html.twig" %}
+    <h4>Current blacklist</h4>
+    {% if list|length > 0 %}
+        <table class="striped tight sortable">
+            <thead>
+                <tr>
+                    <th>Extension</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for extension in list %}
+                    <tr>
+                        <td>{{ extension }}</td>
+                        <td>
+                            <form action="{{ path_for("Admin_blacklist_extension") }}" method="post">
+                                <input type="hidden" name="action" value="delete" />
+                                <input type="hidden" name="extension" value="{{ extension }}" />
+                                {% include "csrf.html.twig" %}
+                                <input type="submit" class="small red" value="Delete" />
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>There are no extensions on the blacklist.</p>
+    {% endif %}
+    <h4>Add new extension to the blacklist</h4>
+    <form action="{{ path_for("Admin_blacklist_extension") }}" method="post">
+        <input type="hidden" name="action" value="add" />
+        <label for="extension">Extension</label>
+        <input type="text" name="extension" id="extension" />
+        {% include "csrf.html.twig" %}
+        <input type="submit" class="green" value="Add extension to blacklist" />
+    </form>
+{% endblock %}
