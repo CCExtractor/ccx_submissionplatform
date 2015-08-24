@@ -10,7 +10,7 @@ While CCExtractor is an awesome tool and it works flawlessly most of the time, b
 
 The aim of this project is to build a platform, which is accessible to everyone (after sign up), that provides a single place to upload, view samples and associated test results.
 
-It will be closely integrated with GitHub and the [GitHub bot](https://github.com/wforums/ccx_gitbot).
+It will be closely integrated with GitHub and the [GitHub bot](https://github.com/canihavesomecoffee/ccx_gitbot).
 
 ## Installation
 

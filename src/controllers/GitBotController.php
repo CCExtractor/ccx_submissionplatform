@@ -17,7 +17,7 @@ use Slim\Http\Response;
 
 /**
  * Class GitBotController is an improvement/replacement for the server part of the GitHub bot found at
- * https://github.com/wforums/ccx_gitbot.
+ * https://github.com/canihavesomecoffee/ccx_gitbot.
  *
  * @package org\ccextractor\submissionplatform\controllers
  */
