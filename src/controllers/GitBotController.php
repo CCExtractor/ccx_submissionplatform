@@ -424,7 +424,7 @@ class GitBotController extends BaseController
     private function queue_github_comment($id, $status)
     {
         $message = "";
-        $progress = "[status](".BaseController::$BASE_URL."/tests/".$id.")";
+        $progress = "[status](".BaseController::$BASE_URL."/test/".$id.")";
         $reports = "[results](".BaseController::$BASE_URL."/reports/".$id.")";
         switch($status){
             case "finalized":
