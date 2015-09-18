@@ -13,8 +13,7 @@
     <script type="text/javascript" src="/js/kickstart.js"></script>
 </head>
 <body>
-{% include "built_with.html.twig" %}
-<!-- Temporary untill it's out of beta -->
+<!-- Temporary until it's out of beta -->
 <div class="grid">
     <div class="col_12">
         {% include "notice.html.twig" with { 'notice_status': 'warning', 'notice_icon': 'warning', 'notice_message': 'Please note that this platform is still in beta phase! Not everything is working, and bugs can occur.'} %}
@@ -79,7 +78,7 @@
 <div id="footer">
     &copy; Copyright 2015 All Rights Reserved. Developed during GSoC 2015 for <a href="http://www.ccextractor.org">CCExtractor</a>.
     See <a href="{{ path_for("Home_about") }}">about</a> for a list of used frameworks and technologies.
-    Built with commit <a href="https://github.com/canihavesomecoffee/ccx_submissionplatform/commit/{{ build_commit }}">{{ build_commit }}</a>
+    {% include "debug.html.twig" %}
 </div>
 <!-- Piwik -->
 <script type="text/javascript">
@@ -96,6 +95,5 @@
 </script>
 <noscript><p><img src="//piwik.canihavesome.coffee/piwik.php?idsite=4" style="border:0;" alt="" /></p></noscript>
 <!-- End Piwik Code -->
-{% include "debug.html.twig" %}
 </body>
 </html>
