@@ -107,6 +107,7 @@ $container['notFoundHandler'] = function ($c) {
         $tv->add('pageDescription','404 Not Found');
         $tv->add('isLoggedIn',$c->get('account')->isLoggedIn());
         $tv->add("loggedInUser", $c->get('account')->getUser());
+
         return $c->get('view')->render($response->withStatus(404),"notfound.html.twig",$tv->getValues());
     };
 };

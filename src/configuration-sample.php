@@ -29,3 +29,9 @@ define("TEMP_STORAGE","/path/to/temporary/storage/");
 define("PERM_STORAGE","/path/to/permanent/storage/");
 // Git Webhook secret id (verification purposes)
 define("GIT_WEBHOOK","mysupersecretidhere");
+// Git remote location, which will be used to clone the repository if it does not exists.
+define("GIT_REMOTE","https://github.com/canihavesomecoffee/ccx_submissionplatform.git");
+// Location of the Git repo. Should not be equal to the location that is served
+define("GIT_LOCATION","/home/web-user/git_repo/");
+// Real location of the site
+define("GIT_DEPLOY","/var/www/site/");
