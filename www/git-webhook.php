@@ -81,4 +81,6 @@ $logMessage .= $commit_hash;
 // Remove maintenance mode
 exec('rm ' . GIT_DEPLOY . '/www/maintenance.html');
 $logMessage .= "[" . date('m/d/Y h:i:s a') . "][Updater] end of maintenance mode\n\n";
-file_put_contents('deploy.log', $logMessage, FILE_APPEND);
+file_put_contents('../deploy.log', $logMessage, FILE_APPEND);
+
+echo "OK";
