@@ -27,3 +27,5 @@ define("AMAZON_SES_PASS","Amazon_User_Password");
 define("TEMP_STORAGE","/path/to/temporary/storage/");
 // Location to store media samples after submitting
 define("PERM_STORAGE","/path/to/permanent/storage/");
+// Git Webhook secret id (verification purposes)
+define("GIT_WEBHOOK","mysupersecretidhere");
