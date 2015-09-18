@@ -55,8 +55,8 @@ if(!is_dir(GIT_LOCATION)){
     exec($git_bin_path. ' clone ' . GIT_REMOTE . ' ' . GIT_LOCATION . ' && cd ' . GIT_LOCATION);
 } else {
     // Change directory and make a fetch
-    $logMessage .= "[" . date('m/d/Y h:i:s a') . "][Updater] Fetch updates for repository\n";
-    exec('cd ' . GIT_LOCATION . ' && ' . $git_bin_path . ' fetch');
+    $logMessage .= "[" . date('m/d/Y h:i:s a') . "][Updater] Pull updates for repository\n";
+    exec('cd ' . GIT_LOCATION . ' && ' . $git_bin_path . ' pull');
 }
 
 $logMessage .= "[" . date('m/d/Y h:i:s a') . "][Updater] Going into maintenance mode\n";
