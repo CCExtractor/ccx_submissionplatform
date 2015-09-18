@@ -43,7 +43,7 @@ if($json["ref"] !== "refs/heads/production"){
 }
 
 // debug file name
-$debug_file = 'src/templates/built_with.html.twig';
+$debug_file = 'src/templates/debug.html.twig';
 // Full path to git binary is required if git is not in your PHP user's path. Otherwise just use 'git'.
 $git_bin_path = 'git';
 
@@ -67,7 +67,7 @@ exec('cd ' . GIT_LOCATION . ' && GIT_WORK_TREE=' . GIT_DEPLOY . ' ' . $git_bin_p
 // Get commit hash
 $commit_hash = shell_exec('cd ' . GIT_LOCATION . ' && ' . $git_bin_path . ' rev-parse --short HEAD');
 // Append commit hash to the template
-file_put_contents(GIT_DEPLOY . $debug_file, '{% set build_commit = "' . $commit_hash . '" %}', FILE_APPEND);
+file_put_contents(GIT_DEPLOY . $debug_file, '{% set build_commit = "'.$commit_hash.'" %} {% include "debug_data.html.twig" %}', FILE_APPEND);
 // Run composer
 $composer_output = shell_exec('cd ' . GIT_DEPLOY . ' && php composer.phar self-update && php composer.phar update');
 file_put_contents('composer.log', $composer_output, FILE_APPEND);
