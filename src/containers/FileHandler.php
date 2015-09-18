@@ -380,5 +380,6 @@ class FileHandler implements ServiceProviderInterface
         if($this->dba->removeAdditionalFile($additional)){
             return unlink($this->store_dir."extra/".$additional->getFileName());
         }
+        return false;
     }
 }

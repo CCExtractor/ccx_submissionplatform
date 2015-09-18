@@ -46,7 +46,6 @@ class SampleData extends Sample
      * @param string $platform
      * @param string $parameters
      * @param string $notes
-     * @param int $nr_extra_files
      */
     public function __construct(
         $id, $hash, $extension, $original_name, User $user, CCExtractorVersion $ccextractor_version,
