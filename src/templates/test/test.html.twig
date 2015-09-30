@@ -22,7 +22,7 @@
             <tbody>
         {% for entry in test.progress %}
             <tr>
-                <td>{{ entry.timestamp|date("Y-m-d h:i:s") }}</td>
+                <td>{{ entry.timestamp|date("Y-m-d H:i:s") }}</td>
                 <td>{{ entry.status }}</td>
                 <td>{{ entry.message }}</td>
             </tr>
