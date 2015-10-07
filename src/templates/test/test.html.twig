@@ -1,7 +1,50 @@
 {% extends "base.html.twig" %}
 
+{% block head %}
+    <script type="text/javascript">
+        function hide_show_progress_table(){
+            var button = document.getElementById("progress_button");
+            var table = document.getElementById("progress_table");
+            if(table.getAttribute("class") == "hide"){
+                table.setAttribute('class','tight striped');
+                button.innerHTML = "Hide test progress";
+            } else {
+                table.setAttribute("class","hide");
+                button.innerHTML = "Show test progress";
+            }
+        }
+    </script>
+{% endblock %}
+
 {% block content %}
     <h3>Progress for test {{ test.id }}</h3>
+    {% set active = 1 %}
+    {% set error = 0 %}
+    {% set start_time = "-" %}
+    {% set end_time = "-" %}
+    {% if test.progress|length > 0 %}
+        {# Progress is determined based on the last status message posted by the bot #}
+        {% set last = test.progress[test.progress|length - 1].status %}
+        {% set start_time = test.progress[0].timestamp|date("Y-m-d H:i:s") %}
+        {% if last == "error" %}
+            {% set error = 1 %}
+            {# If the last status is an error, we'll have to #}
+            {% if test.progress|length > 1 %}
+                {% set last = test.progress[test.progress|length - 2].status %}
+                {% set end_time = test.progress[test.progress|length - 2].timestamp|date("Y-m-d H:i:s") %}
+            {% endif %}
+        {% endif %}
+        {% if last == "preparation" %}
+            {% set active = active + 1 %}
+        {% endif %}
+        {% if last  == "tests"%}
+            {% set active = active + 2 %}
+        {% endif %}
+        {% if last == "finalisation" %}
+            {% set active = active + 3 %}
+            {% set end_time = test.progress[test.progress|length - 1].timestamp|date("Y-m-d H:i:s") %}
+        {% endif %}
+    {% endif %}
     <table class="tight">
         <tbody>
             <tr>
@@ -18,41 +61,26 @@
                 <td>Repository</td>
                 <td><a href="{{ test.getRepositoryURL }}" target="_blank">{{ test.getCleanRepositoryName }}</a></td>
             </tr>
+            <tr>
+                <td>Start time</td>
+                <td>{{ start_time }}</td>
+            </tr>
+            <tr>
+                <td>End time</td>
+                <td>{{ end_time }}</td>
+            </tr>
         </tbody>
     </table>
-    {% set active = 1 %}
-    {% set start_time = "-" %}
-    {% set end_time = "-" %}
-    {% if test.progress|length > 0 %}
-        {% set last = test.progress[test.progress|length - 1].status %}
-        {% set start_time = test.progress[0].timestamp|date("Y-m-d H:i:s") %}
-        {% if last == "preparation" %}
-            {% set active = active + 1 %}
-        {% endif %}
-        {% if last  == "tests"%}
-            {% set active = active + 2 %}
-        {% endif %}
-        {% if last == "finalisation" %}
-            {% set active = active + 3 %}
-            {% set end_time = test.progress[test.progress|length - 1].timestamp|date("Y-m-d H:i:s") %}
-        {% endif %}
-    {% endif %}
-    <!-- TODO: add red color on failure and replace checkmark from last with cross -->
     <ol class="col_12 progtrckr">
-        <li class="progtrckr-{% if active >= 1 %}done{% else %}todo{% endif %}">Queued</li>
-        <li class="progtrckr-{% if active >= 2 %}done{% else %}todo{% endif %}">Preparation</li>
-        <li class="progtrckr-{% if active >= 3 %}done{% else %}todo{% endif %}">Tests</li>
-        <li class="progtrckr-{% if active >= 4 %}done{% else %}todo{% endif %}">Finalisation</li>
+        <li class="progtrckr-{% if active >= 1 %}done{% if error == 1 and active == 1 %} error{% endif %}{% else %}todo{% endif %}">Queued</li>
+        <li class="progtrckr-{% if active >= 2 %}done{% if error == 1 and active == 2 %} error{% endif %}{% else %}todo{% endif %}">Preparation</li>
+        <li class="progtrckr-{% if active >= 3 %}done{% if error == 1 and active == 3 %} error{% endif %}{% else %}todo{% endif %}">Tests</li>
+        <li class="progtrckr-{% if active >= 4 %}done{% if error == 1 and active == 4 %} error{% endif %}{% else %}todo{% endif %}">Finalisation</li>
     </ol>
     <br class="clear" />
-    <div class="col_3">Start time</div>
-    <div class="col_3">{{ start_time }}</div>
-    <div class="col_3">End time</div>
-    <div class="col_3">{{ end_time }}</div>
-    <br class="clear" />
-    <!-- TODO: replace this section -->
     {% if test.progress|length > 0 %}
-        <table class="tight striped">
+        <p><button id="progress_button" class="small" onclick="hide_show_progress_table();">Show test progress</button></p>
+        <table id="progress_table" class="hide">
             <thead>
             <tr>
                 <th>Time</th>
@@ -71,12 +99,18 @@
             </tbody>
         </table>
     {% else %}
-        <p>This test run is still in the waiting queue! Please check again later.</p>
+        <p>This test is still in the queue! Please check again later.</p>
     {% endif %}
     {% if test.isFinished %}
-        <p><a class="button" target="_blank" href="/reports/{{ test.id }}">Go to the results</a></p>
-        <p><strong>WARNING! The result files have been auto-generated and could possibly contain malware*, so please use caution.</strong></p>
-        <p>(* That is, if someone is so unkind to abuse the functionality of the bot)</p>
+        <h4>Test results</h4>
+        {% if test.results|length > 0 %}
+            {# New method, from database #}
+            {# TODO: finish #}
+        {% else %}
+            {# Old method, with index files #}
+            <p><a class="button" target="_blank" href="/reports/{{ test.id }}">Go to the results</a></p>
+            <p><strong>WARNING! The result files have been auto-generated and could possibly contain malware*, so please use caution.</strong></p>
+            <p>(* That is, if someone is so unkind to abuse the functionality of the bot)</p>
+        {% endif %}
     {% endif %}
-    <!-- end of TO DO -->
 {% endblock %}

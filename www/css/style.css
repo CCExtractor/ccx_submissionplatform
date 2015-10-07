@@ -229,3 +229,12 @@ ol.progtrckr li.progtrckr-todo:before {
     font-size: 1.5em;
     bottom: -1.8em;
 }
+
+ol.progtrckr li.progtrckr-done.error::before {
+    background-color: red;
+    content: "x";
+}
+
+ol.progtrckr li.progtrckr-done.error {
+    border-color: red;
+}
