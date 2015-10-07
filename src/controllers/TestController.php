@@ -67,8 +67,6 @@ class TestController extends BaseController
                     if($test->getId() > 0){
                         $this->templateValues->add("test",$test);
                         return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
-                    } else {
-
                     }
                 }
                 return $this->view->render($response->withStatus(404),"test/notfound.html.twig",$this->templateValues->getValues());
@@ -83,14 +81,13 @@ class TestController extends BaseController
                 if($test->getId() > 0){
                     $this->templateValues->add("test",$test);
                     return $this->view->render($response,"test/test.html.twig",$this->templateValues->getValues());
-                } else {
-
                 }
                 return $this->view->render($response->withStatus(404),"test/notfound.html.twig",$this->templateValues->getValues());
             })->setName($self->getPageName()."_commit");
             // GET: show test details for a certain sample
             $this->get('/sample/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
+                /** @var Response $response */
                 $self->setDefaultBaseValues($this);
                 /** @var SampleData $sample */
                 $sample = $this->database->getSampleById($args["id"]);
@@ -99,7 +96,7 @@ class TestController extends BaseController
 
                     return $this->view->render($response,"test/sample.html.twig",$this->templateValues->getValues());
                 }
-                // TODO: return not found
+                return $this->view->render($response->withStatus(404),"test/notfound.html.twig",$this->templateValues->getValues());
             })->setName($self->getPageName()."_sample");
         });
     }

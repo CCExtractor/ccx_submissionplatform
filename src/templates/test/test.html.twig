@@ -1,15 +1,26 @@
 {% extends "base.html.twig" %}
 
 {% block content %}
-    {% if test.type == "Commit" %}
-        <h3>Test run progress for commit {{ test.commit|slice(0,7) }} (branch {{ test.branch }})</h3>
-        {% set url = test.getRepositoryURL ~ "/commit/" ~ test.commit %}
-    {% elseif test.type == "PullRequest" %}
-        <h3>Test run progress for pull request {{ test.commit }}</h3>
-        {% set url = test.getRepositoryURL ~ "/pull/" ~ test.commit %}
-    {% endif %}
-    <p>Repository: <a href="{{ test.getRepositoryURL }}" target="_blank">{{ test.getCleanRepositoryName }}</a></p>
-    <p>Test source: <a href="{{ url }}" target="_blank">GitHub</a></p>
+    <h3>Progress for test {{ test.id }}</h3>
+    <table class="tight">
+        <tbody>
+            <tr>
+                <td>{{ test.getTypeFormatted }}</td>
+                {% if test.type == "Commit" %}
+                    {% set url = test.getRepositoryURL ~ "/commit/" ~ test.commit %}
+                    <td><a href="{{ url }}" target="_blank">{{ test.commit|slice(0,7) }}</a> (branch {{ test.branch }})</td>
+                {% elseif test.type == "PullRequest" %}
+                    {% set url = test.getRepositoryURL ~ "/pull/" ~ test.commit %}
+                    <td><a href="{{ url }}" target="_blank">{{ test.commit }}</a></td>
+                {% endif %}
+            </tr>
+            <tr>
+                <td>Repository</td>
+                <td><a href="{{ test.getRepositoryURL }}" target="_blank">{{ test.getCleanRepositoryName }}</a></td>
+            </tr>
+        </tbody>
+    </table>
+
     {% if test.progress|length > 0 %}
         <table class="tight striped">
             <thead>
