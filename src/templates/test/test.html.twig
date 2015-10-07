@@ -20,7 +20,37 @@
             </tr>
         </tbody>
     </table>
-
+    {% set active = 1 %}
+    {% set start_time = "-" %}
+    {% set end_time = "-" %}
+    {% if test.progress|length > 0 %}
+        {% set last = test.progress[test.progress|length - 1].status %}
+        {% set start_time = test.progress[0].timestamp|date("Y-m-d H:i:s") %}
+        {% if last == "preparation" %}
+            {% set active = active + 1 %}
+        {% endif %}
+        {% if last  == "tests"%}
+            {% set active = active + 2 %}
+        {% endif %}
+        {% if last == "finalisation" %}
+            {% set active = active + 3 %}
+            {% set end_time = test.progress[test.progress|length - 1].timestamp|date("Y-m-d H:i:s") %}
+        {% endif %}
+    {% endif %}
+    <!-- TODO: add red color on failure and replace checkmark from last with cross -->
+    <ol class="col_12 progtrckr">
+        <li class="progtrckr-{% if active >= 1 %}done{% else %}todo{% endif %}">Queued</li>
+        <li class="progtrckr-{% if active >= 2 %}done{% else %}todo{% endif %}">Preparation</li>
+        <li class="progtrckr-{% if active >= 3 %}done{% else %}todo{% endif %}">Tests</li>
+        <li class="progtrckr-{% if active >= 4 %}done{% else %}todo{% endif %}">Finalisation</li>
+    </ol>
+    <br class="clear" />
+    <div class="col_3">Start time</div>
+    <div class="col_3">{{ start_time }}</div>
+    <div class="col_3">End time</div>
+    <div class="col_3">{{ end_time }}</div>
+    <br class="clear" />
+    <!-- TODO: replace this section -->
     {% if test.progress|length > 0 %}
         <table class="tight striped">
             <thead>
@@ -48,4 +78,5 @@
         <p><strong>WARNING! The result files have been auto-generated and could possibly contain malware*, so please use caution.</strong></p>
         <p>(* That is, if someone is so unkind to abuse the functionality of the bot)</p>
     {% endif %}
+    <!-- end of TO DO -->
 {% endblock %}
