@@ -45,6 +45,10 @@ class Test
      * @var array A list of all the progress entries.
      */
     private $progress;
+    /**
+     * @var array A list of the entries, grouped per test (if applicable).
+     */
+    private $results;
 
     /**
      * Test constructor.
@@ -57,8 +61,9 @@ class Test
      * @param string $commit The hash of the commit that was tested.
      * @param string $type The type that was tested (commit, pull request, ...).
      * @param array $progress A list of all the progress entries.
+     * @param array $results A list of the entries, grouped per test (if applicable).
      */
-    public function __construct($id, $token, $finished, $repository, $branch, $commit, $type, array $progress = []){
+    public function __construct($id, $token, $finished, $repository, $branch, $commit, $type, array $progress = [], array $results=[]){
         $this->id = $id;
         $this->token = $token;
         $this->finished = $finished;
@@ -67,6 +72,7 @@ class Test
         $this->commit = $commit;
         $this->type = $type;
         $this->progress = $progress;
+        $this->results = $results;
     }
 
     public static function getNullTest(){
@@ -127,6 +133,14 @@ class Test
      */
     public function getProgress(){
         return $this->progress;
+    }
+
+    /**
+     * @return array
+     */
+    public function getResults()
+    {
+        return $this->results;
     }
 
     /**
