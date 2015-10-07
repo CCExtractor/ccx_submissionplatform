@@ -72,9 +72,6 @@ $container['view'] = function ($c) {
 // Database
 $dba = new DatabaseLayer(DATABASE_SOURCE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD);
 $container->register($dba);
-// Bot Database
-$bdba = new BotDatabaseLayer(BOT_DATABASE_SOURCE_NAME, BOT_DATABASE_USERNAME, BOT_DATABASE_PASSWORD);
-$container->register($bdba);
 // Email container
 $host = $app->environment["HTTP_HOST"];
 BaseController::$BASE_URL = (($app->environment["HTTPS"] === "on")?"https://":"http://").$app->environment["HTTP_HOST"];
@@ -133,7 +130,7 @@ foreach($menuPages as $page){
 // These stay out of the pages that will be rendered in the menu, but need to be registered anyway
 $nonMenuPages = [
     new GitBotController(
-        $bdba, BOT_CCX_VBOX_MANAGER, BOT_CCX_WORKER, __DIR__."/reports", $logger, BOT_AUTHOR, BOT_REPOSITORY_FOLDER,
+        $dba, BOT_CCX_VBOX_MANAGER, BOT_CCX_WORKER, __DIR__."/reports", $logger, BOT_AUTHOR, BOT_REPOSITORY_FOLDER,
         BOT_HMAC_KEY, BOT_WORKER_URL),
     new AdminController()
 ];

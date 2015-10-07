@@ -10,6 +10,7 @@ use DOMDocument;
 use DOMNode;
 use Katzgrau\KLogger\Logger;
 use org\ccextractor\submissionplatform\containers\BotDatabaseLayer;
+use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\objects\NoticeType;
 use Slim\App;
 use Slim\Http\Request;
@@ -24,7 +25,7 @@ use Slim\Http\Response;
 class GitBotController extends BaseController
 {
     /**
-     * @var BotDatabaseLayer The access to the database.
+     * @var DatabaseLayer The access to the database.
      */
     private $dba;
     /**
@@ -63,7 +64,7 @@ class GitBotController extends BaseController
     /**
      * GitBotController constructor.
      *
-     * @param BotDatabaseLayer $dba The access to the database.
+     * @param DatabaseLayer $dba The access to the database.
      * @param string $python_script The path to the python GitHub bot script.
      * @param string $worker_script The path to the worker shell script.
      * @param string $reportFolder The folder that holds the reports.
@@ -73,7 +74,7 @@ class GitBotController extends BaseController
      * @param string $hmac The HMAC used for adding/removing repositories from the worker.
      * @param string $worker_url The location where the worker can be contacted for repository management.
      */
-    public function __construct(BotDatabaseLayer $dba, $python_script, $worker_script, $reportFolder, Logger $logger, $author, $worker_folder, $hmac, $worker_url){
+    public function __construct(DatabaseLayer $dba, $python_script, $worker_script, $reportFolder, Logger $logger, $author, $worker_folder, $hmac, $worker_url){
         parent::__construct("GitBot Controller");
         $this->dba = $dba;
         $this->python_script = $python_script;
@@ -198,14 +199,14 @@ class GitBotController extends BaseController
                                 // Execute action
                                 switch($_POST["action"]){
                                     case "abort":
-                                        if($this->bot_database->abortQueueEntry($_POST["id"],"The admin aborted your currently running request (id {0}). Please get in touch to know why.")){
+                                        if($this->database->abortQueueEntry($_POST["id"],"The admin aborted your currently running request (id {0}). Please get in touch to know why.")){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"Entry ".$_POST["id"]." was aborted");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"Entry ".$_POST["id"]." could not be aborted");
                                         }
                                         break;
                                     case "remove":
-                                        if($this->bot_database->removeFromQueue($_POST["id"],false,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
+                                        if($this->database->removeFromQueue($_POST["id"],false,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"Entry ".$_POST["id"]." was removed");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"Entry ".$_POST["id"]." could not be removed");
@@ -216,7 +217,7 @@ class GitBotController extends BaseController
                                 }
                             }
                             // Fetch queue
-                            $this->templateValues->add("queue",$this->bot_database->fetchVMQueue());
+                            $this->templateValues->add("queue",$this->database->fetchVMQueue());
                             // CSRF values
                             $self->setCSRF($this,$request);
                             // Render
@@ -236,7 +237,7 @@ class GitBotController extends BaseController
                                 // Execute action
                                 switch($_POST["action"]){
                                     case "remove":
-                                        if($this->bot_database->removeFromQueue($_POST["id"],true,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
+                                        if($this->database->removeFromQueue($_POST["id"],true,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"Entry ".$_POST["id"]." was removed");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"Entry ".$_POST["id"]." could not be removed");
@@ -247,7 +248,7 @@ class GitBotController extends BaseController
                                 }
                             }
                             // Fetch queue
-                            $this->templateValues->add("queue",$this->bot_database->fetchLocalQueue());
+                            $this->templateValues->add("queue",$this->database->fetchLocalQueue());
                             // CSRF values
                             $self->setCSRF($this,$request);
                             // Render
@@ -262,7 +263,7 @@ class GitBotController extends BaseController
                     /** @var App $this */
                     $self->setDefaultBaseValues($this);
                     if($this->account->getUser()->isAdmin()){
-                        $this->templateValues->add("queue",$this->bot_database->getCommandHistory());
+                        $this->templateValues->add("queue",$this->database->getCommandHistory());
                         return $this->view->render($response,"github_bot/history.html.twig",$this->templateValues->getValues());
                     }
                     /** @var Response $response */
@@ -277,7 +278,7 @@ class GitBotController extends BaseController
                             switch($_POST["action"]){
                                 case "remove":
                                     if(isset($_POST["id"])){
-                                        if($this->bot_database->removeTrustedUser($_POST["id"])){
+                                        if($this->database->removeTrustedUser($_POST["id"])){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"User removed");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"User could not be removed");
@@ -286,7 +287,7 @@ class GitBotController extends BaseController
                                     break;
                                 case "add":
                                     if(isset($_POST["name"])){
-                                        if($this->bot_database->addTrustedUser($_POST["name"])){
+                                        if($this->database->addTrustedUser($_POST["name"])){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"User added");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"User could not be added");
@@ -298,7 +299,7 @@ class GitBotController extends BaseController
                             }
                         }
                         // Fetch list of all users
-                        $this->templateValues->add("users", $this->bot_database->fetchTrustedUsers());
+                        $this->templateValues->add("users", $this->database->fetchTrustedUsers());
                         // CSRF values
                         $self->setCSRF($this,$request);
                         // Render
@@ -338,7 +339,7 @@ class GitBotController extends BaseController
                             }
                         }
                         // Fetch list of all repositories
-                        $this->templateValues->add("repositories", $this->bot_database->fetchLocalRepositories());
+                        $this->templateValues->add("repositories", $this->database->fetchLocalRepositories());
                         $this->templateValues->add("worker_folder", $self->worker_folder);
                         // CSRF values
                         $self->setCSRF($this,$request);
