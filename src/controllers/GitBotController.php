@@ -192,6 +192,8 @@ class GitBotController extends BaseController
                     $this->map(['GET', 'POST'],"/vm",function($request, $response, $args) use ($self){
                         /** @var App $this */
                         /** @var Request $request */
+                        /** @var DatabaseLayer $dba */
+                        $dba = $this->database;
                         $self->setDefaultBaseValues($this);
                         if($this->account->getUser()->isAdmin()){
                             // Check if POST's are set
@@ -199,14 +201,14 @@ class GitBotController extends BaseController
                                 // Execute action
                                 switch($_POST["action"]){
                                     case "abort":
-                                        if($this->database->abortQueueEntry($_POST["id"],"The admin aborted your currently running request (id {0}). Please get in touch to know why.")){
+                                        if($dba->getBot()->abortQueueEntry($_POST["id"],"The admin aborted your currently running request (id {0}). Please get in touch to know why.")){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"Entry ".$_POST["id"]." was aborted");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"Entry ".$_POST["id"]." could not be aborted");
                                         }
                                         break;
                                     case "remove":
-                                        if($this->database->removeFromQueue($_POST["id"],false,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
+                                        if($dba->getBot()->removeFromQueue($_POST["id"],false,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"Entry ".$_POST["id"]." was removed");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"Entry ".$_POST["id"]." could not be removed");
@@ -217,7 +219,7 @@ class GitBotController extends BaseController
                                 }
                             }
                             // Fetch queue
-                            $this->templateValues->add("queue",$this->database->fetchVMQueue());
+                            $this->templateValues->add("queue",$dba->getBot()->fetchVMQueue());
                             // CSRF values
                             $self->setCSRF($this,$request);
                             // Render
@@ -230,6 +232,8 @@ class GitBotController extends BaseController
                     $this->map(['GET', 'POST'],"/local",function($request, $response, $args) use ($self){
                         /** @var App $this */
                         /** @var Request $request */
+                        /** @var DatabaseLayer $dba */
+                        $dba = $this->database;
                         $self->setDefaultBaseValues($this);
                         if($this->account->getUser()->isAdmin()){
                             // Check if POST's are set
@@ -237,7 +241,7 @@ class GitBotController extends BaseController
                                 // Execute action
                                 switch($_POST["action"]){
                                     case "remove":
-                                        if($this->database->removeFromQueue($_POST["id"],true,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
+                                        if($dba->getBot()->removeFromQueue($_POST["id"],true,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"Entry ".$_POST["id"]." was removed");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"Entry ".$_POST["id"]." could not be removed");
@@ -248,7 +252,7 @@ class GitBotController extends BaseController
                                 }
                             }
                             // Fetch queue
-                            $this->templateValues->add("queue",$this->database->fetchLocalQueue());
+                            $this->templateValues->add("queue",$dba->getBot()->fetchLocalQueue());
                             // CSRF values
                             $self->setCSRF($this,$request);
                             // Render
@@ -261,9 +265,11 @@ class GitBotController extends BaseController
                 // GET: history shows the history of commands
                 $this->get("/history",function($request, $response, $args) use ($self){
                     /** @var App $this */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     if($this->account->getUser()->isAdmin()){
-                        $this->templateValues->add("queue",$this->database->getCommandHistory());
+                        $this->templateValues->add("queue",$dba->getBot()->getCommandHistory());
                         return $this->view->render($response,"github_bot/history.html.twig",$this->templateValues->getValues());
                     }
                     /** @var Response $response */
@@ -272,13 +278,15 @@ class GitBotController extends BaseController
                 // GET: manage trusted users
                 $this->map(["GET","POST"],"/users", function($request, $response, $args) use ($self){
                     /** @var App $this */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     if($this->account->getUser()->isAdmin()){
                         if($request->getAttribute('csrf_status',true) === true && isset($_POST["action"])){
                             switch($_POST["action"]){
                                 case "remove":
                                     if(isset($_POST["id"])){
-                                        if($this->database->removeTrustedUser($_POST["id"])){
+                                        if($dba->getBot()->removeTrustedUser($_POST["id"])){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"User removed");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"User could not be removed");
@@ -287,7 +295,7 @@ class GitBotController extends BaseController
                                     break;
                                 case "add":
                                     if(isset($_POST["name"])){
-                                        if($this->database->addTrustedUser($_POST["name"])){
+                                        if($dba->getBot()->addTrustedUser($_POST["name"])){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"User added");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"User could not be added");
@@ -299,7 +307,7 @@ class GitBotController extends BaseController
                             }
                         }
                         // Fetch list of all users
-                        $this->templateValues->add("users", $this->database->fetchTrustedUsers());
+                        $this->templateValues->add("users", $dba->getBot()->fetchTrustedUsers());
                         // CSRF values
                         $self->setCSRF($this,$request);
                         // Render
@@ -311,6 +319,8 @@ class GitBotController extends BaseController
                 // GET: manage local repositories
                 $this->map(["GET","POST"],"/local-repositories", function($request, $response, $args) use ($self){
                     /** @var App $this */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     if($this->account->getUser()->isAdmin()){
                         // Process post actions
@@ -339,7 +349,7 @@ class GitBotController extends BaseController
                             }
                         }
                         // Fetch list of all repositories
-                        $this->templateValues->add("repositories", $this->database->fetchLocalRepositories());
+                        $this->templateValues->add("repositories", $dba->getBot()->fetchLocalRepositories());
                         $this->templateValues->add("worker_folder", $self->worker_folder);
                         // CSRF values
                         $self->setCSRF($this,$request);
@@ -360,7 +370,7 @@ class GitBotController extends BaseController
         $this->logger->info("Deleted id from VM queue; checking for more");
         // If there's still one or multiple items left in the queue, we'll need to give the python script a
         // kick so it processes the next item.
-        $remaining = $this->dba->hasQueueItemsLeft();
+        $remaining = $this->dba->getBot()->hasQueueItemsLeft();
         if ($remaining !== false) {
             $this->logger->info("Starting python script");
             // Call python script
@@ -376,7 +386,7 @@ class GitBotController extends BaseController
      */
     private function processLocalQueue(){
         $this->logger->info("Deleted id from local queue; checking for more");
-        $token = $this->dba->hasLocalTokensLeft();
+        $token = $this->dba->getBot()->hasLocalTokensLeft();
         if ($token !== false) {
             $this->logger->info("Starting shell script");
             // Call worker shell script
@@ -486,7 +496,7 @@ class GitBotController extends BaseController
                 break;
         }
         if($message !== ""){
-            $this->dba->store_github_message($id,$message);
+            $this->dba->getBot()->storeGitHubMessage($id,$message);
         }
     }
 
@@ -514,7 +524,7 @@ class GitBotController extends BaseController
         $gitHub = "git://github.com/".$gitHub.".git";
         $folder = $this->worker_folder.$folder;
         if($this->callWorker($gitHub,$folder,"add")){
-            return $this->dba->addLocalRepository($gitHub,$folder);
+            return $this->dba->getBot()->addLocalRepository($gitHub,$folder);
         }
         return false;
     }
@@ -526,10 +536,10 @@ class GitBotController extends BaseController
      * @return bool True if the git was removed locally and from the database, false otherwise.
      */
     private function removeRepository($id){
-        $data = $this->dba->getLocalRepository($id);
+        $data = $this->dba->getBot()->getLocalRepository($id);
         if($data !== false){
             if($this->callWorker($data["github"],$data["local"],"remove")){
-                return $this->dba->removeLocalRepository($id);
+                return $this->dba->getBot()->removeLocalRepository($id);
             }
         }
         return false;
