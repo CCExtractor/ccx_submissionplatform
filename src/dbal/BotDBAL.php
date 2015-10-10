@@ -1,18 +1,18 @@
 <?php
-namespace org\ccextractor\submissionplatform\dba;
+namespace org\ccextractor\submissionplatform\dbal;
 
 use PDO;
 use PDOException;
 
 /**
- * Class BotTables holds all bot related operations on the related database tables.
+ * Class BotDBAL holds all bot related operations on the related database tables.
  *
- * @package org\ccextractor\submissionplatform\dba
+ * @package org\ccextractor\submissionplatform\dbal
  */
-class BotTables extends AbstractTables
+class BotDBAL extends AbstractDBAL
 {
     /**
-     * BotTables constructor.
+     * BotDBAL constructor.
      *
      * @param PDO $pdo The connection to the database system.
      */

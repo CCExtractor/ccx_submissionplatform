@@ -1,5 +1,5 @@
 <?php
-namespace org\ccextractor\submissionplatform\dba;
+namespace org\ccextractor\submissionplatform\dbal;
 
 use DateTime;
 use org\ccextractor\submissionplatform\objects\Test;
@@ -8,10 +8,15 @@ use PDO;
 use PDOException;
 use PDOStatement;
 
-class TestTables extends AbstractTables
+/**
+ * Class TestDBAL holds all test related operations on the related database tables.
+ *
+ * @package org\ccextractor\submissionplatform\dbal
+ */
+class TestDBAL extends AbstractDBAL
 {
     /**
-     * TestTables constructor.
+     * TestDBAL constructor.
      *
      * @param PDO $pdo The connection to the database system.
      */

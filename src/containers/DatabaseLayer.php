@@ -2,8 +2,8 @@
 namespace org\ccextractor\submissionplatform\containers;
 
 use DateTime;
-use org\ccextractor\submissionplatform\dba\BotTables;
-use org\ccextractor\submissionplatform\dba\TestTables;
+use org\ccextractor\submissionplatform\dbal\BotDBAL;
+use org\ccextractor\submissionplatform\dbal\TestDBAL;
 use org\ccextractor\submissionplatform\objects\AdditionalFile;
 use org\ccextractor\submissionplatform\objects\CCExtractorVersion;
 use org\ccextractor\submissionplatform\objects\FTPCredentials;
@@ -36,11 +36,11 @@ class DatabaseLayer implements ServiceProviderInterface
     ];
 
     /**
-     * @var BotTables holds all logic related to bot functioning.
+     * @var BotDBAL holds all logic related to bot functioning.
      */
     private $bot;
     /**
-     * @var TestTables holds all logic related to tests.
+     * @var TestDBAL holds all logic related to tests.
      */
     private $tests;
 
@@ -62,8 +62,8 @@ class DatabaseLayer implements ServiceProviderInterface
             }
         }
         $this->pdo = new PDO($dsn, $username, $password, $options);
-        $this->bot = new BotTables($this->pdo);
-        $this->tests = new TestTables($this->pdo);
+        $this->bot = new BotDBAL($this->pdo);
+        $this->tests = new TestDBAL($this->pdo);
     }
 
     /**
@@ -80,7 +80,7 @@ class DatabaseLayer implements ServiceProviderInterface
     }
 
     /**
-     * @return BotTables
+     * @return BotDBAL
      */
     public function getBot()
     {
@@ -88,7 +88,7 @@ class DatabaseLayer implements ServiceProviderInterface
     }
 
     /**
-     * @return TestTables
+     * @return TestDBAL
      */
     public function getTests()
     {

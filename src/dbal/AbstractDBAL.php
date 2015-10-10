@@ -1,9 +1,14 @@
 <?php
-namespace org\ccextractor\submissionplatform\dba;
+namespace org\ccextractor\submissionplatform\dbal;
 
 use PDO;
 
-abstract class AbstractTables
+/**
+ * Class AbstractDBAL is the abstract class that the other DBAL classes can use to inherit from.
+ *
+ * @package org\ccextractor\submissionplatform\dbal
+ */
+abstract class AbstractDBAL
 {
     /**
      * @var PDO The connection to the database system.
@@ -11,7 +16,7 @@ abstract class AbstractTables
     protected $pdo;
 
     /**
-     * AbstractTables constructor.
+     * AbstractDBAL constructor.
      *
      * @param PDO $pdo The connection to the database system.
      */
