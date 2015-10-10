@@ -102,7 +102,7 @@ class DatabaseLayer implements ServiceProviderInterface
      */
     public function getLatestCCExtractorVersion()
     {
-        $stmt = $this->pdo->query("SELECT * FROM ccextractor_versions ORDER BY ID DESC LIMIT 1;");
+        $stmt = $this->pdo->query("SELECT * FROM ccextractor_versions ORDER BY id DESC LIMIT 1;");
         if ($stmt !== false) {
             $data = $stmt->fetch();
             $result = new CCExtractorVersion($data["id"], $data["version"], new DateTime($data["released"]),
@@ -864,10 +864,7 @@ WHERE s.hash = :hash LIMIT 1;"
         if ($this->pdo->beginTransaction()) {
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             try {
-                $stmt = $this->pdo->prepare("DELETE FROM ccextractor_reference WHERE sample_id = :id;");
-                $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-                $stmt->execute();
-                $stmt = $this->pdo->prepare("DELETE FROM regression_tests WHERE sample_id = :id;");
+                $stmt = $this->pdo->prepare("DELETE FROM regression_test WHERE sample_id = :id;");
                 $stmt->bindParam(":id", $id, PDO::PARAM_INT);
                 $stmt->execute();
                 $stmt = $this->pdo->prepare("DELETE FROM upload WHERE sample_id = :id;");
