@@ -9,22 +9,18 @@ use PDOException;
  *
  * @package org\ccextractor\submissionplatform\dba
  */
-class BotTables
+class BotTables extends AbstractTables
 {
-    /**
-     * @var PDO The real connection to the database.
-     */
-    private $pdo;
-
     /**
      * BotTables constructor.
      *
-     * @param PDO $pdo
+     * @param PDO $pdo The connection to the database system.
      */
     public function __construct(PDO $pdo)
     {
-        $this->pdo = $pdo;
+        parent::__construct($pdo);
     }
+
 
     /**
      * Fetches all pending entries for the VM queue from the database.
