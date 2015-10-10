@@ -1,10 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Willem
- */
-
 namespace org\ccextractor\submissionplatform\objects;
+
 use DateTime;
 
 /**

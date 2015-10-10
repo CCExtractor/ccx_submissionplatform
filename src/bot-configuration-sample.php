@@ -1,8 +1,5 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Willem
- *
  * Copy and rename this file to configuration.php and fill in the necessary values in order for the script to work
  */
 

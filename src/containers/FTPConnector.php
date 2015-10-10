@@ -1,8 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Willem
- */
 namespace org\ccextractor\submissionplatform\containers;
 
 use org\ccextractor\submissionplatform\objects\FTPCredentials;

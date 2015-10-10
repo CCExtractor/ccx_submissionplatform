@@ -1,8 +1,5 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Willem
- *
  * This page receives Git(Hub) Webhook requests and processes them in order to automatically update the platform with the latest production branch code.
  */
 include_once "../src/configuration.php";
