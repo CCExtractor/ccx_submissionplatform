@@ -97,7 +97,7 @@ class GitBotController extends BaseController
                 /** @var Response $response */
                 if($this->environment['HTTP_USER_AGENT'] === BOT_CCX_USER_AGENT) {
                     if (isset($_POST["type"]) && isset($_POST["token"])) {
-                        $id = $self->dba->bot_validate_token($_POST["token"]);
+                        $id = $self->dba->getTests()->bot_validate_token($_POST["token"]);
                         $self->logger->info("Handling request for id ".$id);
                         if ($id > -1) {
                             switch ($_POST["type"]) {
@@ -107,15 +107,15 @@ class GitBotController extends BaseController
                                             case "preparation":
                                             case "running":
                                             case "finalization":
-                                                if($self->dba->save_status($id,$_POST["status"], $_POST["message"])){
+                                                if($self->dba->getTests()->save_status($id,$_POST["status"], $_POST["message"])){
                                                     return $response->write("OK");
                                                 } else {
                                                     return $response->withStatus(403)->write("ERROR");
                                                 }
                                             case "finalized":
                                             case "error":
-                                                if($self->dba->save_status($id,$_POST["status"], $_POST["message"])){
-                                                    $toRelaunch = $self->dba->mark_finished($id);
+                                                if($self->dba->getTests()->save_status($id,$_POST["status"], $_POST["message"])){
+                                                    $toRelaunch = $self->dba->getTests()->mark_finished($id);
                                                     switch($toRelaunch){
                                                         case 1:
                                                             // VM queue
@@ -162,7 +162,7 @@ class GitBotController extends BaseController
                 /** @var Response $response */
                 if($this->environment['HTTP_USER_AGENT'] === BOT_CCX_USER_AGENT_S) {
                     if (isset($_POST["token"])) {
-                        return $response->write(json_encode($self->dba->fetchDataForToken($_POST["token"])));
+                        return $response->write(json_encode($self->dba->getTests()->fetchDataForToken($_POST["token"])));
                     }
                 }
                 return $response->withStatus(403)->write("INVALID COMMAND");

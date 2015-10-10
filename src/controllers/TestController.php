@@ -1,6 +1,7 @@
 <?php
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\objects\SampleData;
 use org\ccextractor\submissionplatform\objects\Test;
 use Slim\App;
@@ -34,6 +35,8 @@ class TestController extends BaseController
             // GET: show start of controller
             $this->get('[/]', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
+                /** @var DatabaseLayer $dba */
+                $dba = $this->database;
                 $self->setDefaultBaseValues($this);
                 $newest = $this->database->fetchLastXTests();
                 $this->templateValues->add("tests", $newest);
@@ -45,9 +48,11 @@ class TestController extends BaseController
             $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
                 /** @var Response $response */
+                /** @var DatabaseLayer $dba */
+                $dba = $this->database;
                 $self->setDefaultBaseValues($this);
                 /** @var Test $test */
-                $test = $this->database->fetchTestInformation($args["id"]);
+                $test = $dba->getTests()->fetchTestInformation($args["id"]);
                 if ($test->getId() > 0) {
                     $this->templateValues->add("test", $test);
 
@@ -63,11 +68,13 @@ class TestController extends BaseController
             $this->get('/ccextractor/{version}', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
                 /** @var Response $response */
+                /** @var DatabaseLayer $dba */
+                $dba = $this->database;
                 $self->setDefaultBaseValues($this);
-                $commit = $this->database->fetchHashForCCXVersion($args["version"]);
+                $commit = $dba->fetchHashForCCXVersion($args["version"]);
                 if ($commit !== "") {
                     /** @var Test $test */
-                    $test = $this->database->fetchTestInformationForCommit($commit);
+                    $test = $dba->getTests()->fetchTestInformationForCommit($commit);
                     if ($test->getId() > 0) {
                         $this->templateValues->add("test", $test);
 
@@ -85,9 +92,11 @@ class TestController extends BaseController
             $this->get('/commit/{hash}', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
                 /** @var Response $response */
+                /** @var DatabaseLayer $dba */
+                $dba = $this->database;
                 $self->setDefaultBaseValues($this);
                 /** @var Test $test */
-                $test = $this->database->fetchTestInformationForCommit($args["hash"]);
+                $test = $dba->getTests()->fetchTestInformationForCommit($args["hash"]);
                 if ($test->getId() > 0) {
                     $this->templateValues->add("test", $test);
 
@@ -103,9 +112,11 @@ class TestController extends BaseController
             $this->get('/sample/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
                 /** @var Response $response */
+                /** @var DatabaseLayer $dba */
+                $dba = $this->database;
                 $self->setDefaultBaseValues($this);
                 /** @var SampleData $sample */
-                $sample = $this->database->getSampleById($args["id"]);
+                $sample = $dba->getSampleById($args["id"]);
                 if ($sample !== false) {
                     $this->templateValues->add("sample", $sample);
 
