@@ -3,6 +3,7 @@ namespace org\ccextractor\submissionplatform\controllers;
 
 use Milo\Github\Http\Response;
 use Milo\Github\OAuth\Token;
+use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use Slim\App;
 
 /**
@@ -31,6 +32,8 @@ class HomeController extends BaseController
         // GET: start page of the site/application
         $app->get('/[home]',function($request, $response, $args) use ($self) {
             /** @var App $this */
+            /** @var DatabaseLayer $dba */
+            $dba = $this->database;
             $self->setDefaultBaseValues($this);
             // Get latest GitHub commit
             $token = new Token(BOT_TOKEN);
@@ -54,8 +57,7 @@ class HomeController extends BaseController
             }
 
             // Custom page values
-
-            $this->templateValues->add("ccx_last_release", $this->database->getLatestCCExtractorVersion());
+            $this->templateValues->add("ccx_last_release", $dba->getLatestCCExtractorVersion());
             $this->templateValues->add("ccx_latest_commit", $commit);
             // Render
             return $this->view->render($response,'home/home.html.twig',$this->templateValues->getValues());

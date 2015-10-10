@@ -273,6 +273,7 @@ class GitBotController extends BaseController
                 // GET: manage trusted users
                 $this->map(["GET","POST"],"/users", function($request, $response, $args) use ($self){
                     /** @var App $this */
+                    /** @var Request $request */
                     /** @var DatabaseLayer $dba */
                     $dba = $this->database;
                     $self->setDefaultBaseValues($this);
@@ -314,6 +315,7 @@ class GitBotController extends BaseController
                 // GET: manage local repositories
                 $this->map(["GET","POST"],"/local-repositories", function($request, $response, $args) use ($self){
                     /** @var App $this */
+                    /** @var Request $request */
                     /** @var DatabaseLayer $dba */
                     $dba = $this->database;
                     $self->setDefaultBaseValues($this);
