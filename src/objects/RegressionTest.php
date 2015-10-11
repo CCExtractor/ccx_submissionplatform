@@ -41,6 +41,7 @@ class RegressionTest
      *
      * @param int $id
      * @param Sample $sample
+     * @param RegressionCategory $category
      * @param string $command
      * @param RegressionInputType $input
      * @param RegressionOutputType $output

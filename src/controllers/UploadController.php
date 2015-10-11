@@ -124,6 +124,7 @@ class UploadController extends BaseController
                 $this->post('[/]', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         $message = "CSRF token invalid";

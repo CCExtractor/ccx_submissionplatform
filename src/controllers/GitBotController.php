@@ -4,7 +4,6 @@ namespace org\ccextractor\submissionplatform\controllers;
 use DOMDocument;
 use DOMNode;
 use Katzgrau\KLogger\Logger;
-use org\ccextractor\submissionplatform\containers\BotDatabaseLayer;
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\objects\NoticeType;
 use Slim\App;

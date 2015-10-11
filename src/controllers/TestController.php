@@ -38,7 +38,7 @@ class TestController extends BaseController
                 /** @var DatabaseLayer $dba */
                 $dba = $this->database;
                 $self->setDefaultBaseValues($this);
-                $newest = $this->database->fetchLastXTests();
+                $newest = $dba->getTests()->fetchLastXTests();
                 $this->templateValues->add("tests", $newest);
 
                 return $this->view->render($response, "test/index.html.twig", $this->templateValues->getValues());

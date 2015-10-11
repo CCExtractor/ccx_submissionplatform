@@ -10,7 +10,6 @@ use org\ccextractor\submissionplatform\objects\RegressionTestResult;
 use org\ccextractor\submissionplatform\objects\Sample;
 use org\ccextractor\submissionplatform\objects\Test;
 use org\ccextractor\submissionplatform\objects\TestEntry;
-use org\ccextractor\submissionplatform\objects\TestResult;
 use PDO;
 use PDOException;
 use PDOStatement;

@@ -162,6 +162,7 @@ class AccountController extends BaseController
                 // POST: recover procedure step 2: choosing a new password
                 $this->post('/step2/{id:[0-9]+}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
@@ -323,6 +324,7 @@ class AccountController extends BaseController
                 // POST: processing of the actual creation
                 $this->post('/{email}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
