@@ -30,7 +30,8 @@ class TestEntry
      * @param string $message The message of this status entry.
      * @param DateTime $timestamp The time of this entry.
      */
-    public function __construct($status, $message, DateTime $timestamp){
+    public function __construct($status, $message, DateTime $timestamp)
+    {
         $this->status = $status;
         $this->message = $message;
         $this->timestamp = $timestamp;
@@ -39,21 +40,24 @@ class TestEntry
     /**
      * @return string
      */
-    public function getStatus(){
+    public function getStatus()
+    {
         return $this->status;
     }
 
     /**
      * @return string
      */
-    public function getMessage(){
+    public function getMessage()
+    {
         return $this->message;
     }
 
     /**
      * @return DateTime
      */
-    public function getTimestamp(){
+    public function getTimestamp()
+    {
         return $this->timestamp;
     }
 }

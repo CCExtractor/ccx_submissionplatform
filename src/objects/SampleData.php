@@ -43,10 +43,17 @@ class SampleData extends Sample
      * @param string $notes
      */
     public function __construct(
-        $id, $hash, $extension, $original_name, User $user, CCExtractorVersion $ccextractor_version,
-        $platform = "Windows", $parameters = "", $notes =""
-    ){
-        parent::__construct($id,$hash,$extension,$original_name);
+        $id,
+        $hash,
+        $extension,
+        $original_name,
+        User $user,
+        CCExtractorVersion $ccextractor_version,
+        $platform = "Windows",
+        $parameters = "",
+        $notes = ""
+    ) {
+        parent::__construct($id, $hash, $extension, $original_name);
         $this->user = $user;
         $this->ccextractor_version = $ccextractor_version;
         $this->platform = $platform;
@@ -57,63 +64,72 @@ class SampleData extends Sample
     /**
      * @return User
      */
-    public function getUser(){
+    public function getUser()
+    {
         return $this->user;
     }
 
     /**
      * @return CCExtractorVersion
      */
-    public function getCCExtractorVersion(){
+    public function getCCExtractorVersion()
+    {
         return $this->ccextractor_version;
     }
 
     /**
      * @return string
      */
-    public function getPlatform(){
+    public function getPlatform()
+    {
         return $this->platform;
     }
 
     /**
      * @return string
      */
-    public function getParameters(){
+    public function getParameters()
+    {
         return $this->parameters;
     }
 
     /**
      * @return string
      */
-    public function getNotes(){
+    public function getNotes()
+    {
         return $this->notes;
     }
 
     /**
      * @param string $notes
      */
-    public function setNotes($notes){
+    public function setNotes($notes)
+    {
         $this->notes = $notes;
     }
 
     /**
      * @param string $parameters
      */
-    public function setParameters($parameters){
+    public function setParameters($parameters)
+    {
         $this->parameters = $parameters;
     }
 
     /**
      * @param string $platform
      */
-    public function setPlatform($platform){
+    public function setPlatform($platform)
+    {
         $this->platform = $platform;
     }
 
     /**
      * @param CCExtractorVersion $ccextractor_version
      */
-    public function setCcextractorVersion($ccextractor_version){
+    public function setCcextractorVersion($ccextractor_version)
+    {
         $this->ccextractor_version = $ccextractor_version;
     }
 }

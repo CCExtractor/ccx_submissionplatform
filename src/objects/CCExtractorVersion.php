@@ -35,7 +35,8 @@ class CCExtractorVersion
      * @param DateTime $release The date of the release of this version.
      * @param string $hash The hash of the GitHub repository of the release.
      */
-    public function __construct($id, $name, DateTime $release, $hash){
+    public function __construct($id, $name, DateTime $release, $hash)
+    {
         $this->id = $id;
         $this->name = $name;
         $this->release = $release;
@@ -45,28 +46,32 @@ class CCExtractorVersion
     /**
      * @return int
      */
-    public function getId(){
+    public function getId()
+    {
         return $this->id;
     }
 
     /**
      * @return string
      */
-    public function getName(){
+    public function getName()
+    {
         return $this->name;
     }
 
     /**
      * @return DateTime
      */
-    public function getRelease(){
+    public function getRelease()
+    {
         return $this->release;
     }
 
     /**
      * @return string
      */
-    public function getHash(){
+    public function getHash()
+    {
         return $this->hash;
     }
 
@@ -75,7 +80,8 @@ class CCExtractorVersion
      *
      * @return CCExtractorVersion The null object (id: -1)
      */
-    public static function getNullObject(){
-        return new CCExtractorVersion(-1,"",new DateTime(),"");
+    public static function getNullObject()
+    {
+        return new CCExtractorVersion(-1, "", new DateTime(), "");
     }
 }
