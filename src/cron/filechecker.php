@@ -1,8 +1,5 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Willem
- *
  * This file will be called by the FTP upload script after a file is uploaded, so it can be processed automatically.
  */
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;

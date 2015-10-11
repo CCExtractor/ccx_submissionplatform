@@ -1,10 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Willem
- */
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\objects\NoticeType;
 use Slim\App;
 use Slim\Http\Request;
@@ -48,6 +45,8 @@ class AdminController extends BaseController
             $this->map(["GET","POST"],"/blacklist-extensions",function($request, $response, $args) use ($self){
                 /** @var App $this */
                 /** @var Request $request */
+                /** @var DatabaseLayer $dba */
+                $dba = $this->database;
                 $self->setDefaultBaseValues($this);
                 if($this->account->getUser()->isAdmin()){
                     if($request->isPost()){
@@ -56,14 +55,14 @@ class AdminController extends BaseController
                                 // Process request
                                 switch($_POST["action"]){
                                     case "add":
-                                        if($this->database->addForbiddenExtension($_POST["extension"])){
+                                        if($dba->addForbiddenExtension($_POST["extension"])){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"extension ".$_POST["extension"]." added.");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"extension ".$_POST["extension"]." could not be added.");
                                         }
                                         break;
                                     case "delete":
-                                        if($this->database->deleteForbiddenExtension($_POST["extension"])){
+                                        if($dba->deleteForbiddenExtension($_POST["extension"])){
                                             $self->setNoticeValues($this,NoticeType::getSuccess(),"extension ".$_POST["extension"]." deleted.");
                                         } else {
                                             $self->setNoticeValues($this,NoticeType::getError(),"extension ".$_POST["extension"]." could not be deleted.");
@@ -81,7 +80,7 @@ class AdminController extends BaseController
                         }
                     }
                     // Get all extensions
-                    $this->templateValues->add("list",$this->database->getForbiddenExtensions());
+                    $this->templateValues->add("list",$dba->getForbiddenExtensions());
                     // Set CSRF
                     $self->setCSRF($this,$request);
                     // Render

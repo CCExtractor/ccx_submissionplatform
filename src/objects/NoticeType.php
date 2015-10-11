@@ -1,9 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Willem
- */
-
 namespace org\ccextractor\submissionplatform\objects;
 
 use SplEnum;
@@ -27,7 +22,7 @@ class NoticeType extends SplEnum
     const INFORMATION = 4;
 
     // Static fields for shortcut usage instead of constructor.
-    private static $ok = null;
+    private static $success = null;
     private static $warning = null;
     private static $error = null;
     private static $information = null;
@@ -37,11 +32,13 @@ class NoticeType extends SplEnum
      *
      * @return NoticeType
      */
-    public static function getSuccess(){
-        if(self::$ok === null){
-            self::$ok = new NoticeType(NoticeType::SUCCESS);
+    public static function getSuccess()
+    {
+        if (self::$success === null) {
+            self::$success = new NoticeType(NoticeType::SUCCESS);
         }
-        return self::$ok;
+
+        return self::$success;
     }
 
     /**
@@ -49,10 +46,12 @@ class NoticeType extends SplEnum
      *
      * @return NoticeType
      */
-    public static function getWarning(){
-        if(self::$warning === null){
+    public static function getWarning()
+    {
+        if (self::$warning === null) {
             self::$warning = new NoticeType(NoticeType::WARNING);
         }
+
         return self::$warning;
     }
 
@@ -61,10 +60,12 @@ class NoticeType extends SplEnum
      *
      * @return NoticeType
      */
-    public static function getError(){
-        if(self::$error === null){
+    public static function getError()
+    {
+        if (self::$error === null) {
             self::$error = new NoticeType(NoticeType::ERROR);
         }
+
         return self::$error;
     }
 
@@ -73,10 +74,12 @@ class NoticeType extends SplEnum
      *
      * @return NoticeType
      */
-    public static function getInformation(){
-        if(self::$information === null){
+    public static function getInformation()
+    {
+        if (self::$information === null) {
             self::$information = new NoticeType(NoticeType::INFORMATION);
         }
+
         return self::$information;
     }
 }

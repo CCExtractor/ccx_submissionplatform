@@ -1,10 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Willem
- */
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\objects\NoticeType;
 use org\ccextractor\submissionplatform\objects\User;
 use Slim\App;
@@ -105,13 +102,15 @@ class AccountController extends BaseController
                 // POST: normal procedure for regular user
                 $this->post('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     $message = "We could not retrieve an account linked to the given email address, or the CSRF protection is invalid. Please try again";
                     // Fetch user, and send recovery email if it exists
                     /** @var Request $request */
                     if($request->getAttribute('csrf_status',true) === true && isset($_POST["email"])){
                         /** @var User $user */
-                        $user = $this->database->getUserWithEmail($_POST["email"]);
+                        $user = $dba->getUserWithEmail($_POST["email"]);
                         if($user->getId() > -1){
                             // We found the user, send recovery email and display ok message
                             if($this->account->sendRecoverEmail($user,$this->view,BaseController::$BASE_URL)){
@@ -163,6 +162,7 @@ class AccountController extends BaseController
                 // POST: recover procedure step 2: choosing a new password
                 $this->post('/step2/{id:[0-9]+}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
@@ -266,12 +266,15 @@ class AccountController extends BaseController
                 // POST: processing the register data
                 $this->post('', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
+                    /** @var Request $request */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     $message  = "The given email address is invalid.";
                     if($request->getAttribute('csrf_status',true) === true && isset($_POST["email"]) && is_email($_POST["email"])){
                         // Verify if email is not already existing
                         /** @var User $user */
-                        $user = $this->database->getUserWithEmail($_POST["email"]);
+                        $user = $dba->getUserWithEmail($_POST["email"]);
                         if($user->getId() === -1){
                             // Send verification email using a hash
                             if($this->account->sendRegistrationEmail($_POST["email"],$this->view, BaseController::$BASE_URL)){
@@ -321,6 +324,7 @@ class AccountController extends BaseController
                 // POST: processing of the actual creation
                 $this->post('/{email}/{expires:[0-9]+}/{hmac:[a-zA-Z0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     // Check expiration time
                     if(time() <= $args["expires"]) {
@@ -386,6 +390,8 @@ class AccountController extends BaseController
                 $this->post('', function($request, $response, $args) use ($self){
                     /** @var App $this */
                     /** @var Response $response */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->isAdmin() && $this->account->getUser()->getId() !== intval($args["id"])) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
@@ -404,7 +410,7 @@ class AccountController extends BaseController
                     $user->setName("Anonymized");
                     $user->setEmail("ccextractor".$user->getId()."@canihavesome.coffee");
                     $user->setHash("");
-                    if($this->database->updateUser($user)){
+                    if($dba->updateUser($user)){
                         if($this->account->getUser()->getId() === intval($args["id"])){
                             // Log out user
                             $this->account->performLogout();
@@ -444,6 +450,8 @@ class AccountController extends BaseController
                     /** @var App $this */
                     /** @var Response $response */
                     /** @var Request $request */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     /** @var User $user */
                     $user = $this->account->getUser();
@@ -469,7 +477,7 @@ class AccountController extends BaseController
                                     $password = true;
                                 }
                                 // Save changes in the database
-                                if($this->database->updateUser($user)){
+                                if($dba->updateUser($user)){
                                     $this->account->setUser($user);
                                     if($oldEmail !== null){
                                         // Send email to old addresses to indicate a change
@@ -509,9 +517,11 @@ class AccountController extends BaseController
                 // GET, Show a list of users if admin, or 403 if not.
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     if($this->account->getUser()->isAdmin()){
-                        $this->templateValues->add("users", $this->database->listUsers());
+                        $this->templateValues->add("users", $dba->listUsers());
                         return $this->view->render($response,"account/userlist.html.twig",$this->templateValues->getValues());
                     }
                     /** @var Response $response */
@@ -520,13 +530,15 @@ class AccountController extends BaseController
                 // GET user, show if admin or own page, 403 otherwise.
                 $this->get('/{id:[0-9]+}', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
 
                     if($this->account->getUser()->isAdmin() || intval($args["id"]) === $this->account->getUser()->getId()){
                         $user = $this->account->findUser($args["id"]);
                         if($user !== false){
                             $this->templateValues->add("user", $user);
-                            $this->templateValues->add("samples", $this->database->getSamplesForUser($user));
+                            $this->templateValues->add("samples", $dba->getSamplesForUser($user));
                             return $this->view->render($response,"account/user.html.twig",$this->templateValues->getValues());
                         }
                         $d = $this->notFoundHandler;
@@ -563,6 +575,8 @@ class AccountController extends BaseController
                     /** @var App $this */
                     /** @var Response $response */
                     /** @var Request $request */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->isAdmin()) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig", $this->templateValues->getValues());
@@ -579,7 +593,7 @@ class AccountController extends BaseController
                         if($admin !== $user->isAdmin()){
                             // Update user
                             $user->setAdmin($admin);
-                            if($this->database->updateUser($user)){
+                            if($dba->updateUser($user)){
                                 // Redirect to list
                                 return $response->withRedirect($this->router->pathFor($self->getPageName()."_view"));
                             }

@@ -20,11 +20,11 @@
     }
   ],
   "require": {
-    "twig/extensions": "1.2.x-dev",
-    "slim/slim": "3.x-dev",
+    "slim/slim": "^3.0@RC",
     "slim/twig-view": "dev-master",
-    "milo/github-api": "^1.4",
     "slim/csrf": "dev-master",
+    "twig/extensions": "1.3",
+    "milo/github-api": "^1.4",
     "phpmailer/phpmailer": "^5.2",
     "dominicsayers/isemail": "dev-master",
     "katzgrau/klogger": "dev-master"

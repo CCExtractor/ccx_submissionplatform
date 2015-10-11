@@ -1,9 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Willem
- */
-
 namespace org\ccextractor\submissionplatform\objects;
 
 /**
@@ -38,7 +33,8 @@ class Sample
      * @param string $extension The extension of the sample.
      * @param string $original_name The original name of the sample.
      */
-    public function __construct($id, $hash, $extension, $original_name = ""){
+    public function __construct($id, $hash, $extension, $original_name = "")
+    {
         $this->id = $id;
         $this->hash = $hash;
         $this->extension = $extension;
@@ -48,28 +44,32 @@ class Sample
     /**
      * @return int
      */
-    public function getId(){
+    public function getId()
+    {
         return $this->id;
     }
 
     /**
      * @return string
      */
-    public function getHash(){
+    public function getHash()
+    {
         return $this->hash;
     }
 
     /**
      * @return string
      */
-    public function getExtension(){
+    public function getExtension()
+    {
         return $this->extension;
     }
 
     /**
      * @return string
      */
-    public function getOriginalName(){
+    public function getOriginalName()
+    {
         return $this->original_name;
     }
 
@@ -78,10 +78,12 @@ class Sample
      *
      * @param string $name The name of the file.
      * @param string $extension The extension of the file.
+     *
      * @return string A concatenated string, based on the given values.
      */
-    public static function getFileName($name,$extension){
-        return $name.(($extension !== "")?".".$extension:"");
+    public static function getFileName($name, $extension)
+    {
+        return $name . (($extension !== "") ? "." . $extension : "");
     }
 
     /**
@@ -89,7 +91,8 @@ class Sample
      *
      * @return string The concatenated string of the hash and extension.
      */
-    public function getSampleFileName(){
-        return self::getFileName($this->getHash(),$this->getExtension());
+    public function getSampleFileName()
+    {
+        return self::getFileName($this->getHash(), $this->getExtension());
     }
 }

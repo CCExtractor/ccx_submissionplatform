@@ -36,7 +36,7 @@ Create a new database with the name of your wish, and then use the statements fr
 
 If you don't have the SplTypes pear package installed yet, you can do this as follows:
 
-1. (optional) Install php-dev (`sudo apt-get install php-dev`).
+1. (optional) Install php-dev (`sudo apt-get install php-dev` or `sudo apt-get install php5-dev`).
 2. (optional) Install php-pear (`sudo apt-get install php-pear`).
 3. Install SplEnum (`sudo pecl install SPL_Types`).
 4. If the install succeeded, add the extension to your `php.ini` file: `extension=spl_types.so`.
@@ -44,7 +44,7 @@ If you don't have the SplTypes pear package installed yet, you can do this as fo
 
 ### Nginx configuration for X-Accel-Redirect
 
-To serve files without any PHP overhead, the X-Accel-Redirect is used. For this to work, the section below needs to be added to the nginx configuration file:
+To serve files without any PHP overhead, the X-Accel-Redirect feature of Nginx is used. To enable it, a special section (as seen below) needs to be added to the nginx configuration file:
 
 ```
 location /protected/ {
@@ -53,9 +53,9 @@ location /protected/ {
 }
 ```
 
-More info on this is available at the [Nginx wiki](http://wiki.nginx.org/NginxXSendfile).
+More info on this directive is available at the [Nginx wiki](http://wiki.nginx.org/NginxXSendfile).
 
-Other webservers can be configured too (see this excellent [SO](http://stackoverflow.com/a/3731639) answer), but will require a small modification in the relevant section of the SampleInfoController that handles the download.
+Other web servers can be configured too (see this excellent [SO](http://stackoverflow.com/a/3731639) answer), but will require a small modification in the relevant section of the SampleInfoController that handles the download.
 
 ### File upload size for HTTP
 

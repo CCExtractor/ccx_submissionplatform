@@ -1,9 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Willem
- */
-
 namespace org\ccextractor\submissionplatform\objects;
 
 /**
@@ -27,7 +22,8 @@ class QueuedSample extends Sample
      * @param string $original_name The original name of the sample.
      * @param User $user The user that submitted this sample.
      */
-    public function __construct($id, $hash, $extension, $original_name, User $user){
+    public function __construct($id, $hash, $extension, $original_name, User $user)
+    {
         parent::__construct($id, $hash, $extension, $original_name);
         $this->user = $user;
     }
@@ -35,7 +31,8 @@ class QueuedSample extends Sample
     /**
      * @return User
      */
-    public function getUser(){
+    public function getUser()
+    {
         return $this->user;
     }
 }

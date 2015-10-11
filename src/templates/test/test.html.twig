@@ -1,17 +1,86 @@
 {% extends "base.html.twig" %}
 
+{% block head %}
+    <script type="text/javascript">
+        function hide_show_progress_table(){
+            var button = document.getElementById("progress_button");
+            var table = document.getElementById("progress_table");
+            if(table.getAttribute("class") == "hide"){
+                table.setAttribute('class','tight striped');
+                button.innerHTML = "Hide test progress";
+            } else {
+                table.setAttribute("class","hide");
+                button.innerHTML = "Show test progress";
+            }
+        }
+    </script>
+{% endblock %}
+
 {% block content %}
-    {% if test.type == "Commit" %}
-        <h3>Test run progress for commit {{ test.commit|slice(0,7) }} (branch {{ test.branch }})</h3>
-        {% set url = test.getRepositoryURL ~ "/commit/" ~ test.commit %}
-    {% elseif test.type == "PullRequest" %}
-        <h3>Test run progress for pull request {{ test.commit }}</h3>
-        {% set url = test.getRepositoryURL ~ "/pull/" ~ test.commit %}
-    {% endif %}
-    <p>Repository: <a href="{{ test.getRepositoryURL }}" target="_blank">{{ test.getCleanRepositoryName }}</a></p>
-    <p>Test source: <a href="{{ url }}" target="_blank">GitHub</a></p>
+    <h3>Progress for test {{ test.id }}</h3>
+    {% set active = 1 %}
+    {% set error = 0 %}
+    {% set start_time = "-" %}
+    {% set end_time = "-" %}
     {% if test.progress|length > 0 %}
-        <table class="tight striped">
+        {# Progress is determined based on the last status message posted by the bot #}
+        {% set last = test.progress[test.progress|length - 1].status %}
+        {% set start_time = test.progress[0].timestamp|date("Y-m-d H:i:s") %}
+        {% if last == "error" %}
+            {% set error = 1 %}
+            {# If the last status is an error, we'll have to #}
+            {% if test.progress|length > 1 %}
+                {% set last = test.progress[test.progress|length - 2].status %}
+                {% set end_time = test.progress[test.progress|length - 2].timestamp|date("Y-m-d H:i:s") %}
+            {% endif %}
+        {% endif %}
+        {% if last == "preparation" %}
+            {% set active = active + 1 %}
+        {% endif %}
+        {% if last  == "tests"%}
+            {% set active = active + 2 %}
+        {% endif %}
+        {% if last == "finalisation" %}
+            {% set active = active + 3 %}
+            {% set end_time = test.progress[test.progress|length - 1].timestamp|date("Y-m-d H:i:s") %}
+        {% endif %}
+    {% endif %}
+    <table class="tight">
+        <tbody>
+            <tr>
+                <td>{{ test.getTypeFormatted }}</td>
+                {% if test.type == "Commit" %}
+                    {% set url = test.getRepositoryURL ~ "/commit/" ~ test.commit %}
+                    <td><a href="{{ url }}" target="_blank">{{ test.commit|slice(0,7) }}</a> (branch {{ test.branch }})</td>
+                {% elseif test.type == "PullRequest" %}
+                    {% set url = test.getRepositoryURL ~ "/pull/" ~ test.commit %}
+                    <td><a href="{{ url }}" target="_blank">{{ test.commit }}</a></td>
+                {% endif %}
+            </tr>
+            <tr>
+                <td>Repository</td>
+                <td><a href="{{ test.getRepositoryURL }}" target="_blank">{{ test.getCleanRepositoryName }}</a></td>
+            </tr>
+            <tr>
+                <td>Start time</td>
+                <td>{{ start_time }}</td>
+            </tr>
+            <tr>
+                <td>End time</td>
+                <td>{{ end_time }}</td>
+            </tr>
+        </tbody>
+    </table>
+    <ol class="col_12 progtrckr">
+        <li class="progtrckr-{% if active >= 1 %}done{% if error == 1 and active == 1 %} error{% endif %}{% else %}todo{% endif %}">Queued</li>
+        <li class="progtrckr-{% if active >= 2 %}done{% if error == 1 and active == 2 %} error{% endif %}{% else %}todo{% endif %}">Preparation</li>
+        <li class="progtrckr-{% if active >= 3 %}done{% if error == 1 and active == 3 %} error{% endif %}{% else %}todo{% endif %}">Tests</li>
+        <li class="progtrckr-{% if active >= 4 %}done{% if error == 1 and active == 4 %} error{% endif %}{% else %}todo{% endif %}">Finalisation</li>
+    </ol>
+    <br class="clear" />
+    {% if test.progress|length > 0 %}
+        <p><button id="progress_button" class="small" onclick="hide_show_progress_table();">Show test progress</button></p>
+        <table id="progress_table" class="hide">
             <thead>
             <tr>
                 <th>Time</th>
@@ -30,11 +99,42 @@
             </tbody>
         </table>
     {% else %}
-        <p>This test run is still in the waiting queue! Please check again later.</p>
+        <p>This test is still in the queue! Please check again later.</p>
     {% endif %}
     {% if test.isFinished %}
-        <p><a class="button" target="_blank" href="/reports/{{ test.id }}">Go to the results</a></p>
-        <p><strong>WARNING! The result files have been auto-generated and could possibly contain malware*, so please use caution.</strong></p>
-        <p>(* That is, if someone is so unkind to abuse the functionality of the bot)</p>
+        <h4>Test results</h4>
+        {% if test.results|length > 0 %}
+            {# New method, from database #}
+            <table class="striped sortable">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Test</th>
+                        <th>Pass?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for testResult in test.results %}
+                        <tr>
+                            <td>{{ testResult.category.name }}</td>
+                            <td>{{ testResult.id }}</td>
+                            <td>
+                                {% if testResult.didPass %}
+                                    <span class="test_pass">&#10004;</span>
+                                {% else %}
+                                    <span class="test_fail">&#10008;</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    {# TODO: finish #}
+                </tbody>
+            </table>
+        {% else %}
+            {# Old method, with index files #}
+            <p><a class="button" target="_blank" href="/reports/{{ test.id }}">Go to the results</a></p>
+            <p><strong>WARNING! The result files have been auto-generated and could possibly contain malware*, so please use caution.</strong></p>
+            <p>(* That is, if someone is so unkind to abuse the functionality of the bot)</p>
+        {% endif %}
     {% endif %}
 {% endblock %}

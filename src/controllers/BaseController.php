@@ -1,8 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Willem
- */
 namespace org\ccextractor\submissionplatform\controllers;
 
 use org\ccextractor\submissionplatform\containers\TemplateValues;

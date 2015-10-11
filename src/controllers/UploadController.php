@@ -1,10 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Willem
- */
 namespace org\ccextractor\submissionplatform\controllers;
 
+use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\objects\FTPCredentials;
 use org\ccextractor\submissionplatform\objects\NoticeType;
 use Slim\App;
@@ -41,15 +38,17 @@ class UploadController extends BaseController
             $this->get('[/]', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
                 /** @var Response $response */
+                /** @var DatabaseLayer $dba */
+                $dba = $this->database;
                 $self->setDefaultBaseValues($this);
                 if($this->account->isLoggedIn()){
                     // Table rendering
-                    $this->templateValues->add("queue",$this->database->getQueuedSamples($this->account->getUser()));
-                    $this->templateValues->add("messages",$this->database->getQueuedMessages($this->account->getUser()));
+                    $this->templateValues->add("queue",$dba->getQueuedSamples($this->account->getUser()));
+                    $this->templateValues->add("messages",$dba->getQueuedMessages($this->account->getUser()));
                     // Admin view
                     if($this->account->getUser()->isAdmin()){
-                        $this->templateValues->add("a_queue",$this->database->getQueuedSamples());
-                        $this->templateValues->add("a_messages",$this->database->getQueuedMessages());
+                        $this->templateValues->add("a_queue",$dba->getQueuedSamples());
+                        $this->templateValues->add("a_messages",$dba->getQueuedMessages());
                     }
                     // Render
                     return $this->view->render($response,"upload/explain.html.twig",$this->templateValues->getValues());
@@ -125,6 +124,7 @@ class UploadController extends BaseController
                 $this->post('[/]', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
+                    /** @var Request $request */
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         $message = "CSRF token invalid";
@@ -170,11 +170,13 @@ class UploadController extends BaseController
                 $this->get('[/]', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     if($this->account->isLoggedIn()){
                         // Table rendering
-                        $this->templateValues->add("queue",$this->database->getQueuedSamples($this->account->getUser()));
-                        $this->templateValues->add("messages",$this->database->getQueuedMessages($this->account->getUser()));
+                        $this->templateValues->add("queue",$dba->getQueuedSamples($this->account->getUser()));
+                        $this->templateValues->add("messages",$dba->getQueuedMessages($this->account->getUser()));
                         // Render
                         return $this->view->render($response,"upload/process.html.twig",$this->templateValues->getValues());
                     }
@@ -186,15 +188,17 @@ class UploadController extends BaseController
                     $this->get('', function ($request, $response, $args) use ($self) {
                         /** @var App $this */
                         /** @var Response $response */
+                        /** @var DatabaseLayer $dba */
+                        $dba = $this->database;
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
-                            $data = $this->database->getQueuedSample($args["id"],$this->account->getUser());
+                            $data = $dba->getQueuedSample($args["id"],$this->account->getUser());
                             if($data !== false){
                                 // CSRF values
                                 $self->setCSRF($this,$request);
                                 // Other variables
                                 $this->templateValues->add("id", $args["id"]);
-                                $this->templateValues->add("ccx_versions", $this->database->getAllCCExtractorVersions());
+                                $this->templateValues->add("ccx_versions", $dba->getAllCCExtractorVersions());
                                 // Render
                                 return $this->view->render($response,"upload/finalize.html.twig",$this->templateValues->getValues());
                             }
@@ -205,14 +209,17 @@ class UploadController extends BaseController
                     $this->post('', function ($request, $response, $args) use ($self) {
                         /** @var App $this */
                         /** @var Response $response */
+                        /** @var Request $request */
+                        /** @var DatabaseLayer $dba */
+                        $dba = $this->database;
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
-                            $data = $this->database->getQueuedSample($args["id"],$this->account->getUser());
+                            $data = $dba->getQueuedSample($args["id"],$this->account->getUser());
                             if($data !== false){
                                 // Verify posted values
                                 if($request->getAttribute('csrf_status',true) === true && isset($_POST["ccx_version"]) && isset($_POST["ccx_os"]) && isset($_POST["ccx_params"]) &&
                                     isset($_POST["notes"]) && strlen($_POST["ccx_params"]) > 0 && strlen($_POST["notes"]) > 0){
-                                    $version = $this->database->isCCExtractorVersion($_POST["ccx_version"]);
+                                    $version = $dba->isCCExtractorVersion($_POST["ccx_version"]);
                                     if($version){
                                         // Store, and redirect
                                         if($this->file_handler->submitSample($this->account->getUser(),$args["id"],$_POST["ccx_version"],$_POST["ccx_os"],$_POST["ccx_params"],$_POST["notes"])){
@@ -239,7 +246,7 @@ class UploadController extends BaseController
                                 $self->setCSRF($this,$request);
                                 // Other variables
                                 $this->templateValues->add("id", $args["id"]);
-                                $this->templateValues->add("ccx_versions", $this->database->getAllCCExtractorVersions());
+                                $this->templateValues->add("ccx_versions", $dba->getAllCCExtractorVersions());
                                 // Notice
                                 $self->setNoticeValues($this,NoticeType::getError(),"Some values were not filled in. Please try again.");
                                 // Render
@@ -256,15 +263,17 @@ class UploadController extends BaseController
                     $this->get('[/]', function ($request, $response, $args) use ($self) {
                         /** @var App $this */
                         /** @var Response $response */
+                        /** @var DatabaseLayer $dba */
+                        $dba = $this->database;
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
-                            $data = $this->database->getQueuedSample($args["id"],$this->account->getUser());
+                            $data = $dba->getQueuedSample($args["id"],$this->account->getUser());
                             if($data !== false){
                                 // CSRF values
                                 $self->setCSRF($this,$request);
                                 // Other variables
                                 $this->templateValues->add("queued", $data);
-                                $this->templateValues->add("samples", $this->database->getSamplesForUser($this->account->getUser()));
+                                $this->templateValues->add("samples", $dba->getSamplesForUser($this->account->getUser()));
                                 // Render
                                 return $this->view->render($response,"upload/link.html.twig",$this->templateValues->getValues());
                             }
@@ -275,12 +284,15 @@ class UploadController extends BaseController
                     $this->post('[/]', function ($request, $response, $args) use ($self) {
                         /** @var App $this */
                         /** @var Response $response */
+                        /** @var Request $request */
+                        /** @var DatabaseLayer $dba */
+                        $dba = $this->database;
                         $self->setDefaultBaseValues($this);
                         if($this->account->isLoggedIn()){
-                            $data = $this->database->getQueuedSample($args["id"],$this->account->getUser());
+                            $data = $dba->getQueuedSample($args["id"],$this->account->getUser());
                             if($data !== false){
                                 if($request->getAttribute('csrf_status',true) === true && isset($_POST["link_id"])){
-                                    $sample = $this->database->getSampleForUser($this->account->getUser(), $_POST["link_id"]);
+                                    $sample = $dba->getSampleForUser($this->account->getUser(), $_POST["link_id"]);
                                     if($sample !== false){
                                         // Process
                                         if($this->file_handler->appendSample($this->account->getUser(), $args["id"], $_POST["link_id"])){
@@ -297,7 +309,7 @@ class UploadController extends BaseController
                                 $self->setCSRF($this,$request);
                                 // Other variables
                                 $this->templateValues->add("queued", $data);
-                                $this->templateValues->add("samples", $this->database->getSamplesForUser($this->account->getUser()));
+                                $this->templateValues->add("samples", $dba->getSamplesForUser($this->account->getUser()));
                                 // Render
                                 return $this->view->render($response,"upload/link.html.twig",$this->templateValues->getValues());
                             }
