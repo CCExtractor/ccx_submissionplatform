@@ -68,7 +68,17 @@ class GitBotController extends BaseController
      * @param string $hmac The HMAC used for adding/removing repositories from the worker.
      * @param string $worker_url The location where the worker can be contacted for repository management.
      */
-    public function __construct(DatabaseLayer $dba, $python_script, $worker_script, $reportFolder, Logger $logger, $author, $worker_folder, $hmac, $worker_url){
+    public function __construct(
+        DatabaseLayer $dba,
+        $python_script,
+        $worker_script,
+        $reportFolder,
+        Logger $logger,
+        $author,
+        $worker_folder,
+        $hmac,
+        $worker_url
+    ) {
         parent::__construct("GitBot Controller");
         $this->dba = $dba;
         $this->python_script = $python_script;
@@ -86,36 +96,78 @@ class GitBotController extends BaseController
      *
      * @param App $app The instance of the Slim framework app.
      */
-    function register(App $app){
+    function register(App $app)
+    {
         $self = $this;
-        $app->group('/github_bot', function() use ($self){
+        $app->group('/github_bot', function () use ($self) {
             /** @var App $this */
             // POST: reporting status updates from the test-suite/bot
-            $this->post('/report',function($request, $response, $args) use ($self) {
+            $this->post('/report', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
                 /** @var Response $response */
-                if($this->environment['HTTP_USER_AGENT'] === BOT_CCX_USER_AGENT) {
+                if ($this->environment['HTTP_USER_AGENT'] === BOT_CCX_USER_AGENT) {
                     if (isset($_POST["type"]) && isset($_POST["token"])) {
                         $id = $self->dba->getTests()->bot_validate_token($_POST["token"]);
-                        $self->logger->info("Handling request for id ".$id);
+                        $self->logger->info("Handling request for id " . $id);
                         if ($id > -1) {
                             switch ($_POST["type"]) {
                                 case "progress":
-                                    if(isset($_POST["status"]) && isset($_POST["message"])){
-                                        switch($_POST["status"]){
+                                    if (isset($_POST["status"]) && isset($_POST["message"])) {
+                                        switch ($_POST["status"]) {
                                             case "preparation":
-                                            case "running":
-                                            case "finalization":
-                                                if($self->dba->getTests()->save_status($id,$_POST["status"], $_POST["message"])){
+                                            case "tests":
+                                                if ($self->dba->getTests()->save_status($id, $_POST["status"],
+                                                    $_POST["message"]
+                                                )
+                                                ) {
                                                     return $response->write("OK");
                                                 } else {
                                                     return $response->withStatus(403)->write("ERROR");
                                                 }
-                                            case "finalized":
+                                            case "finalisation":
+                                                if ($_POST["message"] !== "finished complete run") {
+                                                    if ($self->dba->getTests()->save_status($id, $_POST["status"],
+                                                        $_POST["message"]
+                                                    )
+                                                    ) {
+                                                        return $response->write("OK");
+                                                    } else {
+                                                        return $response->withStatus(403)->write("ERROR");
+                                                    }
+                                                } else {
+                                                    if ($self->dba->getTests()->save_status($id, $_POST["status"],
+                                                        $_POST["message"]
+                                                    )
+                                                    ) {
+                                                        $toRelaunch = $self->dba->getTests()->mark_finished($id);
+                                                        switch ($toRelaunch) {
+                                                            case 1:
+                                                                // VM queue
+                                                                $self->processVMQueue();
+                                                                break;
+                                                            case 2:
+                                                                // Local queue
+                                                                $self->processLocalQueue();
+                                                                break;
+                                                            case 0:
+                                                                // Failed to update, fallthrough to fail.
+                                                            default:
+                                                                return $response->withStatus(403)->write("ERROR");
+                                                        }
+                                                        $self->queue_github_comment($id, $_POST["status"]);
+
+                                                        return $response->write("OK");
+                                                    } else {
+                                                        return $response->withStatus(403)->write("ERROR");
+                                                    }
+                                                }
                                             case "error":
-                                                if($self->dba->getTests()->save_status($id,$_POST["status"], $_POST["message"])){
+                                                if ($self->dba->getTests()->save_status($id, $_POST["status"],
+                                                    $_POST["message"]
+                                                )
+                                                ) {
                                                     $toRelaunch = $self->dba->getTests()->mark_finished($id);
-                                                    switch($toRelaunch){
+                                                    switch ($toRelaunch) {
                                                         case 1:
                                                             // VM queue
                                                             $self->processVMQueue();
@@ -129,83 +181,111 @@ class GitBotController extends BaseController
                                                         default:
                                                             return $response->withStatus(403)->write("ERROR");
                                                     }
-                                                    $self->queue_github_comment($id,$_POST["status"]);
+                                                    $self->queue_github_comment($id, $_POST["status"]);
+
                                                     return $response->write("OK");
                                                 } else {
                                                     return $response->withStatus(403)->write("ERROR");
                                                 }
-                                                break;
                                             default:
                                                 break;
                                         }
                                     }
                                     break;
                                 case "upload":
-                                    if($self->handle_upload($id)){
+                                    if ($self->handle_upload($id)) {
                                         return $response->write("OK");
                                     } else {
                                         return $response->withStatus(403)->write("ERROR");
                                     }
                                 default:
-                                    $self->logger->warning("Unknown type: ".$_POST["type"]);
+                                    $self->logger->warning("Unknown type: " . $_POST["type"]);
                                     break;
                             }
                         }
                     }
                 }
+
                 return $response->withStatus(403)->write("INVALID COMMAND");
-            })->setName($self->getPageName()."_report");
+            }
+            )->setName($self->getPageName() . "_report");
             // POST: fetching the necessary data for a worker.
-            $this->post('/fetch',function($request, $response, $args) use ($self) {
+            $this->post('/fetch', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
                 /** @var Response $response */
-                if($this->environment['HTTP_USER_AGENT'] === BOT_CCX_USER_AGENT_S) {
+                if ($this->environment['HTTP_USER_AGENT'] === BOT_CCX_USER_AGENT_S) {
                     if (isset($_POST["token"])) {
-                        return $response->write(json_encode($self->dba->getTests()->fetchDataForToken($_POST["token"])));
+                        return $response->write(json_encode($self->dba->getTests()->fetchDataForToken($_POST["token"]))
+                        );
                     }
                 }
+
                 return $response->withStatus(403)->write("INVALID COMMAND");
-            })->setName($self->getPageName()."_fetch");
+            }
+            )->setName($self->getPageName() . "_fetch");
             // Admin logic
-            $this->group("/admin", function() use ($self) {
+            $this->group("/admin", function () use ($self) {
                 /** @var App $this */
                 // GET: / root, shows links to actions below.
-                $this->get("[/]",function($request, $response, $args) use ($self){
+                $this->get("[/]", function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     $self->setDefaultBaseValues($this);
-                    if($this->account->getUser()->isAdmin()){
-                        return $this->view->render($response,"github_bot/admin_index.html.twig",$this->templateValues->getValues());
+                    if ($this->account->getUser()->isAdmin()) {
+                        return $this->view->render($response, "github_bot/admin_index.html.twig",
+                            $this->templateValues->getValues()
+                        );
                     }
+
                     /** @var Response $response */
-                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
-                })->setName($self->getPageName()."_admin");
+
+                    return $this->view->render($response->withStatus(403), "forbidden.html.twig",
+                        $this->templateValues->getValues()
+                    );
+                }
+                )->setName($self->getPageName() . "_admin");
                 // Group the queue logic
-                $this->group("/queue", function() use ($self) {
+                $this->group("/queue", function () use ($self) {
                     /** @var App $this */
                     // GET: vmqueue shows the current vm queue
-                    $this->map(['GET', 'POST'],"/vm",function($request, $response, $args) use ($self){
+                    $this->map(['GET', 'POST'], "/vm", function ($request, $response, $args) use ($self) {
                         /** @var App $this */
                         /** @var Request $request */
                         /** @var DatabaseLayer $dba */
                         $dba = $this->database;
                         $self->setDefaultBaseValues($this);
-                        if($this->account->getUser()->isAdmin()){
+                        if ($this->account->getUser()->isAdmin()) {
                             // Check if POST's are set
-                            if($request->getAttribute('csrf_status',true) === true && isset($_POST["action"]) && isset($_POST["id"])){
+                            if ($request->getAttribute('csrf_status', true
+                                ) === true && isset($_POST["action"]) && isset($_POST["id"])
+                            ) {
                                 // Execute action
-                                switch($_POST["action"]){
+                                switch ($_POST["action"]) {
                                     case "abort":
-                                        if($dba->getBot()->abortQueueEntry($_POST["id"],"The admin aborted your currently running request (id {0}). Please get in touch to know why.")){
-                                            $self->setNoticeValues($this,NoticeType::getSuccess(),"Entry ".$_POST["id"]." was aborted");
+                                        if ($dba->getBot()->abortQueueEntry($_POST["id"],
+                                            "The admin aborted your currently running request (id {0}). Please get in touch to know why."
+                                        )
+                                        ) {
+                                            $self->setNoticeValues($this, NoticeType::getSuccess(),
+                                                "Entry " . $_POST["id"] . " was aborted"
+                                            );
                                         } else {
-                                            $self->setNoticeValues($this,NoticeType::getError(),"Entry ".$_POST["id"]." could not be aborted");
+                                            $self->setNoticeValues($this, NoticeType::getError(),
+                                                "Entry " . $_POST["id"] . " could not be aborted"
+                                            );
                                         }
                                         break;
                                     case "remove":
-                                        if($dba->getBot()->removeFromQueue($_POST["id"],false,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
-                                            $self->setNoticeValues($this,NoticeType::getSuccess(),"Entry ".$_POST["id"]." was removed");
+                                        if ($dba->getBot()->removeFromQueue($_POST["id"], false,
+                                            "The admin removed your request (id {0}) from the queue. Please get in touch to know why."
+                                        )
+                                        ) {
+                                            $self->setNoticeValues($this, NoticeType::getSuccess(),
+                                                "Entry " . $_POST["id"] . " was removed"
+                                            );
                                         } else {
-                                            $self->setNoticeValues($this,NoticeType::getError(),"Entry ".$_POST["id"]." could not be removed");
+                                            $self->setNoticeValues($this, NoticeType::getError(),
+                                                "Entry " . $_POST["id"] . " could not be removed"
+                                            );
                                         }
                                         break;
                                     default:
@@ -213,32 +293,49 @@ class GitBotController extends BaseController
                                 }
                             }
                             // Fetch queue
-                            $this->templateValues->add("queue",$dba->getBot()->fetchVMQueue());
+                            $this->templateValues->add("queue", $dba->getBot()->fetchVMQueue());
                             // CSRF values
-                            $self->setCSRF($this,$request);
+                            $self->setCSRF($this, $request);
+
                             // Render
-                            return $this->view->render($response,"github_bot/queue_vm.html.twig",$this->templateValues->getValues());
+                            return $this->view->render($response, "github_bot/queue_vm.html.twig",
+                                $this->templateValues->getValues()
+                            );
                         }
+
                         /** @var Response $response */
-                        return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
-                    })->setName($self->getPageName()."_admin_queue_vm");
+
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig",
+                            $this->templateValues->getValues()
+                        );
+                    }
+                    )->setName($self->getPageName() . "_admin_queue_vm");
                     // GET: localqueue shows the local queue
-                    $this->map(['GET', 'POST'],"/local",function($request, $response, $args) use ($self){
+                    $this->map(['GET', 'POST'], "/local", function ($request, $response, $args) use ($self) {
                         /** @var App $this */
                         /** @var Request $request */
                         /** @var DatabaseLayer $dba */
                         $dba = $this->database;
                         $self->setDefaultBaseValues($this);
-                        if($this->account->getUser()->isAdmin()){
+                        if ($this->account->getUser()->isAdmin()) {
                             // Check if POST's are set
-                            if($request->getAttribute('csrf_status',true) === true && isset($_POST["action"]) && isset($_POST["id"])){
+                            if ($request->getAttribute('csrf_status', true
+                                ) === true && isset($_POST["action"]) && isset($_POST["id"])
+                            ) {
                                 // Execute action
-                                switch($_POST["action"]){
+                                switch ($_POST["action"]) {
                                     case "remove":
-                                        if($dba->getBot()->removeFromQueue($_POST["id"],true,"The admin removed your request (id {0}) from the queue. Please get in touch to know why.")){
-                                            $self->setNoticeValues($this,NoticeType::getSuccess(),"Entry ".$_POST["id"]." was removed");
+                                        if ($dba->getBot()->removeFromQueue($_POST["id"], true,
+                                            "The admin removed your request (id {0}) from the queue. Please get in touch to know why."
+                                        )
+                                        ) {
+                                            $self->setNoticeValues($this, NoticeType::getSuccess(),
+                                                "Entry " . $_POST["id"] . " was removed"
+                                            );
                                         } else {
-                                            $self->setNoticeValues($this,NoticeType::getError(),"Entry ".$_POST["id"]." could not be removed");
+                                            $self->setNoticeValues($this, NoticeType::getError(),
+                                                "Entry " . $_POST["id"] . " could not be removed"
+                                            );
                                         }
                                         break;
                                     default:
@@ -246,54 +343,75 @@ class GitBotController extends BaseController
                                 }
                             }
                             // Fetch queue
-                            $this->templateValues->add("queue",$dba->getBot()->fetchLocalQueue());
+                            $this->templateValues->add("queue", $dba->getBot()->fetchLocalQueue());
                             // CSRF values
-                            $self->setCSRF($this,$request);
+                            $self->setCSRF($this, $request);
+
                             // Render
-                            return $this->view->render($response,"github_bot/queue_local.html.twig",$this->templateValues->getValues());
+                            return $this->view->render($response, "github_bot/queue_local.html.twig",
+                                $this->templateValues->getValues()
+                            );
                         }
+
                         /** @var Response $response */
-                        return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
-                    })->setName($self->getPageName()."_admin_queue_local");
-                });
+
+                        return $this->view->render($response->withStatus(403), "forbidden.html.twig",
+                            $this->templateValues->getValues()
+                        );
+                    }
+                    )->setName($self->getPageName() . "_admin_queue_local");
+                }
+                );
                 // GET: history shows the history of commands
-                $this->get("/history",function($request, $response, $args) use ($self){
+                $this->get("/history", function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var DatabaseLayer $dba */
                     $dba = $this->database;
                     $self->setDefaultBaseValues($this);
-                    if($this->account->getUser()->isAdmin()){
-                        $this->templateValues->add("queue",$dba->getBot()->getCommandHistory());
-                        return $this->view->render($response,"github_bot/history.html.twig",$this->templateValues->getValues());
+                    if ($this->account->getUser()->isAdmin()) {
+                        $this->templateValues->add("queue", $dba->getBot()->getCommandHistory());
+
+                        return $this->view->render($response, "github_bot/history.html.twig",
+                            $this->templateValues->getValues()
+                        );
                     }
+
                     /** @var Response $response */
-                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
-                })->setName($self->getPageName()."_admin_history");
+
+                    return $this->view->render($response->withStatus(403), "forbidden.html.twig",
+                        $this->templateValues->getValues()
+                    );
+                }
+                )->setName($self->getPageName() . "_admin_history");
                 // GET: manage trusted users
-                $this->map(["GET","POST"],"/users", function($request, $response, $args) use ($self){
+                $this->map(["GET", "POST"], "/users", function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Request $request */
                     /** @var DatabaseLayer $dba */
                     $dba = $this->database;
                     $self->setDefaultBaseValues($this);
-                    if($this->account->getUser()->isAdmin()){
-                        if($request->getAttribute('csrf_status',true) === true && isset($_POST["action"])){
-                            switch($_POST["action"]){
+                    if ($this->account->getUser()->isAdmin()) {
+                        if ($request->getAttribute('csrf_status', true) === true && isset($_POST["action"])) {
+                            switch ($_POST["action"]) {
                                 case "remove":
-                                    if(isset($_POST["id"])){
-                                        if($dba->getBot()->removeTrustedUser($_POST["id"])){
-                                            $self->setNoticeValues($this,NoticeType::getSuccess(),"User removed");
+                                    if (isset($_POST["id"])) {
+                                        if ($dba->getBot()->removeTrustedUser($_POST["id"])) {
+                                            $self->setNoticeValues($this, NoticeType::getSuccess(), "User removed");
                                         } else {
-                                            $self->setNoticeValues($this,NoticeType::getError(),"User could not be removed");
+                                            $self->setNoticeValues($this, NoticeType::getError(),
+                                                "User could not be removed"
+                                            );
                                         }
                                     }
                                     break;
                                 case "add":
-                                    if(isset($_POST["name"])){
-                                        if($dba->getBot()->addTrustedUser($_POST["name"])){
-                                            $self->setNoticeValues($this,NoticeType::getSuccess(),"User added");
+                                    if (isset($_POST["name"])) {
+                                        if ($dba->getBot()->addTrustedUser($_POST["name"])) {
+                                            $self->setNoticeValues($this, NoticeType::getSuccess(), "User added");
                                         } else {
-                                            $self->setNoticeValues($this,NoticeType::getError(),"User could not be added");
+                                            $self->setNoticeValues($this, NoticeType::getError(),
+                                                "User could not be added"
+                                            );
                                         }
                                     }
                                     break;
@@ -304,39 +422,52 @@ class GitBotController extends BaseController
                         // Fetch list of all users
                         $this->templateValues->add("users", $dba->getBot()->fetchTrustedUsers());
                         // CSRF values
-                        $self->setCSRF($this,$request);
+                        $self->setCSRF($this, $request);
+
                         // Render
-                        return $this->view->render($response,"github_bot/users.html.twig",$this->templateValues->getValues());
+                        return $this->view->render($response, "github_bot/users.html.twig",
+                            $this->templateValues->getValues()
+                        );
                     }
+
                     /** @var Response $response */
-                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
-                })->setName($self->getPageName()."_admin_users");
+
+                    return $this->view->render($response->withStatus(403), "forbidden.html.twig",
+                        $this->templateValues->getValues()
+                    );
+                }
+                )->setName($self->getPageName() . "_admin_users");
                 // GET: manage local repositories
-                $this->map(["GET","POST"],"/local-repositories", function($request, $response, $args) use ($self){
+                $this->map(["GET", "POST"], "/local-repositories", function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Request $request */
                     /** @var DatabaseLayer $dba */
                     $dba = $this->database;
                     $self->setDefaultBaseValues($this);
-                    if($this->account->getUser()->isAdmin()){
+                    if ($this->account->getUser()->isAdmin()) {
                         // Process post actions
-                        if($request->getAttribute('csrf_status',true) === true && isset($_POST["action"])){
-                            switch($_POST["action"]){
+                        if ($request->getAttribute('csrf_status', true) === true && isset($_POST["action"])) {
+                            switch ($_POST["action"]) {
                                 case "remove":
-                                    if(isset($_POST["id"])){
-                                        if($self->removeRepository($_POST["id"])){
-                                            $self->setNoticeValues($this,NoticeType::getSuccess(),"Repository removed");
+                                    if (isset($_POST["id"])) {
+                                        if ($self->removeRepository($_POST["id"])) {
+                                            $self->setNoticeValues($this, NoticeType::getSuccess(), "Repository removed"
+                                            );
                                         } else {
-                                            $self->setNoticeValues($this,NoticeType::getError(),"Repository could not be removed");
+                                            $self->setNoticeValues($this, NoticeType::getError(),
+                                                "Repository could not be removed"
+                                            );
                                         }
                                     }
                                     break;
                                 case "add":
-                                    if(isset($_POST["name"]) && isset($_POST["folder"])){
-                                        if($self->addRepository($_POST["name"],$_POST["folder"])){
-                                            $self->setNoticeValues($this,NoticeType::getSuccess(),"Repository added");
+                                    if (isset($_POST["name"]) && isset($_POST["folder"])) {
+                                        if ($self->addRepository($_POST["name"], $_POST["folder"])) {
+                                            $self->setNoticeValues($this, NoticeType::getSuccess(), "Repository added");
                                         } else {
-                                            $self->setNoticeValues($this,NoticeType::getError(),"Repository could not be added");
+                                            $self->setNoticeValues($this, NoticeType::getError(),
+                                                "Repository could not be added"
+                                            );
                                         }
                                     }
                                     break;
@@ -348,21 +479,32 @@ class GitBotController extends BaseController
                         $this->templateValues->add("repositories", $dba->getBot()->fetchLocalRepositories());
                         $this->templateValues->add("worker_folder", $self->worker_folder);
                         // CSRF values
-                        $self->setCSRF($this,$request);
+                        $self->setCSRF($this, $request);
+
                         // Render
-                        return $this->view->render($response,"github_bot/repositories.html.twig",$this->templateValues->getValues());
+                        return $this->view->render($response, "github_bot/repositories.html.twig",
+                            $this->templateValues->getValues()
+                        );
                     }
+
                     /** @var Response $response */
-                    return $this->view->render($response->withStatus(403),"forbidden.html.twig",$this->templateValues->getValues());
-                })->setName($self->getPageName()."_admin_local_repos");
-            });
-        });
+
+                    return $this->view->render($response->withStatus(403), "forbidden.html.twig",
+                        $this->templateValues->getValues()
+                    );
+                }
+                )->setName($self->getPageName() . "_admin_local_repos");
+            }
+            );
+        }
+        );
     }
 
     /**
      * Processes the current VM queue in the database (selects one and calls the bot).
      */
-    private function processVMQueue(){
+    private function processVMQueue()
+    {
         $this->logger->info("Deleted id from VM queue; checking for more");
         // If there's still one or multiple items left in the queue, we'll need to give the python script a
         // kick so it processes the next item.
@@ -370,8 +512,9 @@ class GitBotController extends BaseController
         if ($remaining !== false) {
             $this->logger->info("Starting python script");
             // Call python script
-            $cmd = "python ".$this->python_script."> ".dirname($this->logger->getLogFilePath())."/python.txt 2>&1 &";
-            $this->logger->debug("Shell command: ".$cmd);
+            $cmd = "python " . $this->python_script . "> " . dirname($this->logger->getLogFilePath()
+                ) . "/python.txt 2>&1 &";
+            $this->logger->debug("Shell command: " . $cmd);
             exec($cmd);
             $this->logger->debug("Python script returned");
         }
@@ -380,14 +523,16 @@ class GitBotController extends BaseController
     /**
      * Processes the current local queue in the database (selects one and calls the worker script).
      */
-    private function processLocalQueue(){
+    private function processLocalQueue()
+    {
         $this->logger->info("Deleted id from local queue; checking for more");
         $token = $this->dba->getBot()->hasLocalTokensLeft();
         if ($token !== false) {
             $this->logger->info("Starting shell script");
             // Call worker shell script
-            $cmd = $this->worker_script." ".escapeshellarg($token)."> ".dirname($this->logger->getLogFilePath())."/shell.txt 2>&1 &";
-            $this->logger->debug("Shell command: ".$cmd);
+            $cmd = $this->worker_script . " " . escapeshellarg($token) . "> " . dirname($this->logger->getLogFilePath()
+                ) . "/shell.txt 2>&1 &";
+            $this->logger->debug("Shell command: " . $cmd);
             exec($cmd);
             $this->logger->debug("Shell script returned");
         }
@@ -397,28 +542,34 @@ class GitBotController extends BaseController
      * Handles an upload of a file for a test request.
      *
      * @param int $id The id of the test entry.
+     *
      * @return bool True if the file was saved, false otherwise.
      */
-    private function handle_upload($id){
+    private function handle_upload($id)
+    {
         // Check if a file was provided
-        if(array_key_exists("html",$_FILES)){
+        if (array_key_exists("html", $_FILES)) {
             // File data
             $data = $_FILES["html"];
             // Do a couple of basic checks. We expect html
-            if($this->endsWith($data["name"],".html") && $data["type"] === "text/html" && $data["error"] === UPLOAD_ERR_OK){
+            if ($this->endsWith($data["name"], ".html"
+                ) && $data["type"] === "text/html" && $data["error"] === UPLOAD_ERR_OK
+            ) {
                 // Create new folder for id if necessary
-                $dir = $this->reportFolder."/".$id."/";
-                if(!file_exists($dir)){
+                $dir = $this->reportFolder . "/" . $id . "/";
+                if (!file_exists($dir)) {
                     mkdir($dir);
                 }
                 // Copy file to the directory
-                move_uploaded_file($data["tmp_name"],$dir.basename($data["name"]));
+                move_uploaded_file($data["tmp_name"], $dir . basename($data["name"]));
+
                 return true;
             } else {
                 // Delete temp file
                 @unlink($data["tmp_name"]);
             }
         }
+
         return false;
     }
 
@@ -431,35 +582,35 @@ class GitBotController extends BaseController
     private function queue_github_comment($id, $status)
     {
         $message = "";
-        $progress = "[status](".BaseController::$BASE_URL."/test/".$id.")";
-        $reports = "[results](".BaseController::$BASE_URL."/reports/".$id.")";
-        switch($status){
+        $progress = "[status](" . BaseController::$BASE_URL . "/test/" . $id . ")";
+        $reports = "[results](" . BaseController::$BASE_URL . "/reports/" . $id . ")";
+        switch ($status) {
             case "finalized":
                 // Fetch index.html, parse it and convert to a MD table
-                $index = $this->reportFolder."/".$id."/index.html";
-                if(file_exists($index)){
+                $index = $this->reportFolder . "/" . $id . "/index.html";
+                if (file_exists($index)) {
                     $dom = new DOMDocument();
                     $dom->loadHTMLFile($index);
                     $tables = $dom->getElementsByTagName("table");
-                    if($tables->length > 0){
+                    if ($tables->length > 0) {
                         $table = $tables->item(0);
                         // Convert table to markdown
                         $md = "";
                         $errors = false;
                         $firstRow = true;
                         /** @var DOMNode $row */
-                        foreach($table->childNodes as $row){
-                            if($row->hasChildNodes()){
+                        foreach ($table->childNodes as $row) {
+                            if ($row->hasChildNodes()) {
                                 $md .= "|";
                                 /** @var DOMNode $cell */
-                                foreach($row->childNodes as $cell){
-                                    if($cell->nodeType === XML_ELEMENT_NODE) {
+                                foreach ($row->childNodes as $cell) {
+                                    if ($cell->nodeType === XML_ELEMENT_NODE) {
                                         $bold = "";
-                                        if($cell->hasAttributes()){
+                                        if ($cell->hasAttributes()) {
                                             $attr = $cell->attributes->getNamedItem("class");
-                                            if($attr !== null){
-                                                if($attr->nodeValue === "red"){
-                                                    $bold="**";
+                                            if ($attr !== null) {
+                                                if ($attr->nodeValue === "red") {
+                                                    $bold = "**";
                                                     $errors = true;
                                                 }
                                             }
@@ -468,31 +619,31 @@ class GitBotController extends BaseController
                                     }
                                 }
                                 $md .= "\r\n";
-                                if($firstRow){
-                                    $md .= str_replace("- -","---",preg_replace('/[^\|\s]/', '-', $md, -1));
+                                if ($firstRow) {
+                                    $md .= str_replace("- -", "---", preg_replace('/[^\|\s]/', '-', $md, -1));
                                     $firstRow = false;
                                 }
                             }
                         }
-                        if($errors){
-                            $md .= "It seems that not all tests were passed completely. This is an indication that the output of some files is not as expected (but might be according to you). Please check the ".$reports." page, and verify those files. If you have a question about this report, please contact ".$this->author.".";
+                        if ($errors) {
+                            $md .= "It seems that not all tests were passed completely. This is an indication that the output of some files is not as expected (but might be according to you). Please check the " . $reports . " page, and verify those files. If you have a question about this report, please contact " . $this->author . ".";
                         }
-                        $message = "The test suite finished running the test files. Below is a summary of the test results:\r\n\r\n".$md;
+                        $message = "The test suite finished running the test files. Below is a summary of the test results:\r\n\r\n" . $md;
                     } else {
-                        $message = "The index file contained invalid contents. Please check the ".$progress." page, and get in touch with ".$this->author." in case of an error!";
+                        $message = "The index file contained invalid contents. Please check the " . $progress . " page, and get in touch with " . $this->author . " in case of an error!";
                     }
                 } else {
-                    $message = "There is no index file available. Please check the ".$progress." page, and get in touch with ".$this->author." in case of an error!";
+                    $message = "There is no index file available. Please check the " . $progress . " page, and get in touch with " . $this->author . " in case of an error!";
                 }
                 break;
             case "error":
-                $message = "An error occurred while running the tests. Please check the ".$progress." page, and correct the error. If you have a question, please contact ".$this->author.".";
+                $message = "An error occurred while running the tests. Please check the " . $progress . " page, and correct the error. If you have a question, please contact " . $this->author . ".";
                 break;
             default:
                 break;
         }
-        if($message !== ""){
-            $this->dba->getBot()->storeGitHubMessage($id,$message);
+        if ($message !== "") {
+            $this->dba->getBot()->storeGitHubMessage($id, $message);
         }
     }
 
@@ -504,9 +655,11 @@ class GitBotController extends BaseController
      *
      * @return bool True if found, false otherwise.
      */
-    private function endsWith($haystack, $needle) {
+    private function endsWith($haystack, $needle)
+    {
         // search forward starting from end minus needle length characters
-        return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
+        return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp
+            ) !== false);
     }
 
     /**
@@ -514,14 +667,17 @@ class GitBotController extends BaseController
      *
      * @param string $gitHub The location of the repository on GitHub.
      * @param string $folder The local folder.
+     *
      * @return bool True if the git was initialized and added to the database, false otherwise.
      */
-    private function addRepository($gitHub, $folder){
-        $gitHub = "git://github.com/".$gitHub.".git";
-        $folder = $this->worker_folder.$folder;
-        if($this->callWorker($gitHub,$folder,"add")){
-            return $this->dba->getBot()->addLocalRepository($gitHub,$folder);
+    private function addRepository($gitHub, $folder)
+    {
+        $gitHub = "git://github.com/" . $gitHub . ".git";
+        $folder = $this->worker_folder . $folder;
+        if ($this->callWorker($gitHub, $folder, "add")) {
+            return $this->dba->getBot()->addLocalRepository($gitHub, $folder);
         }
+
         return false;
     }
 
@@ -529,15 +685,18 @@ class GitBotController extends BaseController
      * Removes a given repository from the database, and notifies the worker so it can be deleted.
      *
      * @param $id
+     *
      * @return bool True if the git was removed locally and from the database, false otherwise.
      */
-    private function removeRepository($id){
+    private function removeRepository($id)
+    {
         $data = $this->dba->getBot()->getLocalRepository($id);
-        if($data !== false){
-            if($this->callWorker($data["github"],$data["local"],"remove")){
+        if ($data !== false) {
+            if ($this->callWorker($data["github"], $data["local"], "remove")) {
                 return $this->dba->getBot()->removeLocalRepository($id);
             }
         }
+
         return false;
     }
 
@@ -547,19 +706,22 @@ class GitBotController extends BaseController
      * @param string $gitHub The GitHub git url.
      * @param string $folder The local worker folder to store.
      * @param string $action The action to perform for this repository.
+     *
      * @return bool True if the call succeeded, false otherwise.
      */
-    private function callWorker($gitHub, $folder, $action){
-        $data = "github=".urlencode($gitHub)."&folder=".urlencode($folder)."&action=".urlencode($action);
-        $hmac = hash_hmac("sha256",$data,$this->hmac);
+    private function callWorker($gitHub, $folder, $action)
+    {
+        $data = "github=" . urlencode($gitHub) . "&folder=" . urlencode($folder) . "&action=" . urlencode($action);
+        $hmac = hash_hmac("sha256", $data, $this->hmac);
         // Make POST request to the worker
         $ch = curl_init();
-        curl_setopt($ch,CURLOPT_URL,$this->worker_url);
+        curl_setopt($ch, CURLOPT_URL, $this->worker_url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // Need to return the result to the variable
-        curl_setopt($ch,CURLOPT_POST,4);
-        curl_setopt($ch,CURLOPT_POSTFIELDS,$data."&hmac=".urlencode($hmac));
+        curl_setopt($ch, CURLOPT_POST, 4);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data . "&hmac=" . urlencode($hmac));
         $result = curl_exec($ch);
         curl_close($ch);
+
         return $result === "OK";
     }
 }
