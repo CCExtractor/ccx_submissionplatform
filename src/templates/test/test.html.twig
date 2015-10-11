@@ -105,7 +105,31 @@
         <h4>Test results</h4>
         {% if test.results|length > 0 %}
             {# New method, from database #}
-            {# TODO: finish #}
+            <table class="striped sortable">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Test</th>
+                        <th>Pass?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for testResult in test.results %}
+                        <tr>
+                            <td>{{ testResult.category.name }}</td>
+                            <td>{{ testResult.id }}</td>
+                            <td>
+                                {% if testResult.didPass %}
+                                    <span class="test_pass">&#10004;</span>
+                                {% else %}
+                                    <span class="test_fail">&#10008;</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    {# TODO: finish #}
+                </tbody>
+            </table>
         {% else %}
             {# Old method, with index files #}
             <p><a class="button" target="_blank" href="/reports/{{ test.id }}">Go to the results</a></p>
