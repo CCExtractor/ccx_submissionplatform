@@ -125,21 +125,14 @@ class GitBotController extends BaseController
                                                     return $response->withStatus(403)->write("ERROR");
                                                 }
                                             case "finalisation":
-                                                if ($_POST["message"] !== "finished complete run") {
-                                                    if ($self->dba->getTests()->save_status($id, $_POST["status"],
-                                                        $_POST["message"]
-                                                    )
-                                                    ) {
-                                                        return $response->write("OK");
-                                                    } else {
-                                                        return $response->withStatus(403)->write("ERROR");
-                                                    }
-                                                } else {
-                                                    if ($self->dba->getTests()->save_status($id, $_POST["status"],
-                                                        $_POST["message"]
-                                                    )
-                                                    ) {
+                                                if ($self->dba->getTests()->save_status($id, $_POST["status"],
+                                                    $_POST["message"]
+                                                )
+                                                ) {
+                                                    if ($_POST["message"] === "finished complete run")
+                                                    {
                                                         $toRelaunch = $self->dba->getTests()->mark_finished($id);
+                                                        $self->queue_github_comment($id, $_POST["status"]);
                                                         switch ($toRelaunch) {
                                                             case 1:
                                                                 // VM queue
@@ -154,12 +147,10 @@ class GitBotController extends BaseController
                                                             default:
                                                                 return $response->withStatus(403)->write("ERROR");
                                                         }
-                                                        $self->queue_github_comment($id, $_POST["status"]);
-
-                                                        return $response->write("OK");
-                                                    } else {
-                                                        return $response->withStatus(403)->write("ERROR");
                                                     }
+                                                    return $response->write("OK");
+                                                } else {
+                                                    return $response->withStatus(403)->write("ERROR");
                                                 }
                                             case "error":
                                                 if ($self->dba->getTests()->save_status($id, $_POST["status"],
