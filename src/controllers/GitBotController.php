@@ -576,7 +576,7 @@ class GitBotController extends BaseController
         $progress = "[status](" . BaseController::$BASE_URL . "/test/" . $id . ")";
         $reports = "[results](" . BaseController::$BASE_URL . "/reports/" . $id . ")";
         switch ($status) {
-            case "finalized":
+            case "finalisation":
                 // Fetch index.html, parse it and convert to a MD table
                 $index = $this->reportFolder . "/" . $id . "/index.html";
                 if (file_exists($index)) {
