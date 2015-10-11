@@ -182,8 +182,8 @@ CREATE TABLE `regression_test` (
   `id`        INT(11)                                                         NOT NULL AUTO_INCREMENT,
   `sample_id` INT(11)                                                         NOT NULL,
   `command`   VARCHAR(200)                                                    NOT NULL,
-  `input`     ENUM('file', 'stdin', 'udp')                                    NOT NULL,
-  `output`    ENUM('file', 'null', 'tcp', 'cea708', 'multiprogram', 'stdout') NOT NULL,
+  `input`     ENUM('file', 'stdin', 'udp')                                    DEFAULT 'file' NOT NULL,
+  `output`    ENUM('file', 'null', 'tcp', 'cea708', 'multiprogram', 'stdout') DEFAULT 'file' NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `sample_id` (`sample_id`, `command`),
   CONSTRAINT `FK_regression_sample` FOREIGN KEY (`sample_id`) REFERENCES `sample` (`id`)
