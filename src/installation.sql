@@ -10,6 +10,22 @@ CREATE DATABASE /*!32312 IF NOT EXISTS */`ccx_sampleplatform` /*!40100 DEFAULT C
 
 USE `ccx_sampleplatform`;
 
+/*Table structure for table `additional_file` */
+
+DROP TABLE IF EXISTS `additional_file`;
+
+CREATE TABLE `additional_file` (
+  `id`            INT(11)      NOT NULL AUTO_INCREMENT,
+  `sample_id`     INT(11)      NOT NULL,
+  `original_name` VARCHAR(150) NOT NULL,
+  `extension`     VARCHAR(50)  NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_additional_sample` (`sample_id`),
+  CONSTRAINT `FK_additional_sample` FOREIGN KEY (`sample_id`) REFERENCES `sample` (`id`)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = latin1;
+
 /*Table structure for table `blacklist_extension` */
 
 DROP TABLE IF EXISTS `blacklist_extension`;
@@ -17,6 +33,19 @@ DROP TABLE IF EXISTS `blacklist_extension`;
 CREATE TABLE `blacklist_extension` (
   `extension` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`extension`)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = latin1;
+
+/*Table structure for table `category` */
+
+DROP TABLE IF EXISTS `category`;
+
+CREATE TABLE `category` (
+  `id`          INT(11)     NOT NULL AUTO_INCREMENT,
+  `name`        VARCHAR(60) NOT NULL,
+  `description` TEXT        NOT NULL,
+  PRIMARY KEY (`id`)
 )
   ENGINE = InnoDB
   DEFAULT CHARSET = latin1;
@@ -33,7 +62,21 @@ CREATE TABLE `ccextractor_versions` (
   PRIMARY KEY (`id`)
 )
   ENGINE = InnoDB
-  AUTO_INCREMENT = 9
+  DEFAULT CHARSET = latin1;
+
+/*Table structure for table `cmd_history` */
+
+DROP TABLE IF EXISTS `cmd_history`;
+
+CREATE TABLE `cmd_history` (
+  `id`        INT(11)      NOT NULL AUTO_INCREMENT,
+  `time`      DATETIME     NOT NULL,
+  `type`      VARCHAR(100) NOT NULL,
+  `requester` VARCHAR(100) NOT NULL,
+  `link`      TEXT         NOT NULL,
+  PRIMARY KEY (`id`)
+)
+  ENGINE = InnoDB
   DEFAULT CHARSET = latin1;
 
 /*Table structure for table `ftpd` */
@@ -59,6 +102,46 @@ CREATE TABLE `ftpd` (
   ENGINE = InnoDB
   DEFAULT CHARSET = latin1;
 
+/*Table structure for table `github_queue` */
+
+DROP TABLE IF EXISTS `github_queue`;
+
+CREATE TABLE `github_queue` (
+  `id`      INT(11) NOT NULL AUTO_INCREMENT,
+  `test_id` INT(11) NOT NULL,
+  `message` TEXT    NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_github_queue_test` (`test_id`),
+  CONSTRAINT `FK_github_queue_test` FOREIGN KEY (`test_id`) REFERENCES `test` (`id`)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = latin1;
+
+/*Table structure for table `local_queue` */
+
+DROP TABLE IF EXISTS `local_queue`;
+
+CREATE TABLE `local_queue` (
+  `test_id` INT(11) NOT NULL,
+  PRIMARY KEY (`test_id`),
+  CONSTRAINT `FK_local_queue_test` FOREIGN KEY (`test_id`) REFERENCES `test` (`id`)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = latin1;
+
+/*Table structure for table `local_repos` */
+
+DROP TABLE IF EXISTS `local_repos`;
+
+CREATE TABLE `local_repos` (
+  `id`     INT(11) NOT NULL AUTO_INCREMENT,
+  `github` TEXT    NOT NULL,
+  `local`  TEXT    NOT NULL,
+  PRIMARY KEY (`id`)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = latin1;
+
 /*Table structure for table `processing_messages` */
 
 DROP TABLE IF EXISTS `processing_messages`;
@@ -72,7 +155,6 @@ CREATE TABLE `processing_messages` (
   CONSTRAINT `FK_processing_messages_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 )
   ENGINE = InnoDB
-  AUTO_INCREMENT = 15
   DEFAULT CHARSET = latin1;
 
 /*Table structure for table `processing_queued` */
@@ -90,10 +172,9 @@ CREATE TABLE `processing_queued` (
   CONSTRAINT `FK_processing_queue_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 )
   ENGINE = InnoDB
-  AUTO_INCREMENT = 12
   DEFAULT CHARSET = latin1;
 
-/*Table structure for table `regression_tests` */
+/*Table structure for table `regression_test` */
 
 DROP TABLE IF EXISTS `regression_test`;
 
@@ -108,22 +189,39 @@ CREATE TABLE `regression_test` (
   CONSTRAINT `FK_regression_sample` FOREIGN KEY (`sample_id`) REFERENCES `sample` (`id`)
 )
   ENGINE = InnoDB
-  AUTO_INCREMENT = 17
   DEFAULT CHARSET = latin1;
+
+/*Table structure for table `regression_test_category` */
+
+DROP TABLE IF EXISTS `regression_test_category`;
+
+CREATE TABLE `regression_test_category` (
+  `category_id`        INT(11) NOT NULL,
+  `regression_test_id` INT(11) NOT NULL,
+  PRIMARY KEY (`category_id`, `regression_test_id`),
+  KEY `FK_regression_test` (`regression_test_id`),
+  CONSTRAINT `FK_regression_test_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`),
+  CONSTRAINT `FK_regression_test` FOREIGN KEY (`regression_test_id`) REFERENCES `regression_test` (`id`)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = latin1;
+
+/*Table structure for table `regression_test_out` */
 
 DROP TABLE IF EXISTS `regression_test_out`;
 
 CREATE TABLE `regression_test_out` (
+  `test_out_id`   INT(11)      NOT NULL AUTO_INCREMENT,
   `regression_id` INT(11)      NOT NULL,
   `correct`       VARCHAR(128) NOT NULL,
   `expected`      VARCHAR(64)  NOT NULL
   COMMENT 'anything that comes on top of the hash of the sample file',
-  `ignore`        BOOLEAN      NOT NULL DEFAULT FALSE,
-  PRIMARY KEY (`regression_id`, `correct`),
-  CONSTRAINT `FK_regression_test_regression_test_out` FOREIGN KEY (`regression_id`) REFERENCES `ccx_sampleplatform`.`regression_test` (`id`)
+  `ignore`        TINYINT(1)   NOT NULL DEFAULT '0',
+  PRIMARY KEY (`test_out_id`),
+  UNIQUE KEY `regression_id` (`regression_id`, `correct`),
+  CONSTRAINT `FK_regression_test_regression_test_out` FOREIGN KEY (`regression_id`) REFERENCES `regression_test` (`id`)
 )
   ENGINE = InnoDB
-  AUTO_INCREMENT = 17
   DEFAULT CHARSET = latin1;
 
 /*Table structure for table `sample` */
@@ -139,7 +237,82 @@ CREATE TABLE `sample` (
   UNIQUE KEY `hash` (`hash`)
 )
   ENGINE = InnoDB
-  AUTO_INCREMENT = 19
+  DEFAULT CHARSET = latin1;
+
+/*Table structure for table `test` */
+
+DROP TABLE IF EXISTS `test`;
+
+CREATE TABLE `test` (
+  `id`          INT(11)     NOT NULL AUTO_INCREMENT,
+  `token`       VARCHAR(32) NOT NULL,
+  `finished`    TINYINT(1)  NOT NULL DEFAULT '0',
+  `repository`  TEXT        NOT NULL,
+  `branch`      TEXT        NOT NULL,
+  `commit_hash` TEXT        NOT NULL,
+  `type`        TEXT        NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = latin1;
+
+/*Table structure for table `test_progress` */
+
+DROP TABLE IF EXISTS `test_progress`;
+
+CREATE TABLE `test_progress` (
+  `id`      INT(11)      NOT NULL AUTO_INCREMENT,
+  `test_id` INT(11)      NOT NULL,
+  `time`    DATETIME     NOT NULL,
+  `status`  VARCHAR(100) NOT NULL,
+  `message` TEXT,
+  PRIMARY KEY (`id`),
+  KEY `FK_test_progress_test` (`test_id`),
+  CONSTRAINT `FK_test_progress_test` FOREIGN KEY (`test_id`) REFERENCES `test` (`id`)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = latin1;
+
+/*Table structure for table `test_queue` */
+
+DROP TABLE IF EXISTS `test_queue`;
+
+CREATE TABLE `test_queue` (
+  `test_id` INT(11) NOT NULL,
+  PRIMARY KEY (`test_id`),
+  CONSTRAINT `FK_test_queue_test` FOREIGN KEY (`test_id`) REFERENCES `test` (`id`)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = latin1;
+
+/*Table structure for table `test_results` */
+
+DROP TABLE IF EXISTS `test_results`;
+
+CREATE TABLE `test_results` (
+  `test_id`       INT(11) NOT NULL,
+  `regression_id` INT(11) NOT NULL,
+  `hash`          VARCHAR(128) DEFAULT NULL
+  COMMENT 'should be empty if equal',
+  PRIMARY KEY (`test_id`, `regression_id`),
+  KEY `FK_test_results_regression_out` (`regression_id`),
+  CONSTRAINT `FK_test_results_regression_out` FOREIGN KEY (`regression_id`) REFERENCES `regression_test_out` (`test_out_id`),
+  CONSTRAINT `FK_test_results_test` FOREIGN KEY (`test_id`) REFERENCES `test` (`id`)
+)
+  ENGINE = InnoDB
+  DEFAULT CHARSET = latin1;
+
+/*Table structure for table `trusted_users` */
+
+DROP TABLE IF EXISTS `trusted_users`;
+
+CREATE TABLE `trusted_users` (
+  `id`   INT(11)      NOT NULL AUTO_INCREMENT,
+  `user` VARCHAR(100) NOT NULL,
+  PRIMARY KEY (`id`)
+)
+  ENGINE = InnoDB
   DEFAULT CHARSET = latin1;
 
 /*Table structure for table `upload` */
@@ -163,7 +336,6 @@ CREATE TABLE `upload` (
   CONSTRAINT `FK_upload_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 )
   ENGINE = InnoDB
-  AUTO_INCREMENT = 19
   DEFAULT CHARSET = latin1;
 
 /*Table structure for table `user` */
@@ -179,23 +351,6 @@ CREATE TABLE `user` (
   `admin`         TINYINT(1)   NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-)
-  ENGINE = InnoDB
-  AUTO_INCREMENT = 10
-  DEFAULT CHARSET = latin1;
-
-/*Table structure for table `additional_file` */
-
-DROP TABLE IF EXISTS `additional_file`;
-
-CREATE TABLE `additional_file` (
-  `id`            INT(11)      NOT NULL AUTO_INCREMENT,
-  `sample_id`     INT(11)      NOT NULL,
-  `original_name` VARCHAR(150) NOT NULL,
-  `extension`     VARCHAR(50)  NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FK_additional_sample` (`sample_id`),
-  CONSTRAINT `FK_additional_sample` FOREIGN KEY (`sample_id`) REFERENCES `sample` (`id`)
 )
   ENGINE = InnoDB
   DEFAULT CHARSET = latin1;
