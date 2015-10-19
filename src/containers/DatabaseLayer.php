@@ -11,6 +11,7 @@ use org\ccextractor\submissionplatform\objects\QueuedSample;
 use org\ccextractor\submissionplatform\objects\Sample;
 use org\ccextractor\submissionplatform\objects\SampleData;
 use org\ccextractor\submissionplatform\objects\User;
+use org\ccextractor\submissionplatform\objects\UserRole;
 use PDO;
 use PDOException;
 use Pimple\Container;
@@ -187,7 +188,7 @@ class DatabaseLayer implements ServiceProviderInterface
             $data = $stmt->fetch();
 
             return new User($data["id"], $data["name"], $data["email"], $data["password"], $data["github_linked"],
-                $data["admin"]
+                new UserRole($data["role"])
             );
         }
 
@@ -209,7 +210,7 @@ class DatabaseLayer implements ServiceProviderInterface
             $data = $stmt->fetch();
 
             return new User($data["id"], $data["name"], $data["email"], $data["password"], $data["github_linked"],
-                $data["admin"]
+                new UserRole($data["role"])
             );
         }
 
@@ -229,7 +230,7 @@ class DatabaseLayer implements ServiceProviderInterface
             $data = $stmt->fetch();
             while ($data !== false) {
                 $result[] = new User($data["id"], $data["name"], $data["email"], $data["password"],
-                    $data["github_linked"], $data["admin"]
+                    $data["github_linked"], new UserRole($data["role"])
                 );
                 $data = $stmt->fetch();
             }

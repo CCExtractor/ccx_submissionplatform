@@ -3,6 +3,7 @@ namespace org\ccextractor\submissionplatform\containers;
 
 use Exception;
 use org\ccextractor\submissionplatform\objects\User;
+use org\ccextractor\submissionplatform\objects\UserRole;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 use Slim\Views\Twig;
@@ -83,7 +84,7 @@ class AccountManager implements ServiceProviderInterface
     private function restore()
     {
         $d = $_SESSION["userManager"];
-        $this->user = new User($d["id"],$d["name"],$d["email"],$d["hash"],$d["github"],$d["admin"]);
+        $this->user = new User($d["id"],$d["name"],$d["email"],$d["hash"],$d["github"],new UserRole($d["role"]));
     }
 
     /**
@@ -96,7 +97,7 @@ class AccountManager implements ServiceProviderInterface
         $_SESSION["userManager"]["email"] = $this->user->getEmail();
         $_SESSION["userManager"]["hash"] = $this->user->getHash();
         $_SESSION["userManager"]["github"] = $this->user->isGithub();
-        $_SESSION["userManager"]["admin"] = $this->user->isAdmin();
+        $_SESSION["userManager"]["role"] = $this->user->getRole() + 0;
     }
 
     /**

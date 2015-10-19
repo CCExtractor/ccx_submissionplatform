@@ -34,9 +34,9 @@ class User
      */
     private $github;
     /**
-     * @var bool Is the user a admin?
+     * @var UserRole the role of the user.
      */
-    private $admin;
+    private $role;
 
     /**
      * User constructor.
@@ -48,14 +48,14 @@ class User
      * @param bool $github Is GitHub linked?
      * @param bool $admin Is the user a admin?
      */
-    public function __construct($id, $name, $email, $hash="", $github=false, $admin=false)
+    public function __construct($id, $name, $email, $hash="", $github=false, UserRole $role=null)
     {
         $this->id = intval($id);
         $this->name = $name;
         $this->email = $email;
         $this->hash = $hash;
         $this->github = ($github === "1" || $github === true);
-        $this->admin = ($admin === "1" || $admin === true);
+        $this->role = ($role === null)?new UserRole(UserRole::GUEST):$role;
     }
 
     /**
@@ -176,18 +176,26 @@ class User
      */
     public function isAdmin()
     {
-        return $this->admin;
+        return $this->role == UserRole::ADMIN;
     }
 
     /**
-     * @param boolean $admin
-     *
-     * @return bool
+     * @return UserRole
      */
-    public function setAdmin($admin)
+    public function getRole()
     {
-        $old = $this->admin;
-        $this->admin = $admin;
+        return $this->role;
+    }
+
+    /**
+     * @param UserRole $role
+     *
+     * @return UserRole
+     */
+    public function setRole(UserRole $role)
+    {
+        $old = $this->role;
+        $this->role = $role;
         return $old;
     }
 }
