@@ -1,13 +1,16 @@
 {% extends "base.html.twig" %}
 
 {% block content %}
-    <h3>Rights management for {{ user.name }}</h3>
-    <p>Below you can change the rights for this user.</p>
+    <h3>Role management for {{ user.name }}</h3>
     {% include "notice.html.twig" %}
     <form method="post" action="{{ path_for("My Account_rights",{ "id": user.id }) }}">
         {% include "csrf.html.twig" %}
-        <label for="is_admin">Is user admin?</label>
-        <input type="checkbox" name="admin" id="is_admin" {{ user.isAdmin ? 'checked="checked"':'' }} />
+        <label for="user_role">Select a new role</label>:
+        <select id="user_role" name="user_role">
+            <option value="-1" {{ user.role == -1 ? 'selected="selected"':'' }}>User - All persons who sign up</option>
+            <option value="0" {{ user.role == 0 ? 'selected="selected"':'' }}>Admin - Manage bot, users, samples, ...</option>
+            <option value="1" {{ user.role == 1 ? 'selected="selected"':'' }}>Contributor - Manage regression tests</option>
+        </select>
         <p>
             <input type="button" class="red small" value="Cancel and return" onclick="history.back();" />
             <input type="submit" class="green small" value="Save changes" />

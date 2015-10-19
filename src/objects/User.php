@@ -55,7 +55,7 @@ class User
         $this->email = $email;
         $this->hash = $hash;
         $this->github = ($github === "1" || $github === true);
-        $this->role = ($role === null)?new UserRole(UserRole::GUEST):$role;
+        $this->role = ($role === null)?new UserRole(UserRole::USER):$role;
     }
 
     /**
@@ -197,5 +197,14 @@ class User
         $old = $this->role;
         $this->role = $role;
         return $old;
+    }
+
+    /**
+     * @param $roleName
+     *
+     * @return bool
+     */
+    public function hasRole($roleName){
+        return $this->role->hasRole($roleName);
     }
 }
