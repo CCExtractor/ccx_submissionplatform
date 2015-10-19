@@ -8,6 +8,7 @@ use org\ccextractor\submissionplatform\objects\RegressionOutputType;
 use org\ccextractor\submissionplatform\objects\RegressionTest;
 use org\ccextractor\submissionplatform\objects\RegressionTestResult;
 use org\ccextractor\submissionplatform\objects\Sample;
+use org\ccextractor\submissionplatform\objects\SampleData;
 use org\ccextractor\submissionplatform\objects\Test;
 use org\ccextractor\submissionplatform\objects\TestEntry;
 use PDO;
@@ -253,16 +254,42 @@ ORDER BY r.`id`, o.`test_out_id` ASC;");
         $stmt = $this->pdo->query("SELECT * FROM test ORDER BY id DESC LIMIT " . $amount . ";");
         $result = [];
         if ($stmt !== false) {
-            $testEntry = $stmt->fetch();
-            while ($testEntry !== false) {
-                $result[] = new Test(
-                    $testEntry["id"], $testEntry["token"], ($testEntry["finished"] === "1"), $testEntry["repository"],
-                    $testEntry["branch"], $testEntry["commit_hash"], $testEntry["type"]
-                );
-                $testEntry = $stmt->fetch();
-            }
+            $result = $this->fetchLastTests($stmt);
         }
 
+        return $result;
+    }
+
+    /**
+     * @param Sample $sample
+     * @param int $amount
+     */
+    public function fetchLastXTestsForSample(Sample $sample, $amount = 10)
+    {
+        $id = $sample->getId();
+        $stmt = $this->pdo->prepare("
+SELECT t.*
+FROM test t JOIN test_results r ON t.`id` = r.`test_id` JOIN regression_test s ON r.`regression_id` = s.`id`
+WHERE s.`sample_id` = :id LIMIT ".$amount.";");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        $result = [];
+        if($stmt->execute() && $stmt !== false){
+            $result = $this->fetchLastTests($stmt);
+        }
+        return $result;
+    }
+
+    private function fetchLastTests(PDOStatement $stmt)
+    {
+        $result = [];
+        $testEntry = $stmt->fetch();
+        while ($testEntry !== false) {
+            $result[] = new Test(
+                $testEntry["id"], $testEntry["token"], ($testEntry["finished"] === "1"), $testEntry["repository"],
+                $testEntry["branch"], $testEntry["commit_hash"], $testEntry["type"]
+            );
+            $testEntry = $stmt->fetch();
+        }
         return $result;
     }
 }
