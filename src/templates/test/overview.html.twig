@@ -1,0 +1,22 @@
+{% if tests|length > 0 %}
+    <table class="tight striped">
+        <thead>
+        <tr>
+            <th>Repository</th>
+            <th>Type</th>
+            <th>Finished</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for test in tests %}
+            <tr>
+                <td><a href="{{ test.getRepositoryURL }}" target="_blank">{{ test.getCleanRepositoryName }}</a></td>
+                <td>{{ test.getTypeFormatted }}</td>
+                <td><a href="{{ path_for('Test results_id', {'id': test.id }) }}">{{ test.isFinished ? 'Yes' : 'No' }}</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>There are no tests available right now! Please check again later.</p>
+{% endif %}
