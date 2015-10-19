@@ -324,7 +324,7 @@ CREATE TABLE `upload` (
   `user_id`    INT(11)     NOT NULL,
   `sample_id`  INT(11)     NOT NULL,
   `ccx_used`   INT(11)     NOT NULL,
-  `platform`   VARCHAR(50) NOT NULL,
+  `platform`   ENUM('Windows','Linux','Mac') DEFAULT 'Windows' NOT NULL,
   `parameters` TEXT        NOT NULL,
   `notes`      TEXT        NOT NULL,
   PRIMARY KEY (`id`),
@@ -348,7 +348,7 @@ CREATE TABLE `user` (
   `email`         VARCHAR(255) NOT NULL,
   `password`      VARCHAR(500) NOT NULL,
   `github_linked` TINYINT(1)   NOT NULL DEFAULT '0',
-  `admin`         TINYINT(1)   NOT NULL DEFAULT '0',
+  `role` tinyint(4) NOT NULL DEFAULT '-1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 )
