@@ -271,11 +271,13 @@ class FileHandler implements ServiceProviderInterface
         $command = "mediainfo --Output=XML ".escapeshellarg($sample->getPathname())." > ".escapeshellarg($mediaInfo->getPathname());
         shell_exec($command);
         // Strip path info
-        $xml = new SimpleXMLElement($mediaInfo->getRealPath(),0,true);
-        foreach($xml->xpath("//track[@type='General']") as $node){
-            $node->Complete_name = str_replace($this->store_dir,"",(string)$node->Complete_name);
+        if($mediaInfo->isFile()) {
+            $xml = new SimpleXMLElement($mediaInfo->getRealPath(), 0, true);
+            foreach ($xml->xpath("//track[@type='General']") as $node) {
+                $node->Complete_name = str_replace($this->store_dir, "", (string)$node->Complete_name);
+            }
+            $xml->asXML($mediaInfo->getRealPath());
         }
-        $xml->asXML($mediaInfo->getRealPath());
     }
 
     /**
