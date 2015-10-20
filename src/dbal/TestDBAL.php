@@ -23,16 +23,6 @@ use PDOStatement;
 class TestDBAL extends AbstractDBAL
 {
     /**
-     * TestDBAL constructor.
-     *
-     * @param PDO $pdo The connection to the database system.
-     */
-    public function __construct(PDO $pdo)
-    {
-        parent::__construct($pdo);
-    }
-
-    /**
      * Checks if given token is valid.
      *
      * @param string $token The token to validate.
@@ -164,7 +154,7 @@ SELECT
 	r.`id` AS 'regression_id', r.`command` AS 'regression_command', r.`input` AS 'regression_input', r.`output` AS 'regression_output',
 	s.`id` AS 'sample_id', s.`hash` AS 'sample_hash', s.`extension` AS 'sample_extension',
 	c.id AS 'category_id', c.name AS 'category_name', c.description AS 'category_description',
-	t.`regression_id` AS 'rt_id', t.`hash` AS 'rt_result', o.`correct` AS 'rt_hash', o.`expected` AS 'rt_extra', o.`ignore` AS 'rt_ignore'
+	o.`test_out_id` AS 'rt_id', t.`hash` AS 'rt_result', o.`correct` AS 'rt_hash', o.`expected` AS 'rt_extra', o.`ignore` AS 'rt_ignore'
 FROM test_results t
 	JOIN regression_test_out o ON t.`regression_id` = o.`test_out_id`
 	JOIN regression_test r ON r.`id` = o.`regression_id`

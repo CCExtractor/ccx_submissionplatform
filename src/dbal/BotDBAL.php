@@ -12,17 +12,6 @@ use PDOException;
 class BotDBAL extends AbstractDBAL
 {
     /**
-     * BotDBAL constructor.
-     *
-     * @param PDO $pdo The connection to the database system.
-     */
-    public function __construct(PDO $pdo)
-    {
-        parent::__construct($pdo);
-    }
-
-
-    /**
      * Fetches all pending entries for the VM queue from the database.
      *
      * @return array A list with all the pending entries.
