@@ -37,6 +37,11 @@ class RegressionTest
     private $outputFiles;
 
     /**
+     * @var RegressionTest
+     */
+    private static $nullInstance = null;
+
+    /**
      * RegressionTest constructor.
      *
      * @param int $id
@@ -63,6 +68,21 @@ class RegressionTest
         $this->input = $input;
         $this->output = $output;
         $this->outputFiles = $outputFiles;
+    }
+
+    /**
+     * @return RegressionTest
+     */
+    public static function getNullInstance()
+    {
+        if (self::$nullInstance === null) {
+            self::$nullInstance = new RegressionTest(
+                -1, Sample::getNullInstance(), RegressionCategory::getNullInstance(), '',
+                RegressionInputType::createFromString(), RegressionOutputType::createFromString()
+            );
+        }
+
+        return self::$nullInstance;
     }
 
     /**

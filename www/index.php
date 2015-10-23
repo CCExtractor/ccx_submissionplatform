@@ -14,6 +14,7 @@ use org\ccextractor\submissionplatform\controllers\BaseController;
 use org\ccextractor\submissionplatform\controllers\GitBotController;
 use org\ccextractor\submissionplatform\controllers\HomeController;
 use org\ccextractor\submissionplatform\controllers\IController;
+use org\ccextractor\submissionplatform\controllers\RegressionController;
 use org\ccextractor\submissionplatform\controllers\SampleInfoController;
 use org\ccextractor\submissionplatform\controllers\TestController;
 use org\ccextractor\submissionplatform\controllers\UploadController;
@@ -114,7 +115,7 @@ $menuPages = [
     new SampleInfoController(),
     new UploadController(),
     new TestController(),
-    // new TestSuiteController(),
+    new RegressionController(),
     new AccountController()
 ];
 

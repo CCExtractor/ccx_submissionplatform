@@ -3,6 +3,7 @@ namespace org\ccextractor\submissionplatform\containers;
 
 use DateTime;
 use org\ccextractor\submissionplatform\dbal\BotDBAL;
+use org\ccextractor\submissionplatform\dbal\RegressionDBAL;
 use org\ccextractor\submissionplatform\dbal\TestDBAL;
 use org\ccextractor\submissionplatform\objects\AdditionalFile;
 use org\ccextractor\submissionplatform\objects\CCExtractorVersion;
@@ -44,6 +45,10 @@ class DatabaseLayer implements ServiceProviderInterface
      * @var TestDBAL holds all logic related to tests.
      */
     private $tests;
+    /**
+     * @var RegressionDBAL holds all logic related to regression tests.
+     */
+    private $regression;
 
     /**
      * Creates a new instance of the DataBaseLayer, which takes care of the connection to the database.
@@ -65,6 +70,7 @@ class DatabaseLayer implements ServiceProviderInterface
         $this->pdo = new PDO($dsn, $username, $password, $options);
         $this->bot = new BotDBAL($this->pdo);
         $this->tests = new TestDBAL($this->pdo);
+        $this->regression = new RegressionDBAL($this->pdo);
     }
 
     /**
@@ -94,6 +100,14 @@ class DatabaseLayer implements ServiceProviderInterface
     public function getTests()
     {
         return $this->tests;
+    }
+
+    /**
+     * @return RegressionDBAL
+     */
+    public function getRegression()
+    {
+        return $this->regression;
     }
 
     /**

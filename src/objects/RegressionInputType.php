@@ -24,6 +24,12 @@ class RegressionInputType extends SplEnum
     private static $stdin = null;
     private static $udp = null;
 
+    private static $names = [
+        self::FILE => "file",
+        self::STDIN => "stdin",
+        self::UDP => "udp"
+    ];
+
     /**
      * Gets the File instance of this type.
      *
@@ -66,7 +72,7 @@ class RegressionInputType extends SplEnum
         return self::$udp;
     }
 
-    public static function createFromString($dbFormat)
+    public static function createFromString($dbFormat="")
     {
         switch($dbFormat){
             case "file":
@@ -78,5 +84,10 @@ class RegressionInputType extends SplEnum
             default:
                 return self::getFile();
         }
+    }
+
+    public function toString()
+    {
+        return self::$names[(int)$this];
     }
 }

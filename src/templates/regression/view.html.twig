@@ -1,0 +1,51 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Regression test {{ test.id }}</h3>
+    <table>
+        <tr>
+            <td>Category</td>
+            <td>{{ test.category.name }}</td>
+        </tr>
+        <tr>
+            <td>Used sample</td>
+            <td><a href="{{ path_for("Sample Info_hash",{"hash": test.sample.hash }) }}">{{ test.sample.getSampleFileName }}</a></td>
+        </tr>
+        <tr>
+            <td>Command</td>
+            <td>{{ test.command }}</td>
+        </tr>
+        <tr>
+            <td>Input type</td>
+            <td>{{ test.input.toString }}</td>
+        </tr>
+        <tr>
+            <td>Output type</td>
+            <td>{{ test.output.toString }}</td>
+        </tr>
+    </table>
+    <h4>Result file(s)</h4>
+    <div class="col_12">
+        {# TODO: check formatting design #}
+        {% for file in test.outputFiles %}
+            <div class="col_6">
+                <p>
+                    Correct hash: {{ file.correctHash }}<br>
+                    Expected file: {{ test.sample.hash }}{{ file.expectedExtra }}<br>
+                    Ignore result? {{ (file.ignoreResult == 0)?"False":"True" }}<br>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block sidebar %}
+        <h5>Regression test</h5>
+        <ul class="icons">
+            <li><i class="fa fa-li fa-arrow-circle-left"></i> <a href="{{ path_for('Regression tests') }}">Return to overview</a></li>
+            {% if isLoggedIn and loggedInUser.hasRole("Contributor") %}
+                <li><i class="fa fa-li fa-wrench"></i> <a href="{{ path_for('Regression tests_id_results', {'id': test.id}) }}">Update results</a></li>
+                <li><i class="fa fa-li fa-edit"></i> <a href="{{ path_for('Regression tests_id_edit', {'id': test.id}) }}">Edit</a></li>
+                <li><i class="fa fa-li fa-remove"></i> <a href="{{ path_for('Regression tests_id_delete', {'id': test.id}) }}">Delete</a></li>
+            {% endif %}
+        </ul>
+{% endblock %}

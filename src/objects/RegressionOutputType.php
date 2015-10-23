@@ -28,6 +28,15 @@ class RegressionOutputType extends SplEnum
     private static $multiprogram = null;
     private static $cea708 = null;
 
+    private static $names = [
+        self::FILE => "file",
+        self::STDOUT => "stdout",
+        self::TCP => "tcp",
+        self::NULL => "null",
+        self::MULTIPROGRAM => "multi-program",
+        self::CEA708 => "CEA-708"
+    ];
+
     /**
      * Gets the File instance of this type.
      *
@@ -112,7 +121,7 @@ class RegressionOutputType extends SplEnum
         return self::$cea708;
     }
 
-    public static function createFromString($dbFormat)
+    public static function createFromString($dbFormat="")
     {
         switch($dbFormat){
             case "file":
@@ -130,5 +139,10 @@ class RegressionOutputType extends SplEnum
             default:
                 return self::getFile();
         }
+    }
+
+    public function toString()
+    {
+        return self::$names[(int)$this];
     }
 }
