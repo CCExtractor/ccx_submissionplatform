@@ -32,6 +32,10 @@ blockquote {
     font-family: arial, verdana, sans-serif;
 }
 
+.fa-li {
+    position: static;
+}
+
 /*---------------------------------
 	LAYOUT
 -----------------------------------*/
