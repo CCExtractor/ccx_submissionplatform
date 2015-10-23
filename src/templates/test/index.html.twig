@@ -5,3 +5,10 @@
     <p>Below you can see the overview of the last 10 test runs that were performed:</p>
     {% include "test/overview.html.twig" %}
 {% endblock %}
+
+{% block sidebar %}
+    <h5>Regression tests</h5>
+    <ul class="icons">
+        <li><i class="fa fa-li fa-bug"></i> <a href="{{ path_for("Regression tests") }}">View regression tests</a></li>
+    </ul>
+{% endblock %}
