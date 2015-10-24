@@ -186,5 +186,6 @@ It will be reviewed as soon as possible.
 ## Security
 
 Security is taken seriously, but even though many precautions have been taken, bugs always can occur. If you discover 
-any security related issues, please send an email to ccextractor@canihavesome.coffee instead of using the issue tracker,
- in order to prevent abuse while it's being patched.
+any security related issues, please send an email to ccextractor@canihavesome.coffee (GPG key 
+[0xF8643F5B](http://pgp.mit.edu/pks/lookup?op=vindex&search=0x3AFDC9BFF8643F5B), fingerprint 53FF DE55 6DFC 27C3 C688 
+1A49 3AFD C9BF F864 3F5B) instead of using the issue tracker, in order to prevent abuse while it's being patched.
