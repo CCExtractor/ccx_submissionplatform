@@ -58,7 +58,7 @@ class TestController extends BaseController
                     return $this->view->render($response, "test/test.html.twig", $this->templateValues->getValues());
                 }
 
-                return $this->view->render($response->withStatus(404), "test/notfound.html.twig",
+                return $this->view->render($response->withStatus(404), "test/not-found.html.twig",
                     $this->templateValues->getValues()
                 );
             }
@@ -82,7 +82,7 @@ class TestController extends BaseController
                     }
                 }
 
-                return $this->view->render($response->withStatus(404), "test/notfound.html.twig",
+                return $this->view->render($response->withStatus(404), "test/not-found.html.twig",
                     $this->templateValues->getValues()
                 );
             }
@@ -102,7 +102,7 @@ class TestController extends BaseController
                     return $this->view->render($response, "test/test.html.twig", $this->templateValues->getValues());
                 }
 
-                return $this->view->render($response->withStatus(404), "test/notfound.html.twig",
+                return $this->view->render($response->withStatus(404), "test/not-found.html.twig",
                     $this->templateValues->getValues()
                 );
             }
@@ -124,7 +124,7 @@ class TestController extends BaseController
                     return $this->view->render($response, "test/sample.html.twig", $this->templateValues->getValues());
                 }
 
-                return $this->view->render($response->withStatus(404), "test/notfound.html.twig",
+                return $this->view->render($response->withStatus(404), "test/not-found.html.twig",
                     $this->templateValues->getValues()
                 );
             }
