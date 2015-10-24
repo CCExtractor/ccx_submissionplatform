@@ -1,14 +1,18 @@
 # CCExtractor Sample Submission Platform
 
-This repository contains the code for a Sample Submission Platform, which allows for a unified place to report errors, submit samples, view existing samples and more. It was developed during GSoC 2015.
+This repository contains the code for a Sample Submission Platform, which allows for a unified place to report errors, 
+submit samples, view existing samples and more. It was developed during GSoC 2015.
 
 You can find a running version here: [CCExtractor Submission Platform](http://ccextractor.canihavesome.coffee)
 
 ## Concept
 
-While CCExtractor is an awesome tool and it works flawlessly most of the time, bugs occur occasionally (as with all software that exists). These are usually reported through a variety of channels (private email, mailing list, GitHub, ...).
+While CCExtractor is an awesome tool and it works flawlessly most of the time, bugs occur occasionally (as with all 
+software that exists). These are usually reported through a variety of channels (private email, mailing list, GitHub, 
+...).
 
-The aim of this project is to build a platform, which is accessible to everyone (after sign up), that provides a single place to upload, view samples and associated test results.
+The aim of this project is to build a platform, which is accessible to everyone (after sign up), that provides a single 
+place to upload, view samples and associated test results.
 
 It will be closely integrated with GitHub and the [GitHub bot](https://github.com/canihavesomecoffee/ccx_gitbot).
 
@@ -24,7 +28,8 @@ It will be closely integrated with GitHub and the [GitHub bot](https://github.co
 
 ### Database
 
-Create a new database with the name of your wish, and then use the statements from the `installation.sql` file to complete the database, or run the `installation.sql` immediately for a database with preset name.
+Create a new database with the name of your wish, and then use the statements from the `installation.sql` file to 
+complete the database, or run the `installation.sql` immediately for a database with preset name.
 
 ### Web platform
 
@@ -44,7 +49,8 @@ If you don't have the SplTypes pear package installed yet, you can do this as fo
 
 ### Nginx configuration for X-Accel-Redirect
 
-To serve files without any PHP overhead, the X-Accel-Redirect feature of Nginx is used. To enable it, a special section (as seen below) needs to be added to the nginx configuration file:
+To serve files without any PHP overhead, the X-Accel-Redirect feature of Nginx is used. To enable it, a special section 
+(as seen below) needs to be added to the nginx configuration file:
 
 ```
 location /protected/ {
@@ -55,11 +61,13 @@ location /protected/ {
 
 More info on this directive is available at the [Nginx wiki](http://wiki.nginx.org/NginxXSendfile).
 
-Other web servers can be configured too (see this excellent [SO](http://stackoverflow.com/a/3731639) answer), but will require a small modification in the relevant section of the SampleInfoController that handles the download.
+Other web servers can be configured too (see this excellent [SO](http://stackoverflow.com/a/3731639) answer), but will 
+require a small modification in the relevant section of the SampleInfoController that handles the download.
 
 ### File upload size for HTTP
 
-There are a couple of places where you need to take care to set a big enough size (depending on your wishes) when you want to set/increase the upload limit for HTTP uploads.
+There are a couple of places where you need to take care to set a big enough size (depending on your wishes) when you 
+want to set/increase the upload limit for HTTP uploads.
 
 #### Nginx
 
@@ -83,9 +91,11 @@ Set these to an appropriate value.
 
 ### Pure-FTPD configuration
 
-To allow upload of big files, FTP can be used. Since the goal is to keep the uploaded files of the users anonymous for other users, every user should get it's own FTP account.
+To allow upload of big files, FTP can be used. Since the goal is to keep the uploaded files of the users anonymous for 
+other users, every user should get it's own FTP account.
 
-Since system accounts pose a possible security threat, virtual accounts using MySQL can be used instead (and it's easier to manage too).
+Since system accounts pose a possible security threat, virtual accounts using MySQL can be used instead (and it's easier
+ to manage too).
 
 #### Pure-FTPD installation
 
@@ -119,7 +129,9 @@ MYSQLUser       user
 MYSQLPassword   ftpdpass
 # The database name configured in the DATABASE_SOURCE_NAME dsn string in the configuration
 MYSQLDatabase   pureftpd
-# For now we use plaintext. While this is terribly insecure in case of a database leakage, it's not really an issue, given the fact that the passwords for the FTP accounts will be randomly generated and hence do not contain sensitive user info (we need to show the password on the site after all).
+# For now we use plaintext. While this is terribly insecure in case of a database leakage, it's not really an issue, 
+# given the fact that the passwords for the FTP accounts will be randomly generated and hence do not contain sensitive 
+# user info (we need to show the password on the site after all).
 MYSQLCrypt      plaintext
 # Queries
 MYSQLGetPW      SELECT Password FROM ftpd WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
@@ -156,18 +168,23 @@ Note: if you don't see a line saying:
 
 `Restarting ftp upload handler: pure-uploadscript.`
 
-You need to start the pure-uploadscript. This can be done as follows (where 1000 is replaced with the gid & uid specified above):
+You need to start the pure-uploadscript. This can be done as follows (where 1000 is replaced with the gid & uid 
+specified above):
 
 `sudo pure-uploadscript -u 1000 -g 1000 -B -r /home/path/to/src/cron/upload.sh`
 
-You can also verify this by running `ps aux | grep pure-uploadscript`. If it still doesn't work, rebooting the server might help.
+You can also verify this by running `ps aux | grep pure-uploadscript`. If it still doesn't work, rebooting the server 
+might help.
 
 ## Contributing
 
-If you want to help this project forward, or have a solution for some of the issues or bugs, don't hesitate to help! You can fork the project, create a branch for the issue/problem/... and afterwards create a pull request for it.
+If you want to help this project forward, or have a solution for some of the issues or bugs, don't hesitate to help! 
+You can fork the project, create a branch for the issue/problem/... and afterwards create a pull request for it.
 
 It will be reviewed as soon as possible.
 
 ## Security
 
-If you discover any security related issues, please email ccextractor@canihavesome.coffee instead of using the issue tracker.
+Security is taken seriously, but even though many precautions have been taken, bugs always can occur. If you discover 
+any security related issues, please send an email to ccextractor@canihavesome.coffee instead of using the issue tracker,
+ in order to prevent abuse while it's being patched.
