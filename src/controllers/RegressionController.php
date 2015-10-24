@@ -62,13 +62,13 @@ class RegressionController extends BaseController
                     if ($test->getId() > 0) {
                         $this->templateValues->add("test", $test);
 
-                        return $this->view->render($response, "regression/view.html.twig",
+                        return $this->view->render($response, "regression/sample-view.html.twig",
                             $this->templateValues->getValues()
                         );
                     }
 
                     // Return not found
-                    return $this->view->render($response->withStatus(404), "regression/notfound.html.twig",
+                    return $this->view->render($response->withStatus(404), "regression/not-found.html.twig",
                         $this->templateValues->getValues()
                     );
                 }
@@ -77,13 +77,30 @@ class RegressionController extends BaseController
                 $this->map(['GET', 'POST'], '/delete', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->hasRole("Contributor")) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig",
                             $this->templateValues->getValues()
                         );
                     }
-                    // TODO: finish
+                    // Get specific regression test
+                    /** @var RegressionTest $test */
+                    $test = $dba->getRegression()->getRegressionTest($args["id"]);
+                    if ($test->getId() > 0) {
+                        $this->templateValues->add("test", $test);
+
+                        // TODO: finish
+                        return $this->view->render($response, "regression/sample-view.html.twig",
+                            $this->templateValues->getValues()
+                        );
+                    }
+
+                    // Return not found
+                    return $this->view->render($response->withStatus(404), "regression/not-found.html.twig",
+                        $this->templateValues->getValues()
+                    );
                 }
                 )->setName($self->getPageName() . "_id_delete");
                 // GET/POST: edit regression test
@@ -188,7 +205,7 @@ class RegressionController extends BaseController
                     }
 
                     // Return not found
-                    return $this->view->render($response->withStatus(404), "regression/category-notfound.html.twig",
+                    return $this->view->render($response->withStatus(404), "regression/category-not-found.html.twig",
                         $this->templateValues->getValues()
                     );
                 }
@@ -244,7 +261,7 @@ class RegressionController extends BaseController
                     }
 
                     // Return not found
-                    return $this->view->render($response->withStatus(404), "regression/category-notfound.html.twig",
+                    return $this->view->render($response->withStatus(404), "regression/category-not-found.html.twig",
                         $this->templateValues->getValues()
                     );
                 }

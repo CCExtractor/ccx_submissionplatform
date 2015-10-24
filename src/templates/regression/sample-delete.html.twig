@@ -1,0 +1,14 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Regression test - Delete test</h3>
+    {% include "notice.html.twig" %}
+    <form method="post" action="{{ path_for("Regression tests_id_delete", { 'id': test.id}) }}">
+        <p>Are you sure you want to delete the category "{{ category.name }}"?</p>
+        <span class="col_12">
+            <input type="button" value="Cancel" onclick="history.back();" class="red" />
+            <input type="submit" class="green" name="confirm" value="Confirm delete" />
+        </span>
+        {% include "csrf.html.twig" %}
+    </form>
+{% endblock %}
