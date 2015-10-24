@@ -17,6 +17,14 @@
             cat_desc.find("span[data-category!='"+id+"']").each(function(idx, elm){
                 elm.setAttribute("class","hide");
             });
+            {% if isLoggedIn and loggedInUser.hasRole("Admin") %}
+            var cat_edit = $("#category_edit");
+            var cat_delete = $("#category_delete");
+            var cat_parts = cat_edit.attr("href").split("/");
+            cat_edit.attr("href",cat_parts[cat_parts.length-3]+"/"+id+"/"+cat_parts[cat_parts.length-1]);
+            cat_parts = cat_delete.attr("href").split("/");
+            cat_delete.attr("href",cat_parts[cat_parts.length-3]+"/"+id+"/"+cat_parts[cat_parts.length-1]);
+            {% endif %}
         }
     </script>
 {% endblock %}
@@ -24,15 +32,19 @@
 {% block content %}
     <h3>Regression tests</h3>
     {% if tests is defined and tests|length > 0 %}
+        {% set firstCategory = categories[0].id %}
         <p>
             <label for="category">Select a category</label>:
             <select id="category" onchange="switchCategory();">
                 {% for category in categories %}
                     <option value="{{ category.id }}">{{ category.name }}</option>
                 {% endfor %}
-            </select>
+            </select>&nbsp;
+            {% if isLoggedIn and loggedInUser.hasRole("Admin") %}
+                <a href="{{ path_for("Regression tests_category_edit", {'id': firstCategory}) }}" title="Edit category" id="category_edit"><i class="fa fa-edit"></i></a>&nbsp;
+                <a href="{{ path_for("Regression tests_category_delete", {'id': firstCategory}) }}" title="Delete category" id="category_delete"><i class="fa fa-remove"></i></a>&nbsp;
+            {% endif %}
         </p>
-        {% set firstCategory = categories[0].id %}
         <p>Category description:
             <span id="category-descriptions">
                 {% for category in categories %}
@@ -75,6 +87,9 @@
         <h5>Regression tests</h5>
         <ul class="icons">
             <li><i class="fa fa-li fa-plus-circle"></i> <a href="{{ path_for("Regression tests_new") }}">Add new regression test</a></li>
+            {% if loggedInUser.hasRole("Admin") %}
+                <li><i class="fa fa-li fa-object-group"></i> <a href="{{ path_for("Regression tests_category_add") }}">Add regression category</a></li>
+            {% endif %}
         </ul>
     {% endif %}
 {% endblock %}

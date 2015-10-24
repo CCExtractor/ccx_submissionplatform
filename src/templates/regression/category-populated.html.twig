@@ -1,0 +1,7 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Regression test category has associated tests</h3>
+    <p>The category "{{ category.name }}" still has {{ count }} tests associated. These need to be removed from the category before the category can be deleted.</p>
+    <p><a href="{{ path_for("Regression tests") }}" class="button">Return to overview</a></p>
+{% endblock %}
