@@ -120,4 +120,94 @@ ORDER BY r.`id`, o.`test_out_id` ASC;");
         }
         return $result;
     }
+
+    public function addCategory($name, $description)
+    {
+        $stmt = $this->pdo->prepare("INSERT INTO category VALUES (NULL, :name, :description);");
+        $stmt->bindParam(":name",$name, PDO::PARAM_STR);
+        $stmt->bindParam(":description", $description, PDO::PARAM_STR);
+
+        return ($stmt->execute() && $stmt->rowCount() === 1);
+    }
+
+    public function getCategory($id)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM category WHERE id = :id LIMIT 1;");
+        $stmt->bindParam(":id",$id, PDO::PARAM_INT);
+        $result = RegressionCategory::getNullInstance();
+        if($stmt->execute() && $stmt->rowCount() == 1){
+            $data = $stmt->fetch();
+            $result = new RegressionCategory($data["id"],$data["name"],$data["description"]);
+        }
+        return $result;
+    }
+
+    public function getRegressionTestsForCategory(RegressionCategory $category)
+    {
+        $id = $category->getId();
+        $stmt = $this->pdo->prepare("
+SELECT
+	r.`id` AS 'regression_id', r.`command` AS 'regression_command', r.`input` AS 'regression_input', r.`output` AS 'regression_output',
+	s.`id` AS 'sample_id', s.`hash` AS 'sample_hash', s.`extension` AS 'sample_extension',
+	o.`test_out_id` AS 'rt_id', o.`correct` AS 'rt_hash', o.`expected` AS 'rt_extra', o.`ignore` AS 'rt_ignore'
+FROM regression_test r
+	JOIN regression_test_out o ON r.`id` = o.`regression_id`
+	JOIN sample s ON s.`id` = r.`sample_id`
+	LEFT JOIN regression_test_category z ON z.regression_test_id = r.`id`
+	LEFT JOIN category c ON c.id = z.category_id
+WHERE c.id = :id
+ORDER BY r.`id`, o.`test_out_id` ASC;");
+        $stmt->bindParam(":id",$id, PDO::PARAM_INT);
+        $results = [];
+        if ($stmt->execute() && $stmt->rowCount() > 0) {
+            $data = $stmt->fetch();
+            $id = -1;
+            /** @var RegressionTest $test */
+            $test = null;
+            while ($data !== false) {
+                if($id !== $data["regression_id"]){
+                    if($test !== null){
+                        $results[] = $test;
+                    }
+                    $test = new RegressionTest(
+                        $data['regression_id'],
+                        new Sample($data['sample_id'],$data['sample_hash'],$data['sample_extension']),
+                        $category,
+                        $data['regression_command'],
+                        RegressionInputType::createFromString($data['regression_input']),
+                        RegressionOutputType::createFromString($data['regression_output'])
+                    );
+                    $id = $test->getId();
+                }
+                $test->addOutputFile(new RegressionTestResult(
+                    $data['rt_id'],'',$data['rt_extra'],$data['rt_ignore'],''));
+                $data = $stmt->fetch();
+            }
+            if($test !== null){
+                $results[] = $test;
+            }
+        }
+        return $results;
+    }
+
+    public function deleteCategory(RegressionCategory $category)
+    {
+        $id = $category->getId();
+        $stmt = $this->pdo->prepare("DELETE FROM category WHERE id = :id LIMIT 1");
+        $stmt->bindParam(":id",$id, PDO::PARAM_INT);
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
+
+    public function updateCategory(RegressionCategory $category)
+    {
+        $id = $category->getId();
+        $name = $category->getName();
+        $description = $category->getDescription();
+        $stmt = $this->pdo->prepare("UPDATE category SET name = :name, description = :description WHERE id = :id");
+        $stmt->bindParam(":id",$id, PDO::PARAM_INT);
+        $stmt->bindParam(":name", $name, PDO::PARAM_STR);
+        $stmt->bindParam(":description", $description, PDO::PARAM_STR);
+
+        return $stmt->execute() && $stmt->rowCount() === 1;
+    }
 }
