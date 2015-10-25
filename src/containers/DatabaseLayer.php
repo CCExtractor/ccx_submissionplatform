@@ -34,7 +34,8 @@ class DatabaseLayer implements ServiceProviderInterface
      */
     private $defaultOptions = [
         PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8",
-        PDO::ATTR_PERSISTENT => true
+        PDO::ATTR_PERSISTENT => true,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ];
 
     /**
@@ -174,7 +175,7 @@ class DatabaseLayer implements ServiceProviderInterface
      */
     public function getAllSamples()
     {
-        $p = $this->pdo->prepare("SELECT * FROM sample ORDER BY extension ASC");
+        $p = $this->pdo->prepare("SELECT * FROM sample ORDER BY id ASC");
         $result = [];
         if ($p->execute()) {
             $data = $p->fetch();
