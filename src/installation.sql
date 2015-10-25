@@ -179,10 +179,10 @@ CREATE TABLE `processing_queued` (
 DROP TABLE IF EXISTS `regression_test`;
 
 CREATE TABLE `regression_test` (
-  `id`        INT(11)                                                         NOT NULL AUTO_INCREMENT,
-  `sample_id` INT(11)                                                         NOT NULL,
-  `command`   VARCHAR(200)                                                    NOT NULL,
-  `input`     ENUM('file', 'stdin', 'udp')                                    DEFAULT 'file' NOT NULL,
+  `id`        INT(11)                                                                        NOT NULL AUTO_INCREMENT,
+  `sample_id` INT(11)                                                                        NOT NULL,
+  `command`   VARCHAR(200)                                                                   NOT NULL,
+  `input`     ENUM('file', 'stdin', 'udp') DEFAULT 'file'                                    NOT NULL,
   `output`    ENUM('file', 'null', 'tcp', 'cea708', 'multiprogram', 'stdout') DEFAULT 'file' NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `sample_id` (`sample_id`, `command`),
@@ -211,17 +211,20 @@ CREATE TABLE `regression_test_category` (
 DROP TABLE IF EXISTS `regression_test_out`;
 
 CREATE TABLE `regression_test_out` (
-  `test_out_id`   INT(11)      NOT NULL AUTO_INCREMENT,
-  `regression_id` INT(11)      NOT NULL,
-  `correct`       VARCHAR(128) NOT NULL,
-  `expected`      VARCHAR(64)  NOT NULL
-  COMMENT 'anything that comes on top of the hash of the sample file',
-  `ignore`        TINYINT(1)   NOT NULL DEFAULT '0',
+  `test_out_id`       INT(11)      NOT NULL AUTO_INCREMENT,
+  `regression_id`     INT(11)      NOT NULL,
+  `correct`           VARCHAR(128) NOT NULL,
+  `correct_extension` VARCHAR(64)  NOT NULL
+  COMMENT 'extension',
+  `expected_filename` VARCHAR(128) NOT NULL
+  COMMENT 'anything that comes on top of the hash of the sample file, except the extension',
+  `ignore`            TINYINT(1)   NOT NULL DEFAULT '0',
   PRIMARY KEY (`test_out_id`),
   UNIQUE KEY `regression_id` (`regression_id`, `correct`),
   CONSTRAINT `FK_regression_test_regression_test_out` FOREIGN KEY (`regression_id`) REFERENCES `regression_test` (`id`)
 )
   ENGINE = InnoDB
+  AUTO_INCREMENT = 136
   DEFAULT CHARSET = latin1;
 
 /*Table structure for table `sample` */
@@ -320,13 +323,13 @@ CREATE TABLE `trusted_users` (
 DROP TABLE IF EXISTS `upload`;
 
 CREATE TABLE `upload` (
-  `id`         INT(11)     NOT NULL AUTO_INCREMENT,
-  `user_id`    INT(11)     NOT NULL,
-  `sample_id`  INT(11)     NOT NULL,
-  `ccx_used`   INT(11)     NOT NULL,
-  `platform`   ENUM('Windows','Linux','Mac') DEFAULT 'Windows' NOT NULL,
-  `parameters` TEXT        NOT NULL,
-  `notes`      TEXT        NOT NULL,
+  `id`         INT(11)                                           NOT NULL AUTO_INCREMENT,
+  `user_id`    INT(11)                                           NOT NULL,
+  `sample_id`  INT(11)                                           NOT NULL,
+  `ccx_used`   INT(11)                                           NOT NULL,
+  `platform`   ENUM('Windows', 'Linux', 'Mac') DEFAULT 'Windows' NOT NULL,
+  `parameters` TEXT                                              NOT NULL,
+  `notes`      TEXT                                              NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `sample_id` (`sample_id`, `user_id`),
   KEY `FK_upload_ccx_version` (`ccx_used`),
@@ -348,7 +351,7 @@ CREATE TABLE `user` (
   `email`         VARCHAR(255) NOT NULL,
   `password`      VARCHAR(500) NOT NULL,
   `github_linked` TINYINT(1)   NOT NULL DEFAULT '0',
-  `role` tinyint(4) NOT NULL DEFAULT '-1',
+  `role`          TINYINT(4)   NOT NULL DEFAULT '-1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 )

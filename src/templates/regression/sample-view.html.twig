@@ -30,8 +30,8 @@
         {% for file in test.outputFiles %}
             <div class="col_6">
                 <p>
-                    Correct hash: {{ file.correctHash }}<br>
-                    Expected file: {{ test.sample.hash }}{{ file.expectedExtra }}<br>
+                    Correct file: {{ file.getCorrectFilename }}<br>
+                    Expected file: {{ file.getExpectedFilename(test.sample) }}<br>
                     Ignore result? {{ (file.ignoreResult == 0)?"False":"True" }}<br>
             </div>
         {% endfor %}
@@ -43,7 +43,6 @@
         <ul class="icons">
             <li><i class="fa fa-li fa-arrow-circle-left"></i> <a href="{{ path_for('Regression tests') }}">Return to overview</a></li>
             {% if isLoggedIn and loggedInUser.hasRole("Contributor") %}
-                <li><i class="fa fa-li fa-wrench"></i> <a href="{{ path_for('Regression tests_id_results', {'id': test.id}) }}">Update results</a></li>
                 <li><i class="fa fa-li fa-edit"></i> <a href="{{ path_for('Regression tests_id_edit', {'id': test.id}) }}">Edit</a></li>
                 <li><i class="fa fa-li fa-remove"></i> <a href="{{ path_for('Regression tests_id_delete', {'id': test.id}) }}">Delete</a></li>
             {% endif %}

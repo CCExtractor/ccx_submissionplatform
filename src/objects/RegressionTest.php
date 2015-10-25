@@ -78,7 +78,7 @@ class RegressionTest
         if (self::$nullInstance === null) {
             self::$nullInstance = new RegressionTest(
                 -1, Sample::getNullInstance(), RegressionCategory::getNullInstance(), '',
-                RegressionInputType::createFromString(), RegressionOutputType::createFromString()
+                RegressionInputType::fromDatabaseString(), RegressionOutputType::fromDatabaseString()
             );
         }
 
@@ -164,5 +164,13 @@ class RegressionTest
         }
 
         return $pass;
+    }
+
+    /**
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
     }
 }

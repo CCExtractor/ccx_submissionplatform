@@ -4,6 +4,8 @@ namespace org\ccextractor\submissionplatform\controllers;
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\objects\NoticeType;
 use org\ccextractor\submissionplatform\objects\RegressionCategory;
+use org\ccextractor\submissionplatform\objects\RegressionInputType;
+use org\ccextractor\submissionplatform\objects\RegressionOutputType;
 use org\ccextractor\submissionplatform\objects\RegressionTest;
 use Slim\App;
 use Slim\Http\Request;
@@ -92,7 +94,7 @@ class RegressionController extends BaseController
                         $this->templateValues->add("test", $test);
 
                         // TODO: finish
-                        return $this->view->render($response, "regression/sample-view.html.twig",
+                        return $this->view->render($response, "regression/sample-delete.html.twig",
                             $this->templateValues->getValues()
                         );
                     }
@@ -116,8 +118,8 @@ class RegressionController extends BaseController
                     // TODO: finish
                 }
                 )->setName($self->getPageName() . "_id_edit");
-                // GET/POST: edit results
-                $this->map(['GET', 'POST'], '/results', function ($request, $response, $args) use ($self) {
+                // POST: edit results (AJAX call)
+                $this->post('/results', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
                     $self->setDefaultBaseValues($this);
@@ -131,16 +133,90 @@ class RegressionController extends BaseController
                 )->setName($self->getPageName() . "_id_results");
             }
             );
-            $this->get('/new', function ($request, $response, $args) use ($self) {
+            $this->map(['GET', 'POST'], '/new', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
+                /** @var Request $request */
                 /** @var Response $response */
+                /** @var DatabaseLayer $dba */
+                $dba = $this->database;
                 $self->setDefaultBaseValues($this);
                 if (!$this->account->getUser()->hasRole("Contributor")) {
                     return $this->view->render($response->withStatus(403), "forbidden.html.twig",
                         $this->templateValues->getValues()
                     );
                 }
-                // TODO: finish
+                if ($request->isPost()) {
+                    if ($request->getAttribute('csrf_status', true) === true) {
+                        // Process post request
+                        if (isset($_POST["category"]) && isset($_POST["sample"]) && isset($_POST["command"]) &&
+                            isset($_POST["input_type"]) && isset($_POST["output_type"])
+                        ) {
+                            // Validate data
+                            $category = $dba->getRegression()->getCategory($_POST["category"]);
+                            $errors = "";
+                            if ($category->getId() === -1) {
+                                $errors .= "Invalid category; ";
+                            }
+                            $sample = $dba->getSampleById($_POST["sample"]);
+                            if ($sample === false) {
+                                $errors .= "Invalid sample; ";
+                            }
+                            if(strlen($_POST["command"]) === 0){
+                                $errors .= "Command empty";
+                            }
+                            $inputType = null;
+                            if (!RegressionInputType::isValid($_POST["input_type"])) {
+                                $errors .= "Invalid input type; ";
+                            } else {
+                                $inputType = new RegressionInputType($_POST["input_type"]);
+                            }
+                            $outputType = null;
+                            if (!RegressionOutputType::isValid($_POST["output_type"])) {
+                                $errors .= "Invalid output type; ";
+                            } else {
+                                $outputType = new RegressionOutputType($_POST["output_type"]);
+                            }
+                            if ($errors === "") {
+                                // Save in database
+                                $regression = $dba->getRegression()->addRegressionTest(
+                                    new RegressionTest(-1, $sample, $category, $_POST["command"], $inputType,
+                                        $outputType
+                                    )
+                                );
+                                if ($regression->getId() > 0) {
+                                    // Redirect to regression page
+                                    return $response->withRedirect($this->router->pathFor($self->getPageName() . "_id",
+                                        ["id" => $regression->getId()]
+                                    )
+                                    );
+                                }
+                                $self->setNoticeValues($this, NoticeType::getError(), "Could not save in the database");
+                            } else {
+                                $self->setNoticeValues($this, NoticeType::getError(), $errors);
+                            }
+                        } else {
+                            $self->setNoticeValues($this, NoticeType::getError(), "Missing values");
+                        }
+                    } else {
+                        $self->setNoticeValues($this, NoticeType::getError(), "CSRF fail");
+                    }
+                }
+                // Add values
+                $this->templateValues->add("categories", $dba->getRegression()->getRegressionCategories());
+                $this->templateValues->add("samples", $dba->getAllSamples());
+                $this->templateValues->add("input_types", RegressionInputType::getAll());
+                $this->templateValues->add("output_types", RegressionOutputType::getAll());
+                // Add post values, if defined
+                foreach(["category", "sample", "command", "input_type", "output_type"] as $value){
+                    $this->templateValues->add($value,isset($_POST[$value])?$_POST[$value]:"");
+                }
+                // CSRF
+                $self->setCSRF($this, $request);
+
+                // Render
+                return $this->view->render($response, "regression/sample-new.html.twig",
+                    $this->templateValues->getValues()
+                );
             }
             )->setName($self->getPageName() . "_new");
             $this->group('/category/{id:[0-9]+}', function () use ($self) {
