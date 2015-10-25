@@ -46,7 +46,7 @@ class User
      * @param string $email The email address of the user.
      * @param string $hash The password hash for the user.
      * @param bool $github Is GitHub linked?
-     * @param bool $admin Is the user a admin?
+     * @param UserRole $role The role of the user.
      */
     public function __construct($id, $name, $email, $hash="", $github=false, UserRole $role=null)
     {

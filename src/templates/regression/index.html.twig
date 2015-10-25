@@ -68,7 +68,6 @@
                     <td>
                         <a href="{{ path_for('Regression tests_id', {'id': test.id }) }}" title="View details"><i class="fa fa-info-circle"></i></a>&nbsp;
                         {% if isLoggedIn and loggedInUser.hasRole("Contributor") %}
-                            <a href="{{ path_for('Regression tests_id_results', {'id': test.id}) }}" title="Update results regression test"><i class="fa fa-wrench"></i></a>&nbsp;
                             <a href="{{ path_for('Regression tests_id_edit', {'id': test.id}) }}" title="Edit regression test"><i class="fa fa-edit"></i></a>&nbsp;
                             <a href="{{ path_for('Regression tests_id_delete', {'id': test.id}) }}" title="Delete regression test"><i class="fa fa-remove"></i></a>&nbsp;
                         {% endif %}
