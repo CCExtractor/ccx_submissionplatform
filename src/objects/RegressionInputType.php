@@ -30,6 +30,12 @@ class RegressionInputType extends SplEnum
         self::UDP => "udp"
     ];
 
+    private static $databaseNames = [
+        self::FILE => "file",
+        self::STDIN => "stdin",
+        self::UDP => "udp"
+    ];
+
     /**
      * Gets the File instance of this type.
      *
@@ -72,20 +78,51 @@ class RegressionInputType extends SplEnum
         return self::$udp;
     }
 
-    public static function createFromString($dbFormat="")
+    /**
+     * @param string $dbFormat
+     * @param bool $strict
+     *
+     * @return RegressionInputType|bool
+     */
+    public static function fromDatabaseString($dbFormat = "", $strict = false)
     {
-        switch($dbFormat){
-            case "file":
-                return self::getFile();
-            case "stdin":
-                return self::getStdin();
-            case "udp":
-                return self::getUdp();
-            default:
-                return self::getFile();
+        $key = array_search($dbFormat, self::$databaseNames);
+        if ($key !== false) {
+            return new RegressionInputType($key);
         }
+
+        return $strict ? false : self::getFile();
     }
 
+    /**
+     * @return string
+     */
+    public function toDatabaseString()
+    {
+        return self::$databaseNames[(int)$this];
+    }
+
+    /**
+     * @return array
+     */
+    public static function getAll()
+    {
+        return [self::getFile(), self::getStdin(), self::getUdp()];
+    }
+
+    /**
+     * @param $input_type
+     *
+     * @return bool
+     */
+    public static function isValid($input_type)
+    {
+        return array_key_exists($input_type, self::$names);
+    }
+
+    /**
+     * @return string
+     */
     public function toString()
     {
         return self::$names[(int)$this];
