@@ -64,7 +64,7 @@ class RegressionController extends BaseController
                     if ($test->getId() > 0) {
                         $this->templateValues->add("test", $test);
 
-                        return $this->view->render($response, "regression/sample-view.html.twig",
+                        return $this->view->render($response, "regression/test-view.html.twig",
                             $this->templateValues->getValues()
                         );
                     }
@@ -94,7 +94,7 @@ class RegressionController extends BaseController
                         $this->templateValues->add("test", $test);
 
                         // TODO: finish
-                        return $this->view->render($response, "regression/sample-delete.html.twig",
+                        return $this->view->render($response, "regression/test-delete.html.twig",
                             $this->templateValues->getValues()
                         );
                     }
@@ -214,7 +214,7 @@ class RegressionController extends BaseController
                 $self->setCSRF($this, $request);
 
                 // Render
-                return $this->view->render($response, "regression/sample-new.html.twig",
+                return $this->view->render($response, "regression/test-new.html.twig",
                     $this->templateValues->getValues()
                 );
             }
