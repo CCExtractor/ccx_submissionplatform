@@ -183,8 +183,13 @@ ORDER BY r.id, o.test_out_id ASC;");
                         );
                         $id = $test->getId();
                     }
-                    $test->addOutputFile(new RegressionTestResult(
-                        $data['rt_id'],$data['rt_correct'],$data['rt_correct_extension'],$data['rt_extra'],$data['rt_ignore'],$data['rt_result']));
+                    if($data['rt_id'] > 0) {
+                        $test->addOutputFile(new RegressionTestResult(
+                            $data['rt_id'], $data['rt_correct'], $data['rt_correct_extension'], $data['rt_extra'],
+                            $data['rt_ignore'], $data['rt_result']
+                        )
+                        );
+                    }
                     $data = $stmt->fetch();
                 }
                 if($test !== null){
