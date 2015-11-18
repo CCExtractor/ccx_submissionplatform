@@ -34,6 +34,10 @@ class FileHandler implements ServiceProviderInterface
      * @var string The directory that holds the submitted samples.
      */
     private $store_dir;
+    /**
+     * @var string The directory that holds the correct results.
+     */
+    private $result_dir;
 
     /**
      * FileHandler constructor
@@ -41,12 +45,14 @@ class FileHandler implements ServiceProviderInterface
      * @param DatabaseLayer $dba The layer that connects to the database.
      * @param string $temp_dir The directory that holds the queued items.
      * @param string $store_dir The directory that holds the submitted samples.
+     * @param string $result_dir The directory that holds the correct results.
      */
-    public function __construct(DatabaseLayer $dba, $temp_dir, $store_dir)
+    public function __construct(DatabaseLayer $dba, $temp_dir, $store_dir, $result_dir)
     {
         $this->dba = $dba;
         $this->temp_dir = $temp_dir;
         $this->store_dir = $store_dir;
+        $this->result_dir = $result_dir;
         $this->forbiddenExtensions = $this->dba->getForbiddenExtensions();
     }
 
@@ -379,5 +385,48 @@ class FileHandler implements ServiceProviderInterface
             return unlink($this->store_dir."extra/".$additional->getFileName());
         }
         return false;
+    }
+
+    public function isValidCorrectFile($file, $expectedExtension)
+    {
+        $result = ["passed" => false, "file" => "undefined" ];
+        // Undefined | Multiple Files | $_FILES Corruption Attack
+        if(isset($file['error']) && !is_array($file['error'])){
+            switch($file['error']){
+                case UPLOAD_ERR_OK:
+                    $lastDot = strrpos($file["name"],".");
+                    $extension = ($lastDot !== false)?substr($file["name"],$lastDot+1):"";
+                    $spl = new SplFileInfo($file['tmp_name']);
+                    if(".".$extension !== $expectedExtension){
+                        $result["file"] = 'Extension mismatch';
+                    } else {
+                        $result = ["passed" => true, "file" => $spl];
+                    }
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    $result["file"] = 'No file sent.';
+                    break;
+                case UPLOAD_ERR_INI_SIZE:
+                case UPLOAD_ERR_FORM_SIZE:
+                    $result["file"] = 'Exceeded filesize limit.';
+                    break;
+                default:
+                    $result["file"] = 'Unknown errors.';
+            }
+        }
+        return $result;
+    }
+
+    public function addCorrectResult(SplFileInfo $file,$extension){
+        // Get SHA256 of file
+        $hash = hash_file('sha256',$file->getPathname());
+        $resultFile = new SplFileInfo($this->result_dir.$hash.$extension);
+        // Move file
+        if(copy($file->getRealPath(),$resultFile->getPath()."/".$resultFile->getBasename())){
+            if(unlink($file->getRealPath())){
+                return $resultFile;
+            }
+        }
+        return null;
     }
 }

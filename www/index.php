@@ -1,7 +1,6 @@
 <?php
 use Katzgrau\KLogger\Logger;
 use org\ccextractor\submissionplatform\containers\AccountManager;
-use org\ccextractor\submissionplatform\containers\BotDatabaseLayer;
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\containers\EmailLayer;
 use org\ccextractor\submissionplatform\containers\FileHandler;
@@ -21,6 +20,8 @@ use org\ccextractor\submissionplatform\controllers\UploadController;
 use Slim\App;
 use Slim\Container;
 use Slim\Csrf\Guard;
+use Slim\Http\Request;
+use Slim\Http\Response;
 use Slim\Views\Twig;
 use Slim\Views\TwigExtension;
 
@@ -42,6 +43,7 @@ $app = new App($container);
 $container['csrf'] = function ($c) {
     $guard = new Guard();
     $guard->setFailureCallable(function ($request, $response, $next) {
+        /** @var Request $request */
         $request = $request->withAttribute("csrf_status", false);
         return $next($request, $response);
     });
@@ -91,7 +93,7 @@ $container->register($templateValues);
 $ftp = new FTPConnector($app->environment["HTTP_HOST"], 21, $dba);
 $container->register($ftp);
 // File Handler
-$file_handler = new FileHandler($dba, TEMP_STORAGE, PERM_STORAGE);
+$file_handler = new FileHandler($dba, TEMP_STORAGE, PERM_STORAGE, RESULT_STORAGE);
 $container->register($file_handler);
 // Logger (non added right now)
 $logger = new Logger(__DIR__."/../private/logs");
@@ -99,6 +101,8 @@ $logger = new Logger(__DIR__."/../private/logs");
 //Override the default Not Found Handler
 $container['notFoundHandler'] = function ($c) {
     return function ($request, $response) use ($c) {
+        /** @var Container $c */
+        /** @var Response $response */
         /** @var TemplateValues $tv */
         $tv = $c->get('templateValues');
         $tv->add('pageName','404 Not Found');

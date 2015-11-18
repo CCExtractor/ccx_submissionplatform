@@ -13,7 +13,7 @@ require __DIR__.'/../../vendor/autoload.php';
 $dba = new DatabaseLayer(DATABASE_SOURCE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD);
 // File checker
 /** @var FileHandler $checker */
-$checker = new FileHandler($dba, TEMP_STORAGE, PERM_STORAGE);
+$checker = new FileHandler($dba, TEMP_STORAGE, PERM_STORAGE, RESULT_STORAGE);
 
 // Get first argument, which is the file.
 $filePath = $argv[1];
