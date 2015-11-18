@@ -1,5 +1,102 @@
 {% extends "base.html.twig" %}
 
+{% block head %}
+    <script type="text/javascript">
+        var csrf_name_key, csrf_name_value, csrf_value_key, csrf_value_value;
+        csrf_name_key = '{{ csrf_name_key }}';
+        csrf_name_value = '{{ csrf_name_value }}';
+        csrf_value_key = '{{ csrf_value_key }}';
+        csrf_value_value = '{{ csrf_value_value }}';
+        // Function to populate a form for edit/delete
+        function update(id, type){
+            switch(type){
+                case "delete":
+                    $("#deleteResult").text(id);
+                    $("#deleteResultId").val(id);
+                    $("#result_delete").toggleClass("hide");
+                    break;
+                case "edit":
+                    $("#editResultId").val(id);
+                    $("#result_edit").toggleClass("hide");
+                    // TODO: add other values
+                    break;
+                case "update":
+                    $("#updateResultId").val(id);
+                    $("#result_update").toggleClass("hide");
+                    break;
+            }
+        }
+        // Function to submit data to the server through AJAX.
+        function submitForm(type){
+            var url, data, file;
+            url = '{{ path_for("Regression tests_id_results", {'id': test.id }) }}';
+            data = new FormData();
+            switch(type){
+                case "add":
+                    data.append("action", type);
+                    // Values needed: correct (file), extra, extension, ignore
+                    file = $('#newResultFile')[0].files[0];
+                    if(file !== undefined) {
+                        data.append("correct", file, file.name);
+                        data.append("extra", $('#newResultExtra').val());
+                        data.append("extension", $('#newResultExtension').val());
+                        data.append("ignore", $('#newResultIgnore')[0].checked);
+                    } else {
+                        alert("You need to select a file!");
+                        return;
+                    }
+                    break;
+                case "delete":
+                    data.append("action", type);
+                    // Values needed: id
+                    data.append("id", $('#deleteResultId').val());
+                    break;
+                case "edit":
+                    data.append("action", type);
+                    // Values needed: id, extra, extension, ignore
+                    data.append("id", $('#editResultId').val());
+                    data.append("extra", $('#editResultExtra').val());
+                    data.append("extension", $('#editResultExtension').val());
+                    data.append("ignore", $('#editResultIgnore')[0].checked);
+                    break;
+                case "update":
+                    data.append("action", type);
+                    // Values needed: id, correct (file)
+                    data.append("id", $('#updateResultId').val());
+                    file = $('#updateResultFile')[0].files[0];
+                    if(file !== undefined) {
+                        data.append("correct", file, file.name);
+                    } else {
+                        alert("You need to select a file!");
+                        return;
+                    }
+                    break;
+            }
+            // CSRF values
+            data.append(csrf_name_key, csrf_name_value);
+            data.append(csrf_value_key, csrf_value_value);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+            // Set up a handler for when the request finishes.
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    location.reload();
+                } else {
+                    var json = JSON.parse(xhr.responseText);
+                    alert(json.error);
+                    csrf_name_key = json.csrf_name_key;
+                    csrf_name_value = json.csrf_name_value;
+                    csrf_value_key = json.csrf_value_key;
+                    csrf_value_value = json.csrf_value_value;
+                }
+            };
+            // Send the Data.
+            xhr.send(data);
+        }
+    </script>
+{% endblock %}
+
 {% block content %}
     <h3>Regression test {{ test.id }}</h3>
     <table>
@@ -25,17 +122,98 @@
         </tr>
     </table>
     <h4>Result file(s)</h4>
-    <div class="col_12">
-        {# TODO: check formatting design #}
+    <table class="tight striped sortable" id="results">
+        <thead>
+            <tr>
+                <td>Id</td>
+                <td>Correct</td>
+                <td>Expected</td>
+                <td>Extension</td>
+                <td>Ignore</td>
+                {% if isLoggedIn and loggedInUser.hasRole("Contributor") %}
+                    <td>Actions</td>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
         {% for file in test.outputFiles %}
-            <div class="col_6">
-                <p>
-                    Correct file: {{ file.getCorrectFilename }}<br>
-                    Expected file: {{ file.getExpectedFilename(test.sample) }}<br>
-                    Ignore result? {{ (file.ignoreResult == 0)?"False":"True" }}<br>
-            </div>
+            <tr data-id="{{ file.id }}" data-hash="{{ file.correctHash }}" data-extra="{{ file.expectedExtra }}" data-extension="{{ file.correctExtension }}" data-ignore="{{ file.ignoreResult }}">
+                <td>{{ file.id }}</td>
+                <td><abbr title="{{ file.correctHash }}">{{ file.correctHash[0:8] }}</abbr></td>
+                <td><abbr title="{{ test.sample.hash }}{{ file.expectedExtra }}">{{ test.sample.hash[0:8] }}...{{ file.expectedExtra }}</abbr></td>
+                <td>{{ file.correctExtension }}</td>
+                <td>{{ (file.ignoreResult == 0)?"False":"True" }}</td>
+                {% if isLoggedIn and loggedInUser.hasRole("Contributor") %}
+                    <td>
+                        <a onclick="update({{ file.id }}, 'edit');" title="Edit entry"><i class="fa fa-edit"></i></a>
+                        <a onclick="update({{ file.id }}, 'delete');" title="Delete entry"><i class="fa fa-remove"></i></a>
+                        <a onclick="update({{ file.id }}, 'update');" title="Update correct file"><i class="fa fa-file"></i></a>
+                    </td>
+                {% endif %}
+            </tr>
         {% endfor %}
-    </div>
+        </tbody>
+    </table>
+    {% if isLoggedIn and loggedInUser.hasRole("Contributor") %}
+        <div id="result_new" class="col_12 hide">
+            <h5>Add new result</h5>
+            <form>
+                <p class="col_12">
+                    <label class="col_4" for="newResultFile">Correct result file</label>
+                    <input type="file" id="newResultFile" class="col_4" />
+                </p>
+                <p class="col_12">
+                    <label class="col_4" for="newResultExtra">Extra for expected</label>
+                    <input type="text" id="newResultExtra" class="col_4" />
+                </p>
+                <p class="col_12">
+                    <label for="newResultExtension" class="col_4">Extension</label>
+                    <input type="text" id="newResultExtension" class="col_4" />
+                </p>
+                <p class="col_12">
+                    <label for="newResultIgnore" class="col_4">Ignore result?</label>
+                    <input type="checkbox" id="newResultIgnore" class="col_4" />
+                </p>
+                <p class="col_12">
+                    <input type="button" value="Cancel" class="red" onclick="$('#result_new').toggleClass('hide');" />
+                    <input type="button" value="Add" class="green" onclick="submitForm('add');" />
+                </p>
+            </form>
+        </div>
+        <div id="result_edit" class="col_12 hide">
+            <h5>Edit result</h5>
+            <form>
+                <input type="hidden" value="-1" id="editResultId" name="id" />
+                <p class="col_12">
+                    <label class="col_4" for="editResultExtra">Extra for expected</label>
+                    <input type="text" id="editResultExtra" class="col_4" />
+                </p>
+                <p class="col_12">
+                    <label for="editResultExtension" class="col_4">Extension</label>
+                    <input type="text" id="editResultExtension" class="col_4" />
+                </p>
+                <p class="col_12">
+                    <label for="editResultIgnore" class="col_4">Ignore result?</label>
+                    <input type="checkbox" id="editResultIgnore" class="col_4" />
+                </p>
+                <p class="col_12">
+                    <input type="button" value="Cancel" class="red" onclick="$('#result_edit').toggleClass('hide');" />
+                    <input type="button" value="Edit" class="green" onclick="submitForm('edit');" />
+                </p>
+            </form>
+        </div>
+        <div id="result_delete" class="col_12 hide">
+            <h5>Delete result</h5>
+            <form>
+                <input type="hidden" value="-1" id="deleteResultId" name="id" />
+                <p>Are you sure you want to delete the result file with id: <span id="deleteResult"></span>?</p>
+                <p>
+                    <input type="button" value="Cancel" class="red" onclick="$('#result_delete').toggleClass('hide');" />
+                    <input type="button" value="Delete" class="green" onclick="submitForm('delete');" />
+                </p>
+            </form>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block sidebar %}
@@ -43,8 +221,9 @@
         <ul class="icons">
             <li><i class="fa fa-li fa-arrow-circle-left"></i> <a href="{{ path_for('Regression tests') }}">Return to overview</a></li>
             {% if isLoggedIn and loggedInUser.hasRole("Contributor") %}
-                <li><i class="fa fa-li fa-edit"></i> <a href="{{ path_for('Regression tests_id_edit', {'id': test.id}) }}">Edit</a></li>
-                <li><i class="fa fa-li fa-remove"></i> <a href="{{ path_for('Regression tests_id_delete', {'id': test.id}) }}">Delete</a></li>
+                <li><i class="fa fa-li fa-edit"></i> <a href="{{ path_for('Regression tests_id_edit', {'id': test.id}) }}">Edit test</a></li>
+                <li><i class="fa fa-li fa-remove"></i> <a href="{{ path_for('Regression tests_id_delete', {'id': test.id}) }}">Delete test</a></li>
+                <li><i class="fa fa-li fa-file"></i> <a href="#" onclick="$('#result_new').toggleClass('hide');">Add result</a></li>
             {% endif %}
         </ul>
 {% endblock %}
