@@ -21,7 +21,6 @@
                     $("#editResultIgnore").prop("checked", data.ignore);
                     $("#editResultExtension").val(data.extension);
                     $("#editResultExtra").val(data.extra);
-                    // TODO: add other values
                     break;
                 case "update":
                     $("#updateResultId").val(data.id);
@@ -213,6 +212,20 @@
                 <p>
                     <input type="button" value="Cancel" class="red" onclick="$('#result_delete').toggleClass('hide');" />
                     <input type="button" value="Delete" class="green" onclick="submitForm('delete');" />
+                </p>
+            </form>
+        </div>
+        <div id="result_update" class="col_12 hide">
+            <h5>Update result</h5>
+            <form>
+                <input type="hidden" value="-1" id="updateResultId" name="id" />
+                <p class="col_12">
+                    <label for="updateResultFile" class="col_4">Select a new result file</label>:
+                    <input type="file" id="updateResultFile" class="col_4" />
+                </p>
+                <p class="col_12">
+                    <input type="button" value="Cancel" class="red" onclick="$('#result_delete').toggleClass('hide');" />
+                    <input type="button" value="Update file" class="green" onclick="submitForm('update');" />
                 </p>
             </form>
         </div>
