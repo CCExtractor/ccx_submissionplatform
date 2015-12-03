@@ -305,13 +305,14 @@ ORDER BY r.id, o.test_out_id ASC;"
         $ignore
     ) {
         $id = $test->getId();
+        $ignore = (int) filter_var($ignore, FILTER_VALIDATE_BOOLEAN); // When MySQL table is set to tinyint, $ignore cannot be a bool value...
         $stmt = $this->pdo->prepare("INSERT INTO regression_test_out VALUES (NULL, :id, :correct, :correct_extension, :expected_filename, :ignore);"
         );
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
         $stmt->bindParam(":correct", $correct, PDO::PARAM_STR);
         $stmt->bindParam(":correct_extension", $correct_extension, PDO::PARAM_STR);
         $stmt->bindParam(":expected_filename", $expected_filename, PDO::PARAM_STR);
-        $stmt->bindParam(":ignore", $ignore, PDO::PARAM_BOOL);
+        $stmt->bindParam(":ignore", $ignore, PDO::PARAM_INT);
 
         return $stmt->execute() && $stmt->rowCount() === 1;
     }
@@ -342,11 +343,12 @@ ORDER BY r.id, o.test_out_id ASC;"
         $ignore
     ) {
         $id = $result->getId();
+        $ignore = (int) filter_var($ignore, FILTER_VALIDATE_BOOLEAN); // When MySQL table is set to tinyint, $ignore cannot be a bool value...
         $stmt = $this->pdo->prepare("UPDATE regression_test_out SET correct_extension = :extension, expected_filename = :expected, `ignore` = :ignore WHERE test_out_id = :id");
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
         $stmt->bindParam(":extension", $correct_extension, PDO::PARAM_STR);
         $stmt->bindParam(":expected", $expected_filename, PDO::PARAM_STR);
-        $stmt->bindParam(":ignore", $ignore, PDO::PARAM_BOOL);
+        $stmt->bindParam(":ignore", $ignore, PDO::PARAM_INT);
 
         return $stmt->execute() && $stmt->rowCount() === 1;
     }

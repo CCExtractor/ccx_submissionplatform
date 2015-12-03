@@ -8,20 +8,23 @@
         csrf_value_key = '{{ csrf_value_key }}';
         csrf_value_value = '{{ csrf_value_value }}';
         // Function to populate a form for edit/delete
-        function update(id, type){
+        function update(type, data){
             switch(type){
                 case "delete":
-                    $("#deleteResult").text(id);
-                    $("#deleteResultId").val(id);
+                    $("#deleteResult").text(data.id);
+                    $("#deleteResultId").val(data.id);
                     $("#result_delete").toggleClass("hide");
                     break;
                 case "edit":
-                    $("#editResultId").val(id);
+                    $("#editResultId").val(data.id);
                     $("#result_edit").toggleClass("hide");
+                    $("#editResultIgnore").prop("checked", data.ignore);
+                    $("#editResultExtension").val(data.extension);
+                    $("#editResultExtra").val(data.extra);
                     // TODO: add other values
                     break;
                 case "update":
-                    $("#updateResultId").val(id);
+                    $("#updateResultId").val(data.id);
                     $("#result_update").toggleClass("hide");
                     break;
             }
@@ -145,9 +148,9 @@
                 <td>{{ (file.ignoreResult == 0)?"False":"True" }}</td>
                 {% if isLoggedIn and loggedInUser.hasRole("Contributor") %}
                     <td>
-                        <a onclick="update({{ file.id }}, 'edit');" title="Edit entry"><i class="fa fa-edit"></i></a>
-                        <a onclick="update({{ file.id }}, 'delete');" title="Delete entry"><i class="fa fa-remove"></i></a>
-                        <a onclick="update({{ file.id }}, 'update');" title="Update correct file"><i class="fa fa-file"></i></a>
+                        <a onclick="update('edit', {'id': {{ file.id }}, 'ignore': {{ file.ignoreResult }}, 'extension': '{{ file.correctExtension }}', 'extra': '{{ file.expectedExtra }}' });" title="Edit entry"><i class="fa fa-edit"></i></a>
+                        <a onclick="update('delete', {'id': {{ file.id }} });" title="Delete entry"><i class="fa fa-remove"></i></a>
+                        <a onclick="update('update', {'id': {{ file.id }} });" title="Update correct file"><i class="fa fa-file"></i></a>
                     </td>
                 {% endif %}
             </tr>
