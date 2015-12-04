@@ -82,6 +82,7 @@ class RegressionController extends BaseController
                 $this->map(['GET', 'POST'], '/delete', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
+                    /** @var Request $request */
                     /** @var DatabaseLayer $dba */
                     $dba = $this->database;
                     $self->setDefaultBaseValues($this);
@@ -95,8 +96,23 @@ class RegressionController extends BaseController
                     $test = $dba->getRegression()->getRegressionTest($args["id"]);
                     if ($test->getId() > 0) {
                         $this->templateValues->add("test", $test);
+                        if($request->isPost()){
+                            // Process delete request, validate CSRF first
+                            if($request->getAttribute('csrf_status',true) === true){
+                                // Try to delete
+                                if($dba->getRegression()->deleteRegressionTest($test)){
+                                    $self->setNoticeValues($this, NoticeType::getSuccess(), "Regression test deleted");
+                                } else {
+                                    $self->setNoticeValues($this, NoticeType::getError(), "Could not delete the regression test");
+                                }
+                            } else {
+                                $self->setNoticeValues($this, NoticeType::getError(), "CSRF failed");
+                            }
+                        }
 
-                        // TODO: finish
+                        // CSRF
+                        $self->setCSRF($this, $request);
+                        // Render
                         return $this->view->render($response, "regression/test-delete.html.twig",
                             $this->templateValues->getValues()
                         );

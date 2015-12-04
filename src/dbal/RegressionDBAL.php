@@ -352,4 +352,26 @@ ORDER BY r.id, o.test_out_id ASC;"
 
         return $stmt->execute() && $stmt->rowCount() === 1;
     }
+
+    public function deleteRegressionTest(RegressionTest $test)
+    {
+        $id = $test->getId();
+        if($this->pdo->beginTransaction()){
+            try {
+                $stmt = $this->pdo->prepare("DELETE FROM regression_test_category WHERE regression_test_id = :id;");
+                $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+                $stmt->execute();
+                $stmt = $this->pdo->prepare("DELETE FROM regression_test_out WHERE regression_id = :id;");
+                $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+                $stmt->execute();
+                $stmt = $this->pdo->prepare("DELETE FROM regression_test WHERE id = :id;");
+                $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+                $stmt->execute();
+                return $this->pdo->commit();
+            } catch(PDOException $e){
+                $this->pdo->rollBack();
+            }
+        }
+        return false;
+    }
 }
