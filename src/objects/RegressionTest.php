@@ -173,4 +173,44 @@ class RegressionTest
     {
         $this->id = $id;
     }
+
+    /**
+     * @param Sample $sample
+     */
+    public function setSample($sample)
+    {
+        $this->sample = $sample;
+    }
+
+    /**
+     * @param RegressionCategory $category
+     */
+    public function setCategory($category)
+    {
+        $this->category = $category;
+    }
+
+    /**
+     * @param string $command
+     */
+    public function setCommand($command)
+    {
+        $this->command = $command;
+    }
+
+    /**
+     * @param RegressionInputType $input
+     */
+    public function setInput($input)
+    {
+        $this->input = $input;
+    }
+
+    /**
+     * @param RegressionOutputType $output
+     */
+    public function setOutput($output)
+    {
+        $this->output = $output;
+    }
 }

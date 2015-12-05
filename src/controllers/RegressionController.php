@@ -128,13 +128,99 @@ class RegressionController extends BaseController
                 $this->map(['GET', 'POST'], '/edit', function ($request, $response, $args) use ($self) {
                     /** @var App $this */
                     /** @var Response $response */
+                    /** @var Request $request */
+                    /** @var DatabaseLayer $dba */
+                    $dba = $this->database;
                     $self->setDefaultBaseValues($this);
                     if (!$this->account->getUser()->hasRole("Contributor")) {
                         return $this->view->render($response->withStatus(403), "forbidden.html.twig",
                             $this->templateValues->getValues()
                         );
                     }
-                    // TODO: finish
+                    // Get specific regression test
+                    /** @var RegressionTest $test */
+                    $test = $dba->getRegression()->getRegressionTest($args["id"]);
+                    if ($test->getId() > 0) {
+                        $this->templateValues->add("test", $test);
+
+                        if($request->isPost()){
+                            // Process edit request, validate CSRF first
+                            if($request->getAttribute('csrf_status',true) === true){
+                                if (isset($_POST["category"]) && isset($_POST["sample"]) && isset($_POST["command"]) &&
+                                    isset($_POST["input_type"]) && isset($_POST["output_type"])
+                                ) {
+                                    // Validate data
+                                    $category = $dba->getRegression()->getCategory($_POST["category"]);
+                                    $errors = "";
+                                    if ($category->getId() === -1) {
+                                        $errors .= "Invalid category; ";
+                                    } else {
+                                        $test->setCategory($category);
+                                    }
+                                    $sample = $dba->getSampleById($_POST["sample"]);
+                                    if ($sample === false) {
+                                        $errors .= "Invalid sample; ";
+                                    } else {
+                                        $test->setSample($sample);
+                                    }
+                                    if (strlen($_POST["command"]) === 0) {
+                                        $errors .= "Command empty";
+                                    } else {
+                                        $test->setCommand($_POST["command"]);
+                                    }
+                                    $inputType = null;
+                                    if (!RegressionInputType::isValid($_POST["input_type"])) {
+                                        $errors .= "Invalid input type; ";
+                                    } else {
+                                        $test->setInput(new RegressionInputType($_POST["input_type"]));
+                                    }
+                                    $outputType = null;
+                                    if (!RegressionOutputType::isValid($_POST["output_type"])) {
+                                        $errors .= "Invalid output type; ";
+                                    } else {
+                                        $test->setOutput(new RegressionOutputType($_POST["output_type"]));
+                                    }
+                                    if ($errors === "") {
+                                        // Try to update
+                                        if ($dba->getRegression()->updateRegressionTest($test)) {
+                                            $self->setNoticeValues($this, NoticeType::getSuccess(),
+                                                "Regression test updated"
+                                            );
+                                        } else {
+                                            $self->setNoticeValues($this, NoticeType::getError(),
+                                                "Could not update the regression test"
+                                            );
+                                        }
+                                    } else {
+                                        $self->setNoticeValues($this, NoticeType::getError(),
+                                            "Not all values were set correctly: " . $errors
+                                        );
+                                    }
+                                } else {
+                                    $self->setNoticeValues($this, NoticeType::getError(), "Missing values");
+                                }
+                            } else {
+                                $self->setNoticeValues($this, NoticeType::getError(), "CSRF failed");
+                            }
+                        }
+
+                        // Add values
+                        $this->templateValues->add("categories", $dba->getRegression()->getRegressionCategories());
+                        $this->templateValues->add("samples", $dba->getAllSamples());
+                        $this->templateValues->add("input_types", RegressionInputType::getAll());
+                        $this->templateValues->add("output_types", RegressionOutputType::getAll());
+                        // CSRF
+                        $self->setCSRF($this, $request);
+                        // Render
+                        return $this->view->render($response, "regression/test-edit.html.twig",
+                            $this->templateValues->getValues()
+                        );
+                    }
+
+                    // Return not found
+                    return $this->view->render($response->withStatus(404), "regression/not-found.html.twig",
+                        $this->templateValues->getValues()
+                    );
                 }
                 )->setName($self->getPageName() . "_id_edit");
                 // POST: edit/update/delete results

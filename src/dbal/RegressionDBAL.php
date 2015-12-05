@@ -374,4 +374,33 @@ ORDER BY r.id, o.test_out_id ASC;"
         }
         return false;
     }
+
+    public function updateRegressionTest(RegressionTest $test)
+    {
+        $id = $test->getId();
+        $categoryId = $test->getCategory()->getId();
+        $sampleId = $test->getSample()->getId();
+        $command = $test->getCommand();
+        $input = $test->getInput()->toDatabaseString();
+        $output = $test->getOutput()->toDatabaseString();
+        if($this->pdo->beginTransaction()){
+            try {
+                $stmt = $this->pdo->prepare("UPDATE regression_test_category SET category_id = :catId WHERE regression_test_id = :id;");
+                $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+                $stmt->bindParam(":catId", $categoryId, PDO::PARAM_INT);
+                $stmt->execute();
+                $stmt = $this->pdo->prepare("UPDATE regression_test SET sample_id = :sampleId, command = :command, input = :input, output = :output WHERE id = :id;");
+                $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+                $stmt->bindParam(":sampleId", $sampleId, PDO::PARAM_INT);
+                $stmt->bindParam(":command", $command, PDO::PARAM_STR);
+                $stmt->bindParam(":input", $input, PDO::PARAM_STR);
+                $stmt->bindParam(":output", $output, PDO::PARAM_STR);
+                $stmt->execute();
+                return $this->pdo->commit();
+            } catch(PDOException $e){
+                $this->pdo->rollBack();
+            }
+        }
+        return false;
+    }
 }

@@ -1,0 +1,45 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Regression test - Edit test</h3>
+    {% include "notice.html.twig" %}
+    {% if notice_status is defined and notice_status is same as("success") %}
+        <p>
+            <a href="{{ path_for("Regression tests_id", { 'id': test.id } ) }}" class="button">Return to regression test details</a>
+        </p>
+    {% else %}
+        <form method="post" action="{{ path_for("Regression tests_id_edit", { 'id': test.id}) }}">
+            <label class="col_6" for="category">Category</label>
+            <select id="category" class="col_6" name="category">
+                {% for categoryI in categories %}
+                    <option value="{{ categoryI.id }}" {% if categoryI.id == test.category.id %}selected="selected"{% endif %}>{{ categoryI.name }}</option>
+                {% endfor %}
+            </select>
+            <label class="col_6" for="sample">Sample</label>
+            <select id="sample" class="col_6" name="sample">
+                {% for sampleI in samples %}
+                    <option value="{{ sampleI.id }}" {% if sampleI.id == test.sample.id %}selected="selected"{% endif %}>{{ sampleI.id }} - {{ sampleI.getSampleFileName }}</option>
+                {% endfor %}
+            </select>
+            <label class="col_6" for="command">Command</label>
+            <input type="text" class="col_6" id="command" name="command" value="{{ test.command }}" />
+            <label for="input_type" class="col_6">Input type</label>
+            <select class="col_6" id="input_type" name="input_type">
+                {% for input in input_types %}
+                    <option value="{{ input }}" {% if input+0 == test.input %}selected="selected"{% endif %}>{{ input.toString }}</option>
+                {% endfor %}
+            </select>
+            <label class="col_6" for="output_type">Output type</label>
+            <select class="col_6" id="output_type" name="output_type">
+                {% for output in output_types %}
+                    <option value="{{ output }}" {% if output+0  == test.output %}selected="selected"{% endif %}>{{ output.toString }}</option>
+                {% endfor %}
+            </select>
+            <span class="col_12">
+                <a href="{{ path_for("Regression tests_id", {'id': test.id }) }}" class="button red">Cancel (return to details)</a>
+                <input type="submit" class="green" name="confirm" value="Update details" />
+            </span>
+            {% include "csrf.html.twig" %}
+        </form>
+    {% endif %}
+{% endblock %}
