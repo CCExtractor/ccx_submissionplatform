@@ -3,8 +3,8 @@
 {% block head %}
     <script type="text/javascript">
         function switchCategory(){
-            // TODO: add option for switching on page load (using hash/search)?
             var id = $("#category").val();
+            window.location.hash = id;
             $("tbody tr[data-category='"+id+"']").each(function(idx, elm){
                 elm.setAttribute("class","");
             });
@@ -27,6 +27,15 @@
             cat_delete.attr("href",cat_parts[cat_parts.length-3]+"/"+id+"/"+cat_parts[cat_parts.length-1]);
             {% endif %}
         }
+        $(document).ready(function(){
+            var hash = window.location.hash.slice(1);
+            $("#category").find("option").each(function(idx, elm){
+                if($(elm).val() === hash){
+                    $(elm).attr("selected","selected");
+                    switchCategory();
+                }
+            });
+        });
     </script>
 {% endblock %}
 

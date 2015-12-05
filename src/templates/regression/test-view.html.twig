@@ -235,7 +235,7 @@
 {% block sidebar %}
         <h5>Regression test</h5>
         <ul class="icons">
-            <li><i class="fa fa-li fa-arrow-circle-left"></i> <a href="{{ path_for('Regression tests') }}">Return to overview</a></li>
+            <li><i class="fa fa-li fa-arrow-circle-left"></i> <a href="{{ path_for('Regression tests') }}#{{ test.category.id }}">Return to overview</a></li>
             {% if isLoggedIn and loggedInUser.hasRole("Contributor") %}
                 <li><i class="fa fa-li fa-edit"></i> <a href="{{ path_for('Regression tests_id_edit', {'id': test.id}) }}">Edit test</a></li>
                 <li><i class="fa fa-li fa-remove"></i> <a href="{{ path_for('Regression tests_id_delete', {'id': test.id}) }}">Delete test</a></li>

@@ -5,7 +5,8 @@
     {% include "notice.html.twig" %}
     {% if notice_status is defined and notice_status is same as("success") %}
         <p>
-            <a href="{{ path_for("Regression tests_id", { 'id': test.id } ) }}" class="button">Return to regression test details</a>
+            <a href="{{ path_for("Regression tests_id", { 'id': test.id } ) }}" class="button">Return to regression test details</a>&nbsp;
+            <a href="{{ path_for("Regression tests") }}#{{ test.category.id }}" class="button">Return to category overview</a>
         </p>
     {% else %}
         <form method="post" action="{{ path_for("Regression tests_id_edit", { 'id': test.id}) }}">
