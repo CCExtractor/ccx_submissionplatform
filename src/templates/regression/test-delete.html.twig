@@ -10,10 +10,10 @@
     {% else %}
         <form method="post" action="{{ path_for("Regression tests_id_delete", { 'id': test.id}) }}">
             <p>Are you sure you want to delete the sample (id: {{ test.id }})?</p>
-        <span class="col_12">
-            <a href="{{ path_for("Regression tests_id", {'id': test.id }) }}" class="button red">Cancel</a>
-            <input type="submit" class="green" name="confirm" value="Confirm delete" />
-        </span>
+            <span class="col_12">
+                <a href="{{ path_for("Regression tests_id", {'id': test.id }) }}" class="button red">Cancel</a>
+                <input type="submit" class="green" name="confirm" value="Confirm delete" />
+            </span>
             {% include "csrf.html.twig" %}
         </form>
     {% endif %}

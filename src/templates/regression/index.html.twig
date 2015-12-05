@@ -3,6 +3,7 @@
 {% block head %}
     <script type="text/javascript">
         function switchCategory(){
+            // TODO: add option for switching on page load (using hash/search)?
             var id = $("#category").val();
             $("tbody tr[data-category='"+id+"']").each(function(idx, elm){
                 elm.setAttribute("class","");
