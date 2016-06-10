@@ -1,7 +1,6 @@
 <?php
 use Katzgrau\KLogger\Logger;
 use org\ccextractor\submissionplatform\containers\AccountManager;
-use org\ccextractor\submissionplatform\containers\BotDatabaseLayer;
 use org\ccextractor\submissionplatform\containers\DatabaseLayer;
 use org\ccextractor\submissionplatform\containers\EmailLayer;
 use org\ccextractor\submissionplatform\containers\FileHandler;
@@ -10,18 +9,15 @@ use org\ccextractor\submissionplatform\containers\GitWrapper;
 use org\ccextractor\submissionplatform\containers\TemplateValues;
 use org\ccextractor\submissionplatform\controllers\AccountController;
 use org\ccextractor\submissionplatform\controllers\AdminController;
-use org\ccextractor\submissionplatform\controllers\BaseController;
 use org\ccextractor\submissionplatform\controllers\GitBotController;
 use org\ccextractor\submissionplatform\controllers\HomeController;
 use org\ccextractor\submissionplatform\controllers\IController;
+use org\ccextractor\submissionplatform\controllers\RegressionController;
 use org\ccextractor\submissionplatform\controllers\SampleInfoController;
 use org\ccextractor\submissionplatform\controllers\TestController;
 use org\ccextractor\submissionplatform\controllers\UploadController;
-use Slim\App;
-use Slim\Container;
-use Slim\Csrf\Guard;
-use Slim\Views\Twig;
-use Slim\Views\TwigExtension;
+use Slim\Http\Request;
+use Slim\Http\Response;
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -32,15 +28,16 @@ include_once '../src/configuration.php';
 include_once '../src/bot-configuration.php';
 require '../vendor/autoload.php';
 
-$container = new Container();
-
 // Slim app
-$app = new App($container);
+$app = new \Slim\App($container);
+
+$container = $app->getContainer();
 
 // Add CSRF protection middleware
-$container['csrf'] = function ($c) {
-    $guard = new Guard();
+$container['csrf'] = function ($container) {
+    $guard = new \Slim\Csrf\Guard();
     $guard->setFailureCallable(function ($request, $response, $next) {
+        /** @var Request $request */
         $request = $request->withAttribute("csrf_status", false);
         return $next($request, $response);
     });
@@ -50,8 +47,8 @@ $container['csrf'] = function ($c) {
 $app->add($container->get('csrf'));
 
 // Twig
-$container['view'] = function ($c) {
-    $view = new Twig('../src/templates', [
+$container['view'] = function ($container) {
+    $view = new \Slim\Views\Twig('../src/templates', [
         /*'cache' => '../twig_cache',*/
         'strict_variables' => true,
         'autoescape' => true,
@@ -59,10 +56,8 @@ $container['view'] = function ($c) {
     ]);
 
     // Instantiate and add Slim specific extension
-    $view->addExtension(new TwigExtension(
-        $c['router'],
-        $c['request']->getUri()
-    ));
+    $basePath = rtrim(str_ireplace('index.php', '', $container['request']->getUri()->getBasePath()), '/');
+    $view->addExtension(new \Slim\Views\TwigExtension($container['router'], $basePath));
 
     $view->getEnvironment()->addExtension(new Twig_Extensions_Extension_I18n());
 
@@ -71,41 +66,42 @@ $container['view'] = function ($c) {
 
 // Database
 $dba = new DatabaseLayer(DATABASE_SOURCE_NAME, DATABASE_USERNAME, DATABASE_PASSWORD);
-$container->register($dba);
+$container['database'] = $dba;
 // Email container
-$host = $app->environment["HTTP_HOST"];
-BaseController::$BASE_URL = (($app->environment["HTTPS"] === "on")?"https://":"http://").$app->environment["HTTP_HOST"];
+$host = $container->get('environment')["HTTP_HOST"];
 $email = new EmailLayer(AMAZON_SES_USER, AMAZON_SES_PASS, $host);
-$container->register($email);
+$container["email"] = $email;
 // GitHub API
 $github = new GitWrapper();
-$container->register($github);
+$container['github'] = $github;
 // Account Manager
-$account = new AccountManager($dba,$email,HMAC_KEY);
-$container->register($account);
+$account = new AccountManager($dba, $email, HMAC_KEY);
+$container['account'] = $account;
 // Template Values
 $templateValues = new TemplateValues();
-$container->register($templateValues);
+$container["templateValues"] = $templateValues;
 // FTP Connector
-$ftp = new FTPConnector($app->environment["HTTP_HOST"], 21, $dba);
-$container->register($ftp);
+$ftp = new FTPConnector($container->get('environment')["HTTP_HOST"], 21, $dba);
+$container["FTPConnector"] = $ftp;
 // File Handler
-$file_handler = new FileHandler($dba, TEMP_STORAGE, PERM_STORAGE);
-$container->register($file_handler);
+$file_handler = new FileHandler($dba, TEMP_STORAGE, PERM_STORAGE, RESULT_STORAGE);
+$container["file_handler"] = $file_handler;
 // Logger (non added right now)
 $logger = new Logger(__DIR__."/../private/logs");
 
 //Override the default Not Found Handler
-$container['notFoundHandler'] = function ($c) {
-    return function ($request, $response) use ($c) {
+$container['notFoundHandler'] = function ($container) {
+    return function ($request, $response) use ($container) {
+        /** @var Interop\Container\ContainerInterface $container */
+        /** @var Response $response */
         /** @var TemplateValues $tv */
-        $tv = $c->get('templateValues');
+        $tv = $container->get('templateValues');
         $tv->add('pageName','404 Not Found');
         $tv->add('pageDescription','404 Not Found');
-        $tv->add('isLoggedIn',$c->get('account')->isLoggedIn());
-        $tv->add("loggedInUser", $c->get('account')->getUser());
+        $tv->add('isLoggedIn',$container->get('account')->isLoggedIn());
+        $tv->add("loggedInUser", $container->get('account')->getUser());
 
-        return $c->get('view')->render($response->withStatus(404),"notfound.html.twig",$tv->getValues());
+        return $container->get('view')->render($response->withStatus(404),"not-found.html.twig",$tv->getValues());
     };
 };
 
@@ -114,11 +110,11 @@ $menuPages = [
     new SampleInfoController(),
     new UploadController(),
     new TestController(),
-    // new TestSuiteController(),
+    new RegressionController(),
     new AccountController()
 ];
 
-$templateValues->add("pages",$menuPages);
+$templateValues->add("pages", $menuPages);
 
 // Define routes
 

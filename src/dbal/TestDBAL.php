@@ -22,16 +22,6 @@ use PDOStatement;
 class TestDBAL extends AbstractDBAL
 {
     /**
-     * TestDBAL constructor.
-     *
-     * @param PDO $pdo The connection to the database system.
-     */
-    public function __construct(PDO $pdo)
-    {
-        parent::__construct($pdo);
-    }
-
-    /**
      * Checks if given token is valid.
      *
      * @param string $token The token to validate.
@@ -160,18 +150,18 @@ class TestDBAL extends AbstractDBAL
             // Fetch results (only applies to newer results)
             $stmt = $this->pdo->prepare("
 SELECT
-	r.`id` AS 'regression_id', r.`command` AS 'regression_command', r.`input` AS 'regression_input', r.`output` AS 'regression_output',
-	s.`id` AS 'sample_id', s.`hash` AS 'sample_hash', s.`extension` AS 'sample_extension',
+	r.id AS 'regression_id', r.command AS 'regression_command', r.input AS 'regression_input', r.output AS 'regression_output',
+	s.id AS 'sample_id', s.hash AS 'sample_hash', s.extension AS 'sample_extension',
 	c.id AS 'category_id', c.name AS 'category_name', c.description AS 'category_description',
-	t.`regression_id` AS 'rt_id', t.`hash` AS 'rt_result', o.`correct` AS 'rt_hash', o.`expected` AS 'rt_extra', o.`ignore` AS 'rt_ignore'
+	o.test_out_id AS 'rt_id', o.correct AS 'rt_correct', o.correct_extension AS 'rt_correct_extension', o.correct AS 'rt_hash', o.expected_filename AS 'rt_extra', o.ignore AS 'rt_ignore'
 FROM test_results t
-	JOIN regression_test_out o ON t.`regression_id` = o.`test_out_id`
-	JOIN regression_test r ON r.`id` = o.`regression_id`
-	JOIN sample s ON s.`id` = r.`sample_id`
-	LEFT JOIN regression_test_category z ON z.regression_test_id = r.`id`
+	LEFT JOIN regression_test_out o ON t.regression_id = o.test_out_id
+	JOIN regression_test r ON r.id = o.regression_id
+	JOIN sample s ON s.id = r.sample_id
+	LEFT JOIN regression_test_category z ON z.regression_test_id = r.id
 	LEFT JOIN category c ON c.id = z.category_id
 WHERE test_id = :id
-ORDER BY r.`id`, o.`test_out_id` ASC;");
+ORDER BY r.id, o.test_out_id ASC;");
             $stmt->bindParam(":id", $testEntry["id"], PDO::PARAM_INT);
             if ($stmt->execute() && $stmt->rowCount() > 0) {
                 $data = $stmt->fetch();
@@ -188,13 +178,18 @@ ORDER BY r.`id`, o.`test_out_id` ASC;");
                             new Sample($data['sample_id'],$data['sample_hash'],$data['sample_extension']),
                             new RegressionCategory($data['category_id'],$data['category_name'],$data['category_description']),
                             $data['regression_command'],
-                            RegressionInputType::createFromString($data['regression_input']),
-                            RegressionOutputType::createFromString($data['regression_output'])
+                            RegressionInputType::fromDatabaseString($data['regression_input']),
+                            RegressionOutputType::fromDatabaseString($data['regression_output'])
                         );
                         $id = $test->getId();
                     }
-                    $test->addOutputFile(new RegressionTestResult(
-                        $data['rt_id'],$data['rt_hash'],$data['rt_extra'],$data['rt_ignore'],$data['rt_result']));
+                    if($data['rt_id'] > 0) {
+                        $test->addOutputFile(new RegressionTestResult(
+                            $data['rt_id'], $data['rt_correct'], $data['rt_correct_extension'], $data['rt_extra'],
+                            $data['rt_ignore'], $data['rt_result']
+                        )
+                        );
+                    }
                     $data = $stmt->fetch();
                 }
                 if($test !== null){
@@ -253,16 +248,44 @@ ORDER BY r.`id`, o.`test_out_id` ASC;");
         $stmt = $this->pdo->query("SELECT * FROM test ORDER BY id DESC LIMIT " . $amount . ";");
         $result = [];
         if ($stmt !== false) {
-            $testEntry = $stmt->fetch();
-            while ($testEntry !== false) {
-                $result[] = new Test(
-                    $testEntry["id"], $testEntry["token"], ($testEntry["finished"] === "1"), $testEntry["repository"],
-                    $testEntry["branch"], $testEntry["commit_hash"], $testEntry["type"]
-                );
-                $testEntry = $stmt->fetch();
-            }
+            $result = $this->fetchLastTests($stmt);
         }
 
+        return $result;
+    }
+
+    /**
+     * @param Sample $sample
+     * @param int $amount
+     *
+     * @return array
+     */
+    public function fetchLastXTestsForSample(Sample $sample, $amount = 10)
+    {
+        $id = $sample->getId();
+        $stmt = $this->pdo->prepare("
+SELECT t.*
+FROM test t JOIN test_results r ON t.id = r.test_id JOIN regression_test s ON r.regression_id = s.id
+WHERE s.sample_id = :id LIMIT ".$amount.";");
+        $stmt->bindParam(":id",$id,PDO::PARAM_INT);
+        $result = [];
+        if($stmt->execute() && $stmt !== false){
+            $result = $this->fetchLastTests($stmt);
+        }
+        return $result;
+    }
+
+    private function fetchLastTests(PDOStatement $stmt)
+    {
+        $result = [];
+        $testEntry = $stmt->fetch();
+        while ($testEntry !== false) {
+            $result[] = new Test(
+                $testEntry["id"], $testEntry["token"], ($testEntry["finished"] === "1"), $testEntry["repository"],
+                $testEntry["branch"], $testEntry["commit_hash"], $testEntry["type"]
+            );
+            $testEntry = $stmt->fetch();
+        }
         return $result;
     }
 }

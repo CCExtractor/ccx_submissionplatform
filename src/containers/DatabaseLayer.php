@@ -3,6 +3,7 @@ namespace org\ccextractor\submissionplatform\containers;
 
 use DateTime;
 use org\ccextractor\submissionplatform\dbal\BotDBAL;
+use org\ccextractor\submissionplatform\dbal\RegressionDBAL;
 use org\ccextractor\submissionplatform\dbal\TestDBAL;
 use org\ccextractor\submissionplatform\objects\AdditionalFile;
 use org\ccextractor\submissionplatform\objects\CCExtractorVersion;
@@ -11,17 +12,16 @@ use org\ccextractor\submissionplatform\objects\QueuedSample;
 use org\ccextractor\submissionplatform\objects\Sample;
 use org\ccextractor\submissionplatform\objects\SampleData;
 use org\ccextractor\submissionplatform\objects\User;
+use org\ccextractor\submissionplatform\objects\UserRole;
 use PDO;
 use PDOException;
-use Pimple\Container;
-use Pimple\ServiceProviderInterface;
 
 /**
  * Class DatabaseLayer takes care of the connection to the database.
  *
  * @package org\ccextractor\submissionplatform\containers
  */
-class DatabaseLayer implements ServiceProviderInterface
+class DatabaseLayer
 {
     /**
      * @var PDO The real connection to the database.
@@ -32,7 +32,8 @@ class DatabaseLayer implements ServiceProviderInterface
      */
     private $defaultOptions = [
         PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8",
-        PDO::ATTR_PERSISTENT => true
+        PDO::ATTR_PERSISTENT => true,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ];
 
     /**
@@ -43,6 +44,10 @@ class DatabaseLayer implements ServiceProviderInterface
      * @var TestDBAL holds all logic related to tests.
      */
     private $tests;
+    /**
+     * @var RegressionDBAL holds all logic related to regression tests.
+     */
+    private $regression;
 
     /**
      * Creates a new instance of the DataBaseLayer, which takes care of the connection to the database.
@@ -64,19 +69,7 @@ class DatabaseLayer implements ServiceProviderInterface
         $this->pdo = new PDO($dsn, $username, $password, $options);
         $this->bot = new BotDBAL($this->pdo);
         $this->tests = new TestDBAL($this->pdo);
-    }
-
-    /**
-     * Registers services on the given container.
-     *
-     * This method should only be used to configure services and parameters.
-     * It should not get services.
-     *
-     * @param Container $pimple An Container instance
-     */
-    public function register(Container $pimple)
-    {
-        $pimple['database'] = $this;
+        $this->regression = new RegressionDBAL($this->pdo);
     }
 
     /**
@@ -93,6 +86,14 @@ class DatabaseLayer implements ServiceProviderInterface
     public function getTests()
     {
         return $this->tests;
+    }
+
+    /**
+     * @return RegressionDBAL
+     */
+    public function getRegression()
+    {
+        return $this->regression;
     }
 
     /**
@@ -159,7 +160,7 @@ class DatabaseLayer implements ServiceProviderInterface
      */
     public function getAllSamples()
     {
-        $p = $this->pdo->prepare("SELECT * FROM sample ORDER BY extension ASC");
+        $p = $this->pdo->prepare("SELECT * FROM sample ORDER BY id ASC");
         $result = [];
         if ($p->execute()) {
             $data = $p->fetch();
@@ -187,7 +188,7 @@ class DatabaseLayer implements ServiceProviderInterface
             $data = $stmt->fetch();
 
             return new User($data["id"], $data["name"], $data["email"], $data["password"], $data["github_linked"],
-                $data["admin"]
+                new UserRole($data["role"])
             );
         }
 
@@ -209,7 +210,7 @@ class DatabaseLayer implements ServiceProviderInterface
             $data = $stmt->fetch();
 
             return new User($data["id"], $data["name"], $data["email"], $data["password"], $data["github_linked"],
-                $data["admin"]
+                new UserRole($data["role"])
             );
         }
 
@@ -229,7 +230,7 @@ class DatabaseLayer implements ServiceProviderInterface
             $data = $stmt->fetch();
             while ($data !== false) {
                 $result[] = new User($data["id"], $data["name"], $data["email"], $data["password"],
-                    $data["github_linked"], $data["admin"]
+                    $data["github_linked"], new UserRole($data["role"])
                 );
                 $data = $stmt->fetch();
             }
@@ -251,15 +252,15 @@ class DatabaseLayer implements ServiceProviderInterface
         $email = $user->getEmail();
         $hash = $user->getHash();
         $github = $user->isGithub();
-        $admin = $user->isAdmin();
+        $role = (int)$user->getRole();
         $id = $user->getId();
-        $stmt = $this->pdo->prepare("UPDATE user SET name = :name, email = :email, password = :password, github_linked = :github, admin = :admin WHERE id = :id"
+        $stmt = $this->pdo->prepare("UPDATE user SET name = :name, email = :email, password = :password, github_linked = :github, role = :role WHERE id = :id"
         );
         $stmt->bindParam(":name", $name, PDO::PARAM_STR);
         $stmt->bindParam(":email", $email, PDO::PARAM_STR);
         $stmt->bindParam(":password", $hash, PDO::PARAM_STR);
         $stmt->bindParam(":github", $github, PDO::PARAM_BOOL);
-        $stmt->bindParam(":admin", $admin, PDO::PARAM_BOOL);
+        $stmt->bindParam(":role", $role, PDO::PARAM_INT);
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
         if ($stmt->execute()) {
             return $stmt->rowCount() === 1;
@@ -409,13 +410,13 @@ WHERE s.hash = :hash LIMIT 1;"
         $email = $user->getEmail();
         $hash = $user->getHash();
         $github = $user->isGithub();
-        $admin = $user->isAdmin();
-        $stmt = $this->pdo->prepare("INSERT INTO user VALUES (NULL,:name,:email,:password,:github,:admin)");
+        $role = (int)$user->getRole();
+        $stmt = $this->pdo->prepare("INSERT INTO user VALUES (NULL,:name,:email,:password,:github,:role)");
         $stmt->bindParam(":name", $name, PDO::PARAM_STR);
         $stmt->bindParam(":email", $email, PDO::PARAM_STR);
         $stmt->bindParam(":password", $hash, PDO::PARAM_STR);
         $stmt->bindParam(":github", $github, PDO::PARAM_BOOL);
-        $stmt->bindParam(":admin", $admin, PDO::PARAM_BOOL);
+        $stmt->bindParam(":role", $role, PDO::PARAM_INT);
         if ($stmt->execute() && $stmt->rowCount() === 1) {
             return intval($this->pdo->lastInsertId());
         }

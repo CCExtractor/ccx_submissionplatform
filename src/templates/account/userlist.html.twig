@@ -17,11 +17,11 @@
             <tr>
                 <td>{{ user.id }}</td>
                 <td>{{ user.name }}</td>
-                <td>{{ user.isAdmin ? "Yes":"No" }}</td>
+                <td>{{ user.role.toString }}</td>
                 <td>
                     <a href="{{ path_for('My Account_view_id', { 'id': user.id }) }}" title="View user info"><i class="fa fa-info-circle"></i></a>&nbsp;
                     <a href="{{ path_for('My Account_recover_id', { 'id': user.id }) }}" title="Send password recovery for user"><i class="fa fa-support"></i></a>&nbsp;
-                    <a href="{{ path_for('My Account_rights', { 'id': user.id }) }}" title="Change user admin level"><i class="fa fa-key"></i></a>&nbsp;
+                    <a href="{{ path_for('My Account_rights', { 'id': user.id }) }}" title="Change user role"><i class="fa fa-key"></i></a>&nbsp;
                     <a href="{{ path_for('My Account_deactivate', { 'id': user.id }) }}" title="Deactivate user"><i class="fa fa-trash-o"></i></a>&nbsp;
                 </td>
             </tr>

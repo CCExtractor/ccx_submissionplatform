@@ -28,6 +28,24 @@ class RegressionOutputType extends SplEnum
     private static $multiprogram = null;
     private static $cea708 = null;
 
+    private static $names = [
+        self::FILE => "file",
+        self::STDOUT => "stdout",
+        self::TCP => "tcp",
+        self::NULL => "null",
+        self::MULTIPROGRAM => "multi-program",
+        self::CEA708 => "CEA-708"
+    ];
+
+    private static $databaseNames = [
+        self::FILE => "file",
+        self::STDOUT => "stdout",
+        self::TCP => "tcp",
+        self::NULL => "null",
+        self::MULTIPROGRAM => "multiprogram",
+        self::CEA708 => "cea708"
+    ];
+
     /**
      * Gets the File instance of this type.
      *
@@ -112,23 +130,55 @@ class RegressionOutputType extends SplEnum
         return self::$cea708;
     }
 
-    public static function createFromString($dbFormat)
+    /**
+     * @param string $dbFormat
+     * @param bool $strict
+     *
+     * @return bool|RegressionOutputType
+     */
+    public static function fromDatabaseString($dbFormat = "", $strict = false)
     {
-        switch($dbFormat){
-            case "file":
-                return self::getFile();
-            case "stdout":
-                return self::getStdout();
-            case "tcp":
-                return self::getTcp();
-            case "cea708":
-                return self::getCea708();
-            case "multiprogram":
-                return self::getMultiprogram();
-            case "null":
-                return self::getNull();
-            default:
-                return self::getFile();
+        $key = array_search($dbFormat, self::$databaseNames);
+        if ($key !== false) {
+            return new RegressionOutputType($key);
         }
+
+        return $strict ? false : self::getFile();
+    }
+
+    /**
+     * @return string
+     */
+    public function toDatabaseString()
+    {
+        return self::$databaseNames[(int)$this];
+    }
+
+    /**
+     * @return array
+     */
+    public static function getAll()
+    {
+        return [
+            self::getFile(),
+            self::getStdout(),
+            self::getTcp(),
+            self::getCea708(),
+            self::getMultiprogram(),
+            self::getNull()
+        ];
+    }
+
+    public static function isValid($input_type)
+    {
+        return array_key_exists($input_type, self::$names);
+    }
+
+    /**
+     * @return string
+     */
+    public function toString()
+    {
+        return self::$names[(int)$this];
     }
 }

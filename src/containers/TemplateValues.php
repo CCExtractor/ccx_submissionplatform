@@ -1,15 +1,12 @@
 <?php
 namespace org\ccextractor\submissionplatform\containers;
 
-use Pimple\Container;
-use Pimple\ServiceProviderInterface;
-
 /**
  * Class TemplateValues keeps track of the values that are used for template rendering.
  *
  * @package org\ccextractor\submissionplatform\containers
  */
-class TemplateValues implements ServiceProviderInterface
+class TemplateValues
 {
     /**
      * @var array The values that will be used for template rendering
@@ -22,19 +19,6 @@ class TemplateValues implements ServiceProviderInterface
     public function __construct()
     {
         $this->values = [];
-    }
-
-    /**
-     * Registers services on the given container.
-     *
-     * This method should only be used to configure services and parameters.
-     * It should not get services.
-     *
-     * @param Container $pimple An Container instance
-     */
-    public function register(Container $pimple)
-    {
-        $pimple["templateValues"] = $this;
     }
 
     /**

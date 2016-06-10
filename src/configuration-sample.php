@@ -24,6 +24,8 @@ define("AMAZON_SES_PASS","Amazon_User_Password");
 define("TEMP_STORAGE","/path/to/temporary/storage/");
 // Location to store media samples after submitting
 define("PERM_STORAGE","/path/to/permanent/storage/");
+// Location to store the results for media samples
+define("RESULT_STORAGE","/path/to/result/storage");
 // Git Webhook secret id (verification purposes)
 define("GIT_WEBHOOK","mysupersecretidhere");
 // Git remote location, which will be used to clone the repository if it does not exists.

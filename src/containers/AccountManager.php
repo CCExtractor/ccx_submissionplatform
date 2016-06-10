@@ -3,15 +3,14 @@ namespace org\ccextractor\submissionplatform\containers;
 
 use Exception;
 use org\ccextractor\submissionplatform\objects\User;
-use Pimple\Container;
-use Pimple\ServiceProviderInterface;
+use org\ccextractor\submissionplatform\objects\UserRole;
 use Slim\Views\Twig;
 
 /**
  * Class AccountManager manages user accounts (registration, log in, log out, recovery, ...).
  * @package org\ccextractor\submissionplatform\containers
  */
-class AccountManager implements ServiceProviderInterface
+class AccountManager
 {
     /**
      * @var string The HMAC secret.
@@ -47,19 +46,6 @@ class AccountManager implements ServiceProviderInterface
     }
 
     /**
-     * Registers services on the given container.
-     *
-     * This method should only be used to configure services and parameters.
-     * It should not get services.
-     *
-     * @param Container $pimple An Container instance
-     */
-    public function register(Container $pimple)
-    {
-        $pimple['account'] = $this;
-    }
-
-    /**
      * Performs a setup/initialization for the object.
      *
      * @throws Exception When the $_SESSION object is unavailable.
@@ -83,7 +69,7 @@ class AccountManager implements ServiceProviderInterface
     private function restore()
     {
         $d = $_SESSION["userManager"];
-        $this->user = new User($d["id"],$d["name"],$d["email"],$d["hash"],$d["github"],$d["admin"]);
+        $this->user = new User($d["id"],$d["name"],$d["email"],$d["hash"],$d["github"],new UserRole($d["role"]));
     }
 
     /**
@@ -96,7 +82,7 @@ class AccountManager implements ServiceProviderInterface
         $_SESSION["userManager"]["email"] = $this->user->getEmail();
         $_SESSION["userManager"]["hash"] = $this->user->getHash();
         $_SESSION["userManager"]["github"] = $this->user->isGithub();
-        $_SESSION["userManager"]["admin"] = $this->user->isAdmin();
+        $_SESSION["userManager"]["role"] = $this->user->getRole() + 0;
     }
 
     /**

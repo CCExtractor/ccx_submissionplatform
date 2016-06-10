@@ -1,0 +1,17 @@
+{% extends "base.html.twig" %}
+
+{% block content %}
+    <h3>Regression test - Add new category</h3>
+    {% include "notice.html.twig" %}
+    <form method="post" action="{{ path_for("Regression tests_category_add") }}">
+        <label for="name" class="col_6">Category name</label>
+        <input type="text" id="name" name="name" class="col_6" value="{{ name|default('') }}" />
+        <label for="description" class="col_6">Category description</label>
+        <textarea id="description" name="description" class="col_6">{{ description|default('') }}</textarea>
+        <span class="col_12">
+            <a href="{{ path_for("Regression tests") }}" class="button red">Cancel</a>
+            <input type="submit" class="green" value="Add new category" />
+        </span>
+        {% include "csrf.html.twig" %}
+    </form>
+{% endblock %}

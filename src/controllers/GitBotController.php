@@ -132,7 +132,7 @@ class GitBotController extends BaseController
                                                     if ($_POST["message"] === "finished complete run")
                                                     {
                                                         $toRelaunch = $self->dba->getTests()->mark_finished($id);
-                                                        $self->queue_github_comment($id, $_POST["status"]);
+                                                        $self->queue_github_comment($id, $_POST["status"], $request->getScheme().'://'.$request->getHost());
                                                         switch ($toRelaunch) {
                                                             case 1:
                                                                 // VM queue
@@ -172,7 +172,7 @@ class GitBotController extends BaseController
                                                         default:
                                                             return $response->withStatus(403)->write("ERROR");
                                                     }
-                                                    $self->queue_github_comment($id, $_POST["status"]);
+                                                    $self->queue_github_comment($id, $_POST["status"], $request->getScheme().'://'.$request->getHost());
 
                                                     return $response->write("OK");
                                                 } else {
@@ -569,12 +569,13 @@ class GitBotController extends BaseController
      *
      * @param int $id The id of the test entry.
      * @param string $status The status of the test entry.
+     * @param $base_url
      */
-    private function queue_github_comment($id, $status)
+    private function queue_github_comment($id, $status, $base_url)
     {
         $message = "";
-        $progress = "[status](" . BaseController::$BASE_URL . "/test/" . $id . ")";
-        $reports = "[results](" . BaseController::$BASE_URL . "/reports/" . $id . ")";
+        $progress = "[status](" . $base_url . "/test/" . $id . ")";
+        $reports = "[results](" . $base_url . "/reports/" . $id . ")";
         switch ($status) {
             case "finalisation":
                 // Fetch index.html, parse it and convert to a MD table

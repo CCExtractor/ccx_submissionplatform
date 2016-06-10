@@ -38,8 +38,7 @@ class TestController extends BaseController
                 /** @var DatabaseLayer $dba */
                 $dba = $this->database;
                 $self->setDefaultBaseValues($this);
-                $newest = $dba->getTests()->fetchLastXTests();
-                $this->templateValues->add("tests", $newest);
+                $this->templateValues->add("tests", $dba->getTests()->fetchLastXTests());
 
                 return $this->view->render($response, "test/index.html.twig", $this->templateValues->getValues());
             }
@@ -59,7 +58,7 @@ class TestController extends BaseController
                     return $this->view->render($response, "test/test.html.twig", $this->templateValues->getValues());
                 }
 
-                return $this->view->render($response->withStatus(404), "test/notfound.html.twig",
+                return $this->view->render($response->withStatus(404), "test/not-found.html.twig",
                     $this->templateValues->getValues()
                 );
             }
@@ -83,7 +82,7 @@ class TestController extends BaseController
                     }
                 }
 
-                return $this->view->render($response->withStatus(404), "test/notfound.html.twig",
+                return $this->view->render($response->withStatus(404), "test/not-found.html.twig",
                     $this->templateValues->getValues()
                 );
             }
@@ -103,7 +102,7 @@ class TestController extends BaseController
                     return $this->view->render($response, "test/test.html.twig", $this->templateValues->getValues());
                 }
 
-                return $this->view->render($response->withStatus(404), "test/notfound.html.twig",
+                return $this->view->render($response->withStatus(404), "test/not-found.html.twig",
                     $this->templateValues->getValues()
                 );
             }
@@ -119,11 +118,13 @@ class TestController extends BaseController
                 $sample = $dba->getSampleById($args["id"]);
                 if ($sample !== false) {
                     $this->templateValues->add("sample", $sample);
+                    // Fetch last tests for this sample
+                    $this->templateValues->add("tests", $dba->getTests()->fetchLastXTestsForSample($sample));
 
                     return $this->view->render($response, "test/sample.html.twig", $this->templateValues->getValues());
                 }
 
-                return $this->view->render($response->withStatus(404), "test/notfound.html.twig",
+                return $this->view->render($response->withStatus(404), "test/not-found.html.twig",
                     $this->templateValues->getValues()
                 );
             }

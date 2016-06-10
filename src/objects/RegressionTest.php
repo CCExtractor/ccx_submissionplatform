@@ -37,6 +37,11 @@ class RegressionTest
     private $outputFiles;
 
     /**
+     * @var RegressionTest
+     */
+    private static $nullInstance = null;
+
+    /**
      * RegressionTest constructor.
      *
      * @param int $id
@@ -63,6 +68,21 @@ class RegressionTest
         $this->input = $input;
         $this->output = $output;
         $this->outputFiles = $outputFiles;
+    }
+
+    /**
+     * @return RegressionTest
+     */
+    public static function getNullInstance()
+    {
+        if (self::$nullInstance === null) {
+            self::$nullInstance = new RegressionTest(
+                -1, Sample::getNullInstance(), RegressionCategory::getNullInstance(), '',
+                RegressionInputType::fromDatabaseString(), RegressionOutputType::fromDatabaseString()
+            );
+        }
+
+        return self::$nullInstance;
     }
 
     /**
@@ -144,5 +164,53 @@ class RegressionTest
         }
 
         return $pass;
+    }
+
+    /**
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    /**
+     * @param Sample $sample
+     */
+    public function setSample($sample)
+    {
+        $this->sample = $sample;
+    }
+
+    /**
+     * @param RegressionCategory $category
+     */
+    public function setCategory($category)
+    {
+        $this->category = $category;
+    }
+
+    /**
+     * @param string $command
+     */
+    public function setCommand($command)
+    {
+        $this->command = $command;
+    }
+
+    /**
+     * @param RegressionInputType $input
+     */
+    public function setInput($input)
+    {
+        $this->input = $input;
+    }
+
+    /**
+     * @param RegressionOutputType $output
+     */
+    public function setOutput($output)
+    {
+        $this->output = $output;
     }
 }

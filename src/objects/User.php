@@ -34,9 +34,9 @@ class User
      */
     private $github;
     /**
-     * @var bool Is the user a admin?
+     * @var UserRole the role of the user.
      */
-    private $admin;
+    private $role;
 
     /**
      * User constructor.
@@ -46,16 +46,16 @@ class User
      * @param string $email The email address of the user.
      * @param string $hash The password hash for the user.
      * @param bool $github Is GitHub linked?
-     * @param bool $admin Is the user a admin?
+     * @param UserRole $role The role of the user.
      */
-    public function __construct($id, $name, $email, $hash="", $github=false, $admin=false)
+    public function __construct($id, $name, $email, $hash="", $github=false, UserRole $role=null)
     {
         $this->id = intval($id);
         $this->name = $name;
         $this->email = $email;
         $this->hash = $hash;
         $this->github = ($github === "1" || $github === true);
-        $this->admin = ($admin === "1" || $admin === true);
+        $this->role = ($role === null)?new UserRole(UserRole::USER):$role;
     }
 
     /**
@@ -176,18 +176,35 @@ class User
      */
     public function isAdmin()
     {
-        return $this->admin;
+        return $this->role == UserRole::ADMIN;
     }
 
     /**
-     * @param boolean $admin
+     * @return UserRole
+     */
+    public function getRole()
+    {
+        return $this->role;
+    }
+
+    /**
+     * @param UserRole $role
+     *
+     * @return UserRole
+     */
+    public function setRole(UserRole $role)
+    {
+        $old = $this->role;
+        $this->role = $role;
+        return $old;
+    }
+
+    /**
+     * @param $roleName
      *
      * @return bool
      */
-    public function setAdmin($admin)
-    {
-        $old = $this->admin;
-        $this->admin = $admin;
-        return $old;
+    public function hasRole($roleName){
+        return $this->role->hasRole($roleName);
     }
 }

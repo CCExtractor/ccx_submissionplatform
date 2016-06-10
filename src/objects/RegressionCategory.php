@@ -4,6 +4,11 @@ namespace org\ccextractor\submissionplatform\objects;
 class RegressionCategory
 {
     /**
+     * @var RegressionCategory
+     */
+    private static $nullInstance = null;
+
+    /**
      * @var int
      */
     private $id;
@@ -31,6 +36,18 @@ class RegressionCategory
     }
 
     /**
+     * @return RegressionCategory
+     */
+    public static function getNullInstance()
+    {
+        if (self::$nullInstance === null) {
+            self::$nullInstance = new RegressionCategory(-1, "", "");
+        }
+
+        return self::$nullInstance;
+    }
+
+    /**
      * @return int
      */
     public function getId()
@@ -52,5 +69,29 @@ class RegressionCategory
     public function getDescription()
     {
         return $this->description;
+    }
+
+    /**
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * @param string $description
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
     }
 }

@@ -1,0 +1,104 @@
+{% extends "base.html.twig" %}
+
+{% block head %}
+    <script type="text/javascript">
+        function switchCategory(){
+            var id = $("#category").val();
+            window.location.hash = id;
+            $("tbody tr[data-category='"+id+"']").each(function(idx, elm){
+                elm.setAttribute("class","");
+            });
+            $("tbody tr[data-category!='"+id+"']").each(function(idx, elm){
+                elm.setAttribute("class","hide");
+            });
+            var cat_desc = $("#category-descriptions");
+            cat_desc.find("span[data-category='"+id+"']").each(function(idx, elm){
+                elm.setAttribute("class","");
+            });
+            cat_desc.find("span[data-category!='"+id+"']").each(function(idx, elm){
+                elm.setAttribute("class","hide");
+            });
+            {% if isLoggedIn and loggedInUser.hasRole("Admin") %}
+            var cat_edit = $("#category_edit");
+            var cat_delete = $("#category_delete");
+            var cat_parts = cat_edit.attr("href").split("/");
+            cat_edit.attr("href",cat_parts[cat_parts.length-3]+"/"+id+"/"+cat_parts[cat_parts.length-1]);
+            cat_parts = cat_delete.attr("href").split("/");
+            cat_delete.attr("href",cat_parts[cat_parts.length-3]+"/"+id+"/"+cat_parts[cat_parts.length-1]);
+            {% endif %}
+        }
+        $(document).ready(function(){
+            var hash = window.location.hash.slice(1);
+            $("#category").find("option").each(function(idx, elm){
+                if($(elm).val() === hash){
+                    $(elm).attr("selected","selected");
+                    switchCategory();
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h3>Regression tests</h3>
+    {% if tests is defined and tests|length > 0 %}
+        {% set firstCategory = categories[0].id %}
+        <p>
+            <label for="category">Select a category</label>:
+            <select id="category" onchange="switchCategory();">
+                {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>&nbsp;
+            {% if isLoggedIn and loggedInUser.hasRole("Admin") %}
+                <a href="{{ path_for("Regression tests_category_edit", {'id': firstCategory}) }}" title="Edit category" id="category_edit"><i class="fa fa-edit"></i></a>&nbsp;
+                <a href="{{ path_for("Regression tests_category_delete", {'id': firstCategory}) }}" title="Delete category" id="category_delete"><i class="fa fa-remove"></i></a>&nbsp;
+            {% endif %}
+        </p>
+        <p>Category description:
+            <span id="category-descriptions">
+                {% for category in categories %}
+                    <span {% if category.id != firstCategory %}class="hide" {% endif %}data-category="{{ category.id }}">{{ category.description }}</span>
+                {% endfor %}
+            </span>
+        </p>
+        <table id="regression_tests" class="sortable tight striped">
+            <thead>
+            <tr>
+                <th>Category</th>
+                <th>Command</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for test in tests %}
+                <tr data-category="{{ test.category.id }}" {% if test.category.id != firstCategory %}class="hide"{% endif %}>
+                    <td>{{ test.category.name }}</td>
+                    <td>{{ test.command }}</td>
+                    <td>
+                        <a href="{{ path_for('Regression tests_id', {'id': test.id }) }}" title="View details"><i class="fa fa-info-circle"></i></a>&nbsp;
+                        {% if isLoggedIn and loggedInUser.hasRole("Contributor") %}
+                            <a href="{{ path_for('Regression tests_id_edit', {'id': test.id}) }}" title="Edit regression test"><i class="fa fa-edit"></i></a>&nbsp;
+                            <a href="{{ path_for('Regression tests_id_delete', {'id': test.id}) }}" title="Delete regression test"><i class="fa fa-remove"></i></a>&nbsp;
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>There are no regression tests available</p>
+    {% endif %}
+{% endblock %}
+
+{% block sidebar %}
+    {% if isLoggedIn and loggedInUser.hasRole("Contributor") %}
+        <h5>Regression tests</h5>
+        <ul class="icons">
+            <li><i class="fa fa-li fa-plus-circle"></i> <a href="{{ path_for("Regression tests_new") }}">Add new regression test</a></li>
+            {% if loggedInUser.hasRole("Admin") %}
+                <li><i class="fa fa-li fa-object-group"></i> <a href="{{ path_for("Regression tests_category_add") }}">Add regression category</a></li>
+            {% endif %}
+        </ul>
+    {% endif %}
+{% endblock %}

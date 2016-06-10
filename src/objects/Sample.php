@@ -9,6 +9,11 @@ namespace org\ccextractor\submissionplatform\objects;
 class Sample
 {
     /**
+     * @var Sample
+     */
+    private static $nullInstance = null;
+
+    /**
      * @var int The id of the sample.
      */
     protected $id;
@@ -39,6 +44,17 @@ class Sample
         $this->hash = $hash;
         $this->extension = $extension;
         $this->original_name = $original_name;
+    }
+
+    /**
+     * @return Sample
+     */
+    public static function getNullInstance()
+    {
+        if(self::$nullInstance === null){
+            self::$nullInstance = new Sample(-1,"","");
+        }
+        return self::$nullInstance;
     }
 
     /**
