@@ -3,15 +3,13 @@ namespace org\ccextractor\submissionplatform\containers;
 
 use org\ccextractor\submissionplatform\objects\FTPCredentials;
 use org\ccextractor\submissionplatform\objects\User;
-use Pimple\Container;
-use Pimple\ServiceProviderInterface;
 
 /**
  * Class FTPConnector allows for some actions related to FTP.
  *
  * @package org\ccextractor\submissionplatform\containers
  */
-class FTPConnector implements ServiceProviderInterface
+class FTPConnector
 {
     /**
      * @var string The FTP server host name.
@@ -36,19 +34,6 @@ class FTPConnector implements ServiceProviderInterface
         $this->host = $host;
         $this->port = $port;
         $this->dba = $dba;
-    }
-
-    /**
-     * Registers services on the given container.
-     *
-     * This method should only be used to configure services and parameters.
-     * It should not get services.
-     *
-     * @param Container $pimple An Container instance
-     */
-    public function register(Container $pimple)
-    {
-        $pimple["FTPConnector"] = $this;
     }
 
     /**

@@ -14,10 +14,6 @@ use Slim\Http\Request;
 abstract class BaseController implements IController
 {
     /**
-     * @var string The base url (e.g. http://domain.tld) for the application.
-     */
-    public static $BASE_URL;
-    /**
      * @var string The page name of this controller.
      */
     protected $pageName;

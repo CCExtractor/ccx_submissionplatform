@@ -11,7 +11,6 @@ use org\ccextractor\submissionplatform\objects\RegressionTest;
 use Slim\App;
 use Slim\Http\Request;
 use Slim\Http\Response;
-use SplFileInfo;
 
 /**
  * Class RegressionController holds the logic for regression tests.

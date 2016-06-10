@@ -15,15 +15,13 @@ use org\ccextractor\submissionplatform\objects\User;
 use org\ccextractor\submissionplatform\objects\UserRole;
 use PDO;
 use PDOException;
-use Pimple\Container;
-use Pimple\ServiceProviderInterface;
 
 /**
  * Class DatabaseLayer takes care of the connection to the database.
  *
  * @package org\ccextractor\submissionplatform\containers
  */
-class DatabaseLayer implements ServiceProviderInterface
+class DatabaseLayer
 {
     /**
      * @var PDO The real connection to the database.
@@ -72,19 +70,6 @@ class DatabaseLayer implements ServiceProviderInterface
         $this->bot = new BotDBAL($this->pdo);
         $this->tests = new TestDBAL($this->pdo);
         $this->regression = new RegressionDBAL($this->pdo);
-    }
-
-    /**
-     * Registers services on the given container.
-     *
-     * This method should only be used to configure services and parameters.
-     * It should not get services.
-     *
-     * @param Container $pimple An Container instance
-     */
-    public function register(Container $pimple)
-    {
-        $pimple['database'] = $this;
     }
 
     /**

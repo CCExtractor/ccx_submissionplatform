@@ -5,8 +5,6 @@ use org\ccextractor\submissionplatform\objects\AdditionalFile;
 use org\ccextractor\submissionplatform\objects\QueuedSample;
 use org\ccextractor\submissionplatform\objects\Sample;
 use org\ccextractor\submissionplatform\objects\User;
-use Pimple\Container;
-use Pimple\ServiceProviderInterface;
 use SimpleXMLElement;
 use SplFileInfo;
 use XMLReader;
@@ -16,7 +14,7 @@ use XMLReader;
  *
  * @package org\ccextractor\submissionplatform\containers
  */
-class FileHandler implements ServiceProviderInterface
+class FileHandler
 {
     /**
      * @var DatabaseLayer The layer that connects to the database.
@@ -54,19 +52,6 @@ class FileHandler implements ServiceProviderInterface
         $this->store_dir = $store_dir;
         $this->result_dir = $result_dir;
         $this->forbiddenExtensions = $this->dba->getForbiddenExtensions();
-    }
-
-    /**
-     * Registers services on the given container.
-     *
-     * This method should only be used to configure services and parameters.
-     * It should not get services.
-     *
-     * @param Container $pimple An Container instance
-     */
-    public function register(Container $pimple)
-    {
-        $pimple["file_handler"] = $this;
     }
 
     /**
