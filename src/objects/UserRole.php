@@ -1,9 +1,7 @@
 <?php
 namespace org\ccextractor\submissionplatform\objects;
 
-use SplEnum;
-
-class UserRole extends SplEnum
+class UserRole extends BasicEnum
 {
     // Default is file.
     const __default = self::USER;
@@ -25,6 +23,15 @@ class UserRole extends SplEnum
         "Admin" => [self::ADMIN],
         "Contributor" => [self::ADMIN, self::CONTRIBUTOR]
     ];
+
+    /**
+     * UserRole constructor.
+     */
+    public function __construct($enumValue)
+    {
+        parent::__construct($enumValue, UserRole::__default);
+    }
+
 
     /**
      * Checks if a given role id matches a const defined value.

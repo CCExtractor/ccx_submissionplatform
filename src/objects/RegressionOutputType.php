@@ -3,7 +3,7 @@ namespace org\ccextractor\submissionplatform\objects;
 
 use SplEnum;
 
-class RegressionOutputType extends SplEnum
+class RegressionOutputType extends BasicEnum
 {
     // Default is file.
     const __default = 1;
@@ -45,6 +45,15 @@ class RegressionOutputType extends SplEnum
         self::MULTIPROGRAM => "multiprogram",
         self::CEA708 => "cea708"
     ];
+
+    /**
+     * RegressionOutputType constructor.
+     */
+    public function __construct($enumValue)
+    {
+        parent::__construct($enumValue, RegressionOutputType::__default);
+    }
+
 
     /**
      * Gets the File instance of this type.

@@ -1,14 +1,12 @@
 <?php
 namespace org\ccextractor\submissionplatform\objects;
 
-use SplEnum;
-
 /**
  * Class NoticeType represents the possible types of an notice
  *
  * @package org\ccextractor\submissionplatform\objects
  */
-class NoticeType extends SplEnum
+class NoticeType extends BasicEnum
 {
     // Default is error.
     const __default = 1;
@@ -26,6 +24,15 @@ class NoticeType extends SplEnum
     private static $warning = null;
     private static $error = null;
     private static $information = null;
+
+    /**
+     * NoticeType constructor.
+     */
+    public function __construct($enumValue)
+    {
+        parent::__construct($enumValue, NoticeType::__default);
+    }
+
 
     /**
      * Gets the Success instance of this Enum.

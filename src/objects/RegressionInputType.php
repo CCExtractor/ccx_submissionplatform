@@ -1,14 +1,12 @@
 <?php
 namespace org\ccextractor\submissionplatform\objects;
 
-use SplEnum;
-
 /**
  * Class RegressionInputType represent the possible input types for a test.
  *
  * @package org\ccextractor\submissionplatform\objects
  */
-class RegressionInputType extends SplEnum
+class RegressionInputType extends BasicEnum
 {
     // Default is file.
     const __default = 1;
@@ -35,6 +33,15 @@ class RegressionInputType extends SplEnum
         self::STDIN => "stdin",
         self::UDP => "udp"
     ];
+
+    /**
+     * RegressionInputType constructor.
+     */
+    public function __construct($enumValue)
+    {
+        parent::__construct($enumValue, RegressionInputType::__default);
+    }
+
 
     /**
      * Gets the File instance of this type.

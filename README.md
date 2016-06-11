@@ -37,16 +37,6 @@ complete the database, or run the `installation.sql` immediately for a database 
 2. Copy the src/configuration-sample.php to src/configuration.php and fill in the values
 3. Install the Composer dependencies by running `composer update`
 
-#### SplEnum PECL
-
-If you don't have the SplTypes pear package installed yet, you can do this as follows:
-
-1. (optional) Install php-dev (`sudo apt-get install php-dev` or `sudo apt-get install php5-dev`).
-2. (optional) Install php-pear (`sudo apt-get install php-pear`).
-3. Install SplEnum (`sudo pecl install SPL_Types`).
-4. If the install succeeded, add the extension to your `php.ini` file: `extension=spl_types.so`.
-5. Restart the PHP service.
-
 ### Nginx configuration for X-Accel-Redirect
 
 To serve files without any PHP overhead, the X-Accel-Redirect feature of Nginx is used. To enable it, a special section 
