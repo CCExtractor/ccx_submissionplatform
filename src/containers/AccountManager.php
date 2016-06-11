@@ -69,7 +69,12 @@ class AccountManager
     private function restore()
     {
         $d = $_SESSION["userManager"];
-        $this->user = new User($d["id"],$d["name"],$d["email"],$d["hash"],$d["github"],new UserRole($d["role"]));
+        if(array_key_exists('id', $d) && array_key_exists('name', $d) && array_key_exists('email', $d) &&
+            array_key_exists('hash', $d) && array_key_exists('github', $d) && array_key_exists('role', $d)) {
+            $this->user = new User($d["id"],$d["name"],$d["email"],$d["hash"],$d["github"],new UserRole($d["role"]));
+        } else {
+            $this->user = User::getNullUser();
+        }
     }
 
     /**
