@@ -29,7 +29,7 @@ include_once '../src/bot-configuration.php';
 require '../vendor/autoload.php';
 
 // Slim app
-$app = new \Slim\App($container);
+$app = new \Slim\App();
 
 $container = $app->getContainer();
 
