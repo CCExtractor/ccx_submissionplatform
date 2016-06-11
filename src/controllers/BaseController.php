@@ -1,6 +1,7 @@
 <?php
 namespace org\ccextractor\submissionplatform\controllers;
 
+use Interop\Container\ContainerInterface;
 use org\ccextractor\submissionplatform\containers\TemplateValues;
 use org\ccextractor\submissionplatform\objects\NoticeType;
 use Slim\App;
@@ -39,7 +40,7 @@ abstract class BaseController implements IController
      *
      * @param App $app The instance of the Slim framework app.
      */
-    protected function setDefaultBaseValues(App $app){
+    protected function setDefaultBaseValues(ContainerInterface $app){
         /** @var TemplateValues $tv */
         $tv = $app->templateValues;
         $tv->add("pageName", $this->getPageName());
@@ -55,7 +56,7 @@ abstract class BaseController implements IController
      * @param NoticeType $type The type of notice to show.
      * @param string $message The message to display.
      */
-    protected function setNoticeValues(App $app, NoticeType $type, $message){
+    protected function setNoticeValues(ContainerInterface $app, NoticeType $type, $message){
         $app->templateValues->add("notice_message",$message);
         $status = "error";
         $icon = "remove";
@@ -88,7 +89,7 @@ abstract class BaseController implements IController
      * @param App $app The Slim framework app.
      * @param Request $request The request object which contains the CSRF middleware.
      */
-    protected function setCSRF(App $app,Request $request){
+    protected function setCSRF(ContainerInterface $app,Request $request){
         $nameKey = $app->csrf->getTokenNameKey();
         $valueKey = $app->csrf->getTokenValueKey();
         // Register values for template rendering
