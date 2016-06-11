@@ -60,7 +60,7 @@ abstract class BaseController implements IController
         $app->templateValues->add("notice_message",$message);
         $status = "error";
         $icon = "remove";
-        switch($type){
+        switch($type->getValue()){
             case NoticeType::SUCCESS:
                 $status = "success";
                 $icon = "check";

@@ -176,7 +176,7 @@ class User
      */
     public function isAdmin()
     {
-        return $this->role == UserRole::ADMIN;
+        return $this->role->getValue() === UserRole::ADMIN;
     }
 
     /**

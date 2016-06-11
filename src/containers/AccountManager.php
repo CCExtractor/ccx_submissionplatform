@@ -87,7 +87,7 @@ class AccountManager
         $_SESSION["userManager"]["email"] = $this->user->getEmail();
         $_SESSION["userManager"]["hash"] = $this->user->getHash();
         $_SESSION["userManager"]["github"] = $this->user->isGithub();
-        $_SESSION["userManager"]["role"] = $this->user->getRole() + 0;
+        $_SESSION["userManager"]["role"] = $this->user->getRole()->getValue();
     }
 
     /**

@@ -1,8 +1,6 @@
 <?php
 namespace org\ccextractor\submissionplatform\objects;
 
-use SplEnum;
-
 class RegressionOutputType extends BasicEnum
 {
     // Default is file.
@@ -178,9 +176,9 @@ class RegressionOutputType extends BasicEnum
         ];
     }
 
-    public static function isValid($input_type)
+    public static function isValid($output_type)
     {
-        return array_key_exists($input_type, self::$names);
+        return array_key_exists($output_type, self::$names);
     }
 
     /**
