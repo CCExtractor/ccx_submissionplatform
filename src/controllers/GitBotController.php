@@ -105,6 +105,7 @@ class GitBotController extends BaseController
             $this->post('/report', function ($request, $response, $args) use ($self) {
                 /** @var App $this */
                 /** @var Response $response */
+                /** @var Request $request */
                 if ($this->environment['HTTP_USER_AGENT'] === BOT_CCX_USER_AGENT) {
                     if (isset($_POST["type"]) && isset($_POST["token"])) {
                         $id = $self->dba->getTests()->bot_validate_token($_POST["token"]);
@@ -132,7 +133,7 @@ class GitBotController extends BaseController
                                                     if ($_POST["message"] === "finished complete run")
                                                     {
                                                         $toRelaunch = $self->dba->getTests()->mark_finished($id);
-                                                        $self->queue_github_comment($id, $_POST["status"], $request->getScheme().'://'.$request->getHost());
+                                                        $self->queue_github_comment($id, $_POST["status"], $request->getUri()->getScheme().'://'.$request->getUri()->getHost());
                                                         switch ($toRelaunch) {
                                                             case 1:
                                                                 // VM queue
@@ -172,7 +173,7 @@ class GitBotController extends BaseController
                                                         default:
                                                             return $response->withStatus(403)->write("ERROR");
                                                     }
-                                                    $self->queue_github_comment($id, $_POST["status"], $request->getScheme().'://'.$request->getHost());
+                                                    $self->queue_github_comment($id, $_POST["status"], $request->getUri()->getScheme().'://'.$request->getUri()->getHost());
 
                                                     return $response->write("OK");
                                                 } else {
