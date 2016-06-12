@@ -139,7 +139,7 @@ class AccountController extends BaseController
                         $user = $dba->getUserWithEmail($_POST["email"]);
                         if ($user->getId() > -1) {
                             // We found the user, send recovery email and display ok message
-                            if ($this->account->sendRecoverEmail($user, $this->view, $request->getScheme().'://'.$request->getHost())) {
+                            if ($this->account->sendRecoverEmail($user, $this->view, $request->getUri()->getScheme().'://'.$request->getUri()->getHost())) {
                                 // Notice
                                 $self->setNoticeValues($this, NoticeType::getSuccess(),
                                     "An email with instructions to reset the password has been sent."
@@ -313,7 +313,7 @@ class AccountController extends BaseController
                         return $d($request, $response);
                     }
                     // We found the user, send recovery email and display ok message
-                    if ($this->account->sendRecoverEmail($user, $this->view, $request->getScheme().'://'.$request->getHost())) {
+                    if ($this->account->sendRecoverEmail($user, $this->view, $request->getUri()->getScheme().'://'.$request->getUri()->getHost())) {
                         // Notice
                         $self->setNoticeValues($this, NoticeType::getSuccess(),
                             "An email with instructions to reset the password has been sent."
@@ -375,7 +375,7 @@ class AccountController extends BaseController
                         if ($user->getId() === -1) {
                             // Send verification email using a hash
                             if ($this->account->sendRegistrationEmail($_POST["email"], $this->view,
-                                $request->getScheme().'://'.$request->getHost()
+                                $request->getUri()->getScheme().'://'.$request->getUri()->getHost()
                             )
                             ) {
                                 // Notice
